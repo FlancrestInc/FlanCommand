@@ -42,8 +42,39 @@ storage:
 
 ```sh
 cp .env.example .env
-pnpm dev
+docker compose up --build
 ```
+
+## Docker deployment
+
+Requirements: Docker Engine with Compose v2.
+
+Build and start FlanCommand in the background:
+
+```sh
+cp .env.example .env
+docker compose up -d --build
+```
+
+The app listens on `127.0.0.1:3000` and stores data in the named
+`flancommand-storage` volume. Check the container:
+
+```sh
+docker compose ps
+curl -fsS http://127.0.0.1:3000/health
+```
+
+Stop the container without removing its stored data:
+
+```sh
+docker compose down
+```
+
+For Barnabas, set the production Hermes and Cloudflare Access variables in
+`.env` before starting the container. Keep `HERMES_AUTH_TOKEN` and
+`FLANC_APPROVAL_SIGNING_SECRET` out of the repository. See
+[`docs/operations/deployment.md`](docs/operations/deployment.md) for the
+Barnabas and Gospel setup.
 
 For a direct local process instead, build and start the API BFF:
 
