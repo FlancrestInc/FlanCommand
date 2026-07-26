@@ -76,6 +76,45 @@ For Barnabas, set the production Hermes and Cloudflare Access variables in
 [`docs/operations/deployment.md`](docs/operations/deployment.md) for the
 Barnabas and Gospel setup.
 
+## Hermes authentication
+
+FlanCommand does not issue or fetch a Hermes token. The Hermes gateway and the
+FlanCommand API use one shared secret that you create and store.
+
+Generate a strong value with a password or secret manager, for example:
+
+```sh
+openssl rand -hex 32
+```
+
+Set that exact value in both places:
+
+1. On Gospel, give it to the Hermes gateway as
+   `HERMES_DASHBOARD_SESSION_TOKEN`.
+2. On Barnabas, give it to the container as `HERMES_AUTH_TOKEN`.
+
+For a temporary local setup, the gateway can use:
+
+```sh
+HERMES_DASHBOARD_SESSION_TOKEN='<shared-secret>' \
+  hermes serve --host 127.0.0.1 --port 9119
+```
+
+Then put the same value in the local `.env` file:
+
+```dotenv
+HERMES_TRANSPORT=websocket
+HERMES_AUTH_TOKEN=<shared-secret>
+```
+
+`HERMES_AUTH_REF` is only a label for the secret's location in a secret
+manager. FlanCommand does not resolve it. The deployment system must resolve
+that reference and inject the resulting value as `HERMES_AUTH_TOKEN`.
+
+`HERMES_ENDPOINT` is the gateway WebSocket address and `HERMES_ORIGIN` is the
+allowed web origin. Neither is a secret. Never commit `.env`, print the shared
+secret, or send it to browser code.
+
 For a direct local process instead, build and start the API BFF:
 
 ```sh
