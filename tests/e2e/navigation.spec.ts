@@ -1,0 +1,212 @@
+import { expect, test } from "@playwright/test";
+
+test("loads without browser policy console warnings", async ({ page }) => {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "warning" || message.type() === "error") warnings.push(message.text());
+  });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  expect(warnings).toEqual([]);
+});
+
+test("shows a session loading state while the conversation list loads", async ({ page }) => {
+  await page.route("**/api/sessions**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".session-skeleton")).toHaveCount(3);
+  await expect(page.locator("#session-list .session-skeleton")).toHaveCount(0);
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+});
+
+test("honors reduced-motion preferences", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const transitionDuration = await page
+    .locator(".starter")
+    .first()
+    .evaluate((element) => {
+      const browserWindow = (
+        element as unknown as {
+          ownerDocument: {
+            defaultView: { getComputedStyle(node: unknown): { transitionDuration: string } };
+          };
+        }
+      ).ownerDocument.defaultView;
+      return Number.parseFloat(browserWindow.getComputedStyle(element).transitionDuration);
+    });
+  expect(transitionDuration).toBeLessThan(0.001);
+});
+
+test("exposes live status and a visible keyboard focus", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#connection")).toHaveAttribute("role", "status");
+  await expect(page.locator("#toast")).toHaveAttribute("aria-live", "polite");
+  await expect(page.locator("#run-status")).toHaveAttribute("aria-live", "polite");
+  await page.keyboard.press("Tab");
+  await expect(page.locator(":focus")).toHaveCSS("outline-style", "solid");
+  await page.locator("#settings-button").click();
+  await expect(page.locator("#settings-close")).toBeFocused();
+});
+
+test("registers the offline app shell without caching API data", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(async () => {
+    const browserNavigator = navigator as Navigator & {
+      serviceWorker: { ready: Promise<unknown> };
+    };
+    await browserNavigator.serviceWorker.ready;
+  });
+  const cacheEntries = await page.evaluate(async () => {
+    const browser = globalThis as typeof globalThis & {
+      caches: {
+        open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
+      };
+    };
+    const cache = await browser.caches.open("flancommand-shell-v1");
+    return (await cache.keys()).map((request) => new URL(request.url).pathname);
+  });
+  expect(cacheEntries).toContain("/index.html");
+  expect(cacheEntries).toContain("/app.js");
+  expect(cacheEntries.some((path) => path.startsWith("/api/"))).toBe(false);
+
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const browserNavigator = navigator as Navigator & {
+          serviceWorker: { controller: unknown };
+        };
+        return Boolean(browserNavigator.serviceWorker.controller);
+      }),
+    )
+    .toBe(true);
+  await page.context().setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("h1")).toHaveText("Conversations");
+});
+
+test("keeps navigation usable on a phone-sized viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.locator("#mobile-sidebar").click();
+  await expect(page.locator("#sidebar")).toHaveClass(/open/);
+  await page.locator("#brand").click();
+  await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
+
+  await page.locator("#notification-bell").click();
+  await expect(page.locator("#drawer-backdrop")).toBeVisible();
+  await expect(page.locator("#drawer-title")).toHaveText("Notifications");
+  await page.locator("#drawer-close").click();
+  await expect(page.locator("#drawer-backdrop")).toBeHidden();
+
+  await page.locator("#mobile-sidebar").click();
+  await page.locator("#job-dashboard").click();
+  await expect(page.locator("#drawer-title")).toHaveText("Background jobs");
+  await page.locator("#drawer-close").click();
+
+  await page.locator("#diagnostics").click();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator("#audit-panel")).toBeVisible();
+});
+
+test("keeps key mobile controls at a touch-safe size", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  for (const selector of [
+    "#notification-bell",
+    "#theme-toggle",
+    "#settings-button",
+    "#mobile-sidebar",
+    "#attach-file-composer",
+    "#send-button",
+  ]) {
+    const box = await page.locator(selector).boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("keeps a renamed conversation after refresh", async ({ page }) => {
+  await page.goto("/");
+  page.on("dialog", async (dialog) => {
+    await dialog.accept("E2E kept conversation");
+  });
+
+  await page.locator("#new-session").click();
+  await expect(page.locator("#session-title")).toHaveText("New conversation");
+  await page.locator("#rename-session").click();
+  await expect(page.locator("#session-title")).toHaveText("E2E kept conversation");
+
+  await page.reload();
+  await expect(page.locator("#session-title")).toHaveText("E2E kept conversation");
+});
+
+test("edits and archives a project from the browser", async ({ page }) => {
+  await page.goto("/");
+
+  await page.locator("#add-project").click();
+  await expect(page.locator("#project-backdrop")).toBeVisible();
+  await page.locator("#project-name").fill("E2E project before edit");
+  await page.locator("#project-path").fill("/tmp/e2e-project-before");
+  await page.locator("#project-hosts").fill("gospel");
+  await page.locator("#project-instructions").fill("Follow the E2E project rules.");
+  await page.locator("#project-form").locator("button[type=submit]").click();
+  await expect(
+    page.locator("#project-select option", { hasText: "E2E project before edit" }),
+  ).toHaveCount(1);
+  await page.locator("#project-select").selectOption({ label: "E2E project before edit" });
+  await expect(page.locator("#edit-project")).toBeEnabled();
+  await page.locator("#edit-project").click();
+  await expect(page.locator("#project-backdrop")).toBeVisible();
+  await page.locator("#project-name").fill("E2E project after edit");
+  await page.locator("#project-path").fill("/tmp/e2e-project-after");
+  await page.locator("#project-hosts").fill("gospel, barnabas");
+  await page.locator("#project-instructions").fill("Keep the E2E change small.");
+  await page.locator("#project-form").locator("button[type=submit]").click();
+  await expect(
+    page.locator("#project-select option", { hasText: "E2E project after edit" }),
+  ).toHaveCount(1);
+  await page.locator("#project-select").selectOption({ label: "E2E project after edit" });
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.locator("#archive-project").click();
+  await expect(
+    page.locator("#project-select option", { hasText: "E2E project after edit · archived" }),
+  ).toHaveCount(1);
+  await expect(page.locator("#archive-project")).toBeDisabled();
+});
+
+test("switches and persists the Command Blue theme", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+  await expect(page.locator("#settings-backdrop")).toBeVisible();
+  await page.locator("#settings-theme").selectOption("classic");
+  await page.locator("#settings-form").locator("button[type=submit]").click();
+
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "classic");
+  await expect(page.locator("#settings-button")).toBeVisible();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "classic");
+});
+
+test("associates a credential reference through the browser form", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.locator("#add-credential").click();
+  await expect(page.locator("#credential-backdrop")).toBeVisible();
+  await page.locator("#credential-name").fill("E2E Gospel SSH");
+  await page.locator("#credential-secret-id").fill("e2e-secret-reference");
+  await page.locator("#credential-purpose").fill("E2E remote access");
+  await page.locator("#credential-hosts").fill("gospel");
+  await page.locator("#credential-injection").selectOption("temporary_file");
+  await page.locator("#credential-form").locator("button[type=submit]").click();
+
+  await expect(page.locator("#credential-backdrop")).toBeHidden();
+  await expect(page.locator("#credential-list")).toContainText("E2E Gospel SSH");
+  await expect(page.locator("#credential-list")).toContainText("temporary_file");
+});

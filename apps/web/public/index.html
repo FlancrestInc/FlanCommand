@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10151c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="FlanCommand" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>FlanCommand — Hermes command center</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <button class="brand" id="brand" aria-label="Open navigation">
+          <span class="brand-mark">⌁</span><span>FlanCommand</span>
+        </button>
+        <div class="topbar-center">
+          <span class="eyebrow">HERMES COMMAND CENTER</span
+          ><span
+            class="connection"
+            id="connection"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            ><i></i> connecting</span
+          >
+        </div>
+        <div class="top-actions">
+          <button
+            class="icon-button notification-button"
+            id="notification-bell"
+            aria-label="Open notifications"
+          >
+            ♢<span id="notification-count">0</span></button
+          ><button class="icon-button" id="theme-toggle" aria-label="Switch theme">◐</button
+          ><button class="avatar" id="settings-button" aria-label="Open settings">R</button>
+        </div>
+      </header>
+      <main class="workspace">
+        <aside class="sidebar" id="sidebar">
+          <div class="sidebar-head">
+            <div>
+              <span class="eyebrow">WORKSPACE</span>
+              <h1>Conversations</h1>
+            </div>
+            <button class="new-button" id="new-session" aria-label="New conversation">＋</button>
+          </div>
+          <label class="search"
+            ><span>⌕</span
+            ><input
+              id="search"
+              type="search"
+              aria-label="Find a conversation"
+              placeholder="Find a conversation"
+          /></label>
+          <div class="sidebar-controls">
+            <button id="rename-session" type="button">Rename</button>
+            <button id="pin-session" type="button">Pin</button>
+            <button id="archive-session" type="button">Archive</button>
+          </div>
+          <div class="folder-picker">
+            <select id="folder-select" aria-label="Filter by folder">
+              <option value="">All folders</option>
+            </select>
+            <button id="add-folder" type="button" aria-label="Create folder">＋</button>
+          </div>
+          <div class="sidebar-section">
+            <span class="section-label">RECENT</span>
+            <div id="session-list" class="session-list"></div>
+          </div>
+          <div class="project-picker">
+            <div class="library-heading">
+              <span class="section-label">ACTIVE PROJECT</span>
+              <button id="add-project" type="button" aria-label="Create project">＋</button>
+            </div>
+            <select id="project-select" aria-label="Choose project">
+              <option value="">Loading projects…</option>
+            </select>
+            <div class="project-actions">
+              <button id="edit-project" type="button">Edit project</button>
+              <button id="archive-project" type="button">Archive</button>
+            </div>
+            <label class="permission-control">
+              <span class="section-label">PERMISSION MODE</span>
+              <select id="permission-mode" aria-label="Choose project permission mode">
+                <option value="ask">Ask every time</option>
+                <option value="safe">Safe actions</option>
+                <option value="autonomy">Full autonomy</option>
+              </select>
+              <small id="permission-help">Edits, commands, and network actions ask first.</small>
+            </label>
+            <label class="permission-control">
+              <span class="section-label">CONVERSATION OVERRIDE</span>
+              <select id="conversation-permission" aria-label="Choose conversation permission mode">
+                <option value="inherit">Use project mode</option>
+                <option value="ask">Ask every time</option>
+                <option value="safe">Safe actions</option>
+                <option value="autonomy">Full autonomy</option>
+              </select>
+              <small id="conversation-permission-help"
+                >This conversation uses the project mode.</small
+              >
+            </label>
+          </div>
+          <div class="credential-library">
+            <div class="library-heading">
+              <span class="section-label">CREDENTIAL REFERENCES</span
+              ><button id="add-credential" aria-label="Associate a credential reference">＋</button>
+            </div>
+            <div id="credential-list" class="credential-list">
+              <span>No references associated.</span>
+            </div>
+          </div>
+          <div class="file-library">
+            <div class="library-heading">
+              <span class="section-label">FILES</span
+              ><button id="attach-file" aria-label="Upload files">＋</button>
+            </div>
+            <input
+              id="file-input"
+              type="file"
+              multiple
+              accept="image/png,image/jpeg,image/gif,image/webp,text/plain,text/markdown,text/csv,application/json,text/javascript,text/css,application/pdf"
+              hidden
+            />
+            <input
+              id="file-search"
+              class="library-search"
+              type="search"
+              placeholder="Search files"
+            />
+            <div id="file-list" class="file-list"><span>Drop files here or use +</span></div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="mini-status"><span class="pulse"></span><span>Hermes is ready</span></div>
+            <button class="footer-link" id="job-dashboard">
+              Background jobs <span id="job-count">0</span>
+            </button>
+            <button class="footer-link" id="approval-inbox">
+              Approvals <span id="approval-count">0</span>
+            </button>
+            <button class="footer-link" id="memory-viewer">Hermes memory <span>↗</span></button>
+            <button class="footer-link" id="diagnostics">Diagnostics <span>↗</span></button>
+          </div>
+        </aside>
+        <section class="chat-column">
+          <div class="chat-header">
+            <div class="session-title">
+              <span class="live-dot"></span>
+              <div>
+                <h2 id="session-title">Loading conversation</h2>
+                <span id="session-meta">Preparing your workspace</span>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <select class="chip model-select" id="model-select" aria-label="Choose model">
+                <option value="">Model · auto</option></select
+              ><button class="chip" id="context-chip">Context · —</button
+              ><button class="chip dev-toggle" id="dev-toggle">Developer</button
+              ><button class="icon-button" id="mobile-sidebar" aria-label="Open conversations">
+                ☰
+              </button>
+            </div>
+          </div>
+          <div class="message-scroll" id="message-scroll">
+            <div class="welcome" id="welcome">
+              <div class="welcome-kicker">GOOD EVENING, RYAN</div>
+              <h3>What should Hermes<br /><em>make useful</em> today?</h3>
+              <p>
+                Start with a task, a question, or a half-formed idea. The workbench will keep the
+                useful bits visible.
+              </p>
+              <div class="starter-grid">
+                <button
+                  class="starter"
+                  data-prompt="Give me a quick status update on this workspace."
+                >
+                  <span>⌁</span><b>Workspace pulse</b
+                  ><small>See what is ready to run</small></button
+                ><button
+                  class="starter"
+                  data-prompt="Help me break down my next task into a clear plan."
+                >
+                  <span>↳</span><b>Shape a plan</b><small>Turn a thought into steps</small>
+                </button>
+              </div>
+            </div>
+            <div
+              id="messages"
+              class="messages"
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions text"
+            ></div>
+          </div>
+          <div class="composer-wrap">
+            <div class="run-strip" id="run-strip" hidden>
+              <span class="spinner" aria-hidden="true"></span
+              ><span id="run-label" role="status" aria-live="polite">Hermes is working</span
+              ><button id="stop-run">Stop</button
+              ><button id="reconnect-run" hidden>Refresh session</button>
+            </div>
+            <form class="composer" id="composer">
+              <div class="command-menu" id="command-menu" hidden></div>
+              <div class="composer-attachments" id="composer-attachments" hidden></div>
+              <textarea
+                id="composer-input"
+                rows="1"
+                placeholder="Ask Hermes anything…"
+                aria-label="Message Hermes"
+              ></textarea>
+              <div class="composer-tools">
+                <div>
+                  <button
+                    type="button"
+                    class="tool-button"
+                    id="attach-file-composer"
+                    aria-label="Attach files"
+                  >
+                    ＋</button
+                  ><span class="hint">⌘ ↵ to send</span>
+                </div>
+                <button
+                  class="send-button"
+                  id="send-button"
+                  type="submit"
+                  aria-label="Send message"
+                >
+                  ↑
+                </button>
+              </div>
+            </form>
+            <div class="composer-note">Hermes can make mistakes. Check important work.</div>
+          </div>
+        </section>
+        <aside class="detail-panel">
+          <div class="detail-head">
+            <span class="eyebrow">RUN STATUS</span
+            ><span class="status-badge" id="run-status" role="status" aria-live="polite">IDLE</span>
+          </div>
+          <div class="detail-card focus-card">
+            <div class="card-label">CURRENT FOCUS</div>
+            <strong id="focus-title">No active run</strong>
+            <p id="focus-detail">Your next message will appear here with live progress.</p>
+            <div class="run-metrics">
+              <div><span>Elapsed</span><b id="elapsed-value">—</b></div>
+              <div><span>Tokens</span><b id="token-value">—</b></div>
+            </div>
+            <div class="meter"><span id="context-meter"></span></div>
+            <div class="meter-labels">
+              <span>Context used</span><span id="context-value">—</span>
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="activity-heading">
+              <span class="card-label">ACTIVITY</span
+              ><button class="activity-summary" id="activity-toggle">Expand</button>
+            </div>
+            <div id="activity" class="activity">
+              <div class="activity-empty">
+                <span>✦</span>
+                <p>Tool calls and run events<br />will settle here.</p>
+              </div>
+            </div>
+          </div>
+          <details class="detail-card developer-panel" id="developer-panel">
+            <summary class="card-label">DEVELOPER MODE</summary>
+            <p class="developer-note">
+              Sanitized events only. Secrets never cross the adapter boundary.
+            </p>
+            <pre id="raw-events">No events yet.</pre>
+          </details>
+          <section class="detail-card audit-panel" id="audit-panel" hidden>
+            <div class="activity-heading">
+              <span class="card-label">AUDIT LOG</span>
+              <button class="activity-summary" id="audit-refresh" type="button">Refresh</button>
+            </div>
+            <div id="audit-list" class="audit-list">
+              <span>Loading audit events…</span>
+            </div>
+          </section>
+          <div class="detail-card artifact-panel">
+            <div class="card-label">ARTIFACTS</div>
+            <div id="artifact-list" class="artifact-list">
+              <span>No generated artifacts yet.</span>
+            </div>
+          </div>
+          <section class="detail-card file-preview-card" id="file-preview-card" hidden>
+            <div class="activity-heading">
+              <span class="card-label" id="file-preview-title">FILE PREVIEW</span>
+              <button class="activity-summary" id="file-preview-close" type="button">Close</button>
+            </div>
+            <div id="file-preview-body" class="file-preview-body"></div>
+          </section>
+          <div class="detail-card workspace-panel">
+            <div class="card-label">WORKSPACE BROWSER</div>
+            <div class="workspace-path-row">
+              <input
+                id="workspace-path"
+                type="text"
+                aria-label="Declared project path"
+                placeholder="Declared project path"
+              />
+              <button id="workspace-open" type="button">Open</button>
+              <button id="workspace-new-file" type="button">New file</button>
+            </div>
+            <div class="workspace-search-row">
+              <input
+                id="workspace-search"
+                type="search"
+                aria-label="Search workspace files"
+                placeholder="Search names or file text"
+              />
+              <button id="workspace-search-button" type="button">Search</button>
+            </div>
+            <div id="workspace-search-results" class="workspace-search-results" hidden></div>
+            <div class="workspace-new-file-row" id="workspace-new-file-row" hidden>
+              <input
+                id="new-file-path"
+                type="text"
+                aria-label="New file name"
+                placeholder="new-file.md"
+              />
+              <button id="new-file-start" type="button">Start</button>
+              <button id="new-file-cancel" type="button">Cancel</button>
+            </div>
+            <div id="workspace-list" class="workspace-list">
+              <span>Choose a project to browse.</span>
+            </div>
+            <div class="edit-review" id="edit-review" hidden>
+              <div class="card-label" id="edit-file-name">EDIT REVIEW</div>
+              <small id="edit-status">Editing a local copy.</small>
+              <textarea
+                id="edit-content"
+                spellcheck="false"
+                aria-label="Edit file content"
+              ></textarea>
+              <div class="edit-actions">
+                <button id="propose-edit" type="button">Propose change</button>
+                <button id="approve-edit" type="button" hidden>Approve write</button>
+                <button id="reject-edit" type="button" hidden>Reject</button>
+              </div>
+              <pre id="edit-diff" class="edit-diff">No proposal yet.</pre>
+            </div>
+            <div class="terminal-panel" id="terminal-panel">
+              <div class="terminal-heading">
+                <label class="card-label" for="terminal-host">TERMINAL</label>
+                <select id="terminal-host" aria-label="Terminal host">
+                  <option value="local">Local host</option>
+                </select>
+                <select id="terminal-credential" aria-label="Terminal credential">
+                  <option value="">No credential</option>
+                </select>
+                <button id="open-terminal" type="button">Open</button>
+                <button id="terminal-hide" type="button">Hide</button>
+              </div>
+              <small id="terminal-status">Closed · choose a declared host</small>
+              <pre id="terminal-output" role="log" aria-live="polite" aria-label="Terminal output">
+No terminal session.</pre>
+              <div class="terminal-input-row">
+                <input
+                  id="terminal-input"
+                  type="text"
+                  aria-label="Terminal command"
+                  placeholder="Type a command…"
+                  disabled
+                />
+                <button id="send-terminal" type="button" disabled>Send</button>
+                <button id="terminal-copy" type="button">Copy output</button>
+                <button id="terminal-paste" type="button">Paste</button>
+                <button id="close-terminal" type="button" disabled>Close session</button>
+              </div>
+            </div>
+            <button id="show-terminal" type="button" hidden>Show terminal</button>
+          </div>
+          <div class="detail-card details-list">
+            <div class="card-label">SESSION DETAILS</div>
+            <div><span>Source</span><b id="source-value">—</b></div>
+            <div><span>Session ID</span><b id="session-id">—</b></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <div class="palette-backdrop" id="palette-backdrop" hidden>
+      <div class="palette" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+        <div class="palette-head">
+          <span class="eyebrow" id="palette-title">COMMAND PALETTE</span><kbd>Esc</kbd>
+        </div>
+        <button data-palette="new">＋ <span>New conversation</span><kbd>⌘ N</kbd></button>
+        <button data-palette="theme">◐ <span>Toggle theme</span><kbd>⌘ J</kbd></button>
+        <button data-palette="developer">⌁ <span>Open developer mode</span><kbd>⌘ D</kbd></button>
+      </div>
+    </div>
+    <div class="settings-backdrop" id="settings-backdrop" hidden>
+      <form
+        class="settings-panel"
+        id="settings-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
+        <div class="palette-head">
+          <span class="eyebrow" id="settings-title">COMMAND CENTER SETTINGS</span>
+          <button class="activity-summary" id="settings-close" type="button">Close</button>
+        </div>
+        <label class="settings-field">
+          <span>Default model</span>
+          <select id="settings-model">
+            <option value="">Automatic</option>
+          </select>
+          <small>Used when starting a new conversation.</small>
+        </label>
+        <label class="settings-field">
+          <span>Reasoning effort</span>
+          <select id="settings-reasoning">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label class="settings-field">
+          <span>Response limit</span>
+          <input id="settings-response-limit" type="number" min="256" max="32768" step="256" />
+          <small>Stored for Hermes adapters that support response limits.</small>
+        </label>
+        <label class="settings-field">
+          <span>File retention</span>
+          <input id="settings-retention" type="number" min="1" max="365" step="1" />
+          <small>Days before uploaded files become eligible for cleanup.</small>
+        </label>
+        <label class="settings-check"
+          ><input id="settings-notifications" type="checkbox" />
+          <span>Show browser notifications</span></label
+        >
+        <label class="settings-check"
+          ><input id="settings-compact" type="checkbox" /> <span>Use compact activity</span></label
+        >
+        <label class="settings-field">
+          <span>Theme</span>
+          <select id="settings-theme">
+            <option value="dark">Night Ops</option>
+            <option value="light">Paper</option>
+            <option value="classic">Command Blue</option>
+          </select>
+        </label>
+        <div class="settings-actions">
+          <button id="settings-cancel" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Save settings</button>
+        </div>
+      </form>
+    </div>
+    <div class="settings-backdrop" id="project-backdrop" hidden>
+      <form
+        class="settings-panel project-panel"
+        id="project-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-form-title"
+      >
+        <div class="palette-head">
+          <span class="eyebrow" id="project-form-title">NEW PROJECT</span>
+          <button class="activity-summary" id="project-close" type="button">Close</button>
+        </div>
+        <label class="settings-field">
+          <span>Project name</span>
+          <input id="project-name" required maxlength="120" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Declared workspace path</span>
+          <input id="project-path" placeholder="/home/ryan/projects/example" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Declared remote hosts</span>
+          <input id="project-hosts" placeholder="gospel, barnabas" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Project instructions</span>
+          <textarea id="project-instructions" rows="5" maxlength="16000"></textarea>
+          <small>Sent as bounded context for normal Hermes messages.</small>
+        </label>
+        <div class="settings-actions">
+          <button id="project-cancel" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Save project</button>
+        </div>
+      </form>
+    </div>
+    <div class="settings-backdrop" id="credential-backdrop" hidden>
+      <form
+        class="settings-panel credential-panel"
+        id="credential-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="credential-form-title"
+      >
+        <div class="palette-head">
+          <span class="eyebrow" id="credential-form-title">ASSOCIATE CREDENTIAL</span>
+          <button class="activity-summary" id="credential-close" type="button">Close</button>
+        </div>
+        <p class="form-note">Add a reference only. Secret values never belong in this browser.</p>
+        <label class="settings-field">
+          <span>Reference name</span>
+          <input id="credential-name" required maxlength="120" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Bitwarden secret reference</span>
+          <input id="credential-secret-id" required maxlength="256" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Purpose</span>
+          <input id="credential-purpose" required maxlength="240" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Allowed hosts</span>
+          <input id="credential-hosts" placeholder="gospel, barnabas" autocomplete="off" />
+        </label>
+        <label class="settings-field">
+          <span>Injection method</span>
+          <select id="credential-injection">
+            <option value="temporary_file">Temporary file</option>
+            <option value="environment">Process environment</option>
+            <option value="stdin">Standard input</option>
+            <option value="ssh_agent">SSH agent</option>
+          </select>
+        </label>
+        <div class="settings-actions">
+          <button id="credential-cancel" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Save reference</button>
+        </div>
+      </form>
+    </div>
+    <div class="settings-backdrop" id="credential-provide-backdrop" hidden>
+      <form
+        class="settings-panel credential-panel"
+        id="credential-provide-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="credential-provide-title"
+      >
+        <div class="palette-head">
+          <span class="eyebrow" id="credential-provide-title">PROVIDE CREDENTIAL</span>
+          <button class="activity-summary" id="credential-provide-close" type="button">
+            Close
+          </button>
+        </div>
+        <p class="form-note">Choose a stored reference. The secret value stays on the server.</p>
+        <label class="settings-field">
+          <span>Credential reference</span>
+          <select id="credential-provide-select" required></select>
+        </label>
+        <div class="settings-actions">
+          <button id="credential-provide-cancel" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Send reference</button>
+        </div>
+      </form>
+    </div>
+    <div class="drawer-backdrop" id="drawer-backdrop" hidden>
+      <aside class="command-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <div class="drawer-head">
+          <div>
+            <span class="eyebrow">COMMAND CENTER</span>
+            <h2 id="drawer-title">Updates</h2>
+          </div>
+          <button class="activity-summary" id="drawer-close" type="button">Close</button>
+        </div>
+        <div class="drawer-content" id="drawer-content"></div>
+      </aside>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "FlanCommand — Hermes command center",
+  "short_name": "FlanCommand",
+  "description": "A web-native command center for Hermes Agent.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1218",
+  "theme_color": "#10151c",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

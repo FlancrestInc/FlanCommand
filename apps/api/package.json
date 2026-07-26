@@ -1,0 +1,13 @@
+{
+  "name": "@flancommand/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "FLANC_COMMAND_START=1 node --watch dist/apps/api/src/index.js"
+  },
+  "dependencies": {
+    "@flancommand/config": "workspace:*",
+    "@flancommand/event-schema": "workspace:*",
+    "@flancommand/hermes-adapter": "workspace:*"
+  }
+}

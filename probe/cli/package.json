@@ -1,0 +1,14 @@
+{
+  "name": "@flancommand/probe-cli",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node ../../../dist/probe/cli/src/main.js",
+    "probe": "node ../../../dist/probe/cli/src/main.js"
+  },
+  "dependencies": {
+    "@flancommand/config": "workspace:*",
+    "@flancommand/event-schema": "workspace:*",
+    "@flancommand/hermes-adapter": "workspace:*"
+  }
+}

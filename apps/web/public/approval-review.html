@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10151c" />
+    <title>Approval review — FlanCommand</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+        background: #10151c;
+        color: #eef2e8;
+      }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      main {
+        width: min(560px, 100%);
+        border: 1px solid #35414b;
+        border-radius: 16px;
+        padding: 24px;
+        background: #182029;
+        box-shadow: 0 18px 50px #0006;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p {
+        color: #aeb9bd;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        padding: 14px;
+        border-radius: 10px;
+        background: #10151c;
+        color: #d8e3c3;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .actions[hidden] {
+        display: none;
+      }
+      button {
+        flex: 1;
+        border: 0;
+        border-radius: 9px;
+        padding: 12px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #approve {
+        background: #c6e86b;
+        color: #18220e;
+      }
+      #deny {
+        background: #3a4650;
+        color: #eef2e8;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .error {
+        color: #ffb08e;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title">Approval review</h1>
+      <p id="status">Loading the requested action…</p>
+      <pre id="details" hidden></pre>
+      <div class="actions" id="actions" hidden>
+        <button id="deny" type="button">Deny</button>
+        <button id="approve" type="button">Approve</button>
+      </div>
+    </main>
+    <script type="module" src="/approval-review.js"></script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  activityDetail,
+  activityLabel,
+  formatApiError,
+  jobActions,
+  jobStatusLabel,
+  sortNewest,
+} from "../public/command-center.js";
+
+describe("command center presentation helpers", () => {
+  it("keeps the next action when formatting an API error", () => {
+    expect(
+      formatApiError({
+        message: "Hermes WebSocket transport failed.",
+        likelyCause: "The gateway is unavailable.",
+        nextAction: "Check the gateway status and retry.",
+      }),
+    ).toBe(
+      "Hermes WebSocket transport failed. The gateway is unavailable. Next: Check the gateway status and retry.",
+    );
+  });
+
+  it("turns tool events into useful activity rows", () => {
+    expect(
+      activityLabel({
+        type: "tool.started",
+        toolCall: { name: "shell", id: "tool-1", input: { command: "pwd" } },
+      }),
+    ).toBe("Using shell");
+    expect(activityDetail({ type: "tool.output", toolCallId: "tool-1", chunk: "ready\n" })).toBe(
+      "ready",
+    );
+  });
+
+  it("labels job states and orders newest records first", () => {
+    expect(jobStatusLabel("waiting_for_approval")).toBe("Waiting for approval");
+    expect(
+      sortNewest([
+        { id: "old", createdAt: "2026-01-01T00:00:00.000Z" },
+        { id: "new", createdAt: "2026-01-02T00:00:00.000Z" },
+      ]).map((item) => item.id),
+    ).toEqual(["new", "old"]);
+  });
+
+  it("offers recovery actions only when a job has a saved prompt", () => {
+    expect(
+      jobActions({ id: "job-1", status: "failed", prompt: "Try again", sessionId: "session-1" }),
+    ).toEqual(["retry", "duplicate"]);
+    expect(jobActions({ id: "job-2", status: "completed" })).toEqual([]);
+  });
+});

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@flancommand/config": ["packages/config/src/index.ts"],
+      "@flancommand/event-schema": ["packages/event-schema/src/index.ts"],
+      "@flancommand/hermes-adapter": ["packages/hermes-adapter/src/index.ts"]
+    },
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "probe/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

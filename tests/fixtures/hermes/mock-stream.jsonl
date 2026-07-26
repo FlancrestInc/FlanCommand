@@ -1,0 +1,9 @@
+{"jsonrpc":"2.0","method":"event","params":{"type":"gateway.ready","payload":{"skin":"mock"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"session.info","session_id":"session-1","payload":{"status":"idle","model":"mock-model"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","session_id":"session-1","payload":{}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"message.delta","session_id":"session-1","payload":{"seq":1,"text":"Mock reply"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"message.delta","session_id":"session-1","payload":{"seq":1,"text":"Mock reply"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"tool.start","session_id":"session-1","payload":{"tool_id":"tool-1","name":"mock_tool","args_text":"{\"input\":\"fixture\"}"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"tool.complete","session_id":"session-1","payload":{"tool_id":"tool-1","result_text":"{\"ok\":true}"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"approval.request","session_id":"session-1","payload":{"command":"mock command"}}}
+{"jsonrpc":"2.0","method":"event","params":{"type":"message.complete","session_id":"session-1","payload":{"text":"Mock reply","status":"complete"}}}

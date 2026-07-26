@@ -1,0 +1,21 @@
+{
+  "name": "@flancommand/hermes-adapter",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@flancommand/event-schema": "workspace:*",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.13"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  }
+}
