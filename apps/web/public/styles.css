@@ -1993,3 +1993,133 @@ kbd {
     padding: 20px 16px;
   }
 }
+
+/* Side drawers keep the chat as the only primary work surface. */
+.app-shell {
+  height: 100dvh;
+  min-height: 0;
+}
+.workspace {
+  position: relative;
+  display: block;
+  min-height: 0;
+  overflow: hidden;
+}
+.chat-column {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.chat-header {
+  position: relative;
+  z-index: 9;
+}
+.message-scroll {
+  min-height: 0;
+}
+.side-drawer {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  bottom: 0;
+  width: min(340px, 92vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+.sidebar.side-drawer {
+  left: 0;
+  transform: translateX(-102%);
+  box-shadow: 14px 0 32px transparent;
+}
+.detail-panel.side-drawer {
+  right: 0;
+  transform: translateX(102%);
+  box-shadow: -14px 0 32px transparent;
+}
+.sidebar.side-drawer.open,
+.detail-panel.side-drawer.open {
+  transform: translateX(0);
+  box-shadow: 14px 0 32px #0006;
+}
+.detail-panel.side-drawer.open {
+  box-shadow: -14px 0 32px #0006;
+}
+.side-drawer-backdrop {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: #0007;
+}
+.side-drawer-backdrop[hidden] {
+  display: none;
+}
+.sidebar-head-actions,
+.detail-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.drawer-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+}
+.drawer-close:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+#mobile-sidebar,
+#details-trigger {
+  display: grid;
+}
+.sidebar-section > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.sidebar-section > summary::-webkit-details-marker {
+  display: none;
+}
+.audit-panel > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.audit-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.sidebar-section > summary::after {
+  float: right;
+  color: var(--muted);
+  content: "＋";
+  font-size: 12px;
+}
+.sidebar-section[open] > summary::after {
+  content: "−";
+}
+.sidebar-section .session-list {
+  max-height: 35vh;
+  overflow-y: auto;
+}
+@media (max-width: 720px) {
+  .side-drawer {
+    width: min(330px, 88vw);
+  }
+  .chat-header {
+    padding-right: 10px;
+  }
+  #details-trigger,
+  #mobile-sidebar {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

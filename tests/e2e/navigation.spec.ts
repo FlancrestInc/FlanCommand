@@ -114,6 +114,54 @@ test("keeps navigation usable on a phone-sized viewport", async ({ page }) => {
   await expect(page.locator("#audit-panel")).toBeVisible();
 });
 
+test("keeps the composer visible in a short desktop window", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 520 });
+  await page.goto("/");
+  const sendBox = await page.locator("#composer").boundingBox();
+  const sendButton = await page.locator("#send-button").boundingBox();
+
+  expect(sendBox).not.toBeNull();
+  expect(sendButton).not.toBeNull();
+  expect(sendBox!.y + sendBox!.height).toBeLessThanOrEqual(520);
+  expect(sendButton!.y + sendButton!.height).toBeLessThanOrEqual(520);
+});
+
+test("opens side drawers one at a time and collapses long sections", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.locator("#mobile-sidebar").click();
+  await expect(page.locator("#sidebar")).toHaveClass(/open/);
+  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "true");
+
+  await page.locator("#details-trigger").click();
+  await expect(page.locator("#detail-panel")).toHaveClass(/open/);
+  await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
+  await expect(page.locator("#close-details")).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#detail-panel")).not.toHaveClass(/open/);
+  await expect(page.locator("#details-trigger")).toBeFocused();
+
+  await page.locator("#mobile-sidebar").click();
+  await page.locator("#side-drawer-backdrop").click({ position: { x: 400, y: 120 } });
+  await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
+
+  await page.locator("#mobile-sidebar").click();
+  const recent = page.locator("#recent-chats-section");
+  await expect(recent).toHaveAttribute("open", "");
+  await recent.locator("summary").click();
+  await expect(recent).not.toHaveAttribute("open", "");
+  await expect(recent.locator("summary")).toContainText("RECENT");
+
+  await page.locator("#diagnostics").click();
+  const audit = page.locator("#audit-panel");
+  await expect(audit).toHaveAttribute("open", "");
+  await audit.locator("summary").click();
+  await expect(audit).not.toHaveAttribute("open", "");
+  await expect(page.locator("#audit-refresh")).toBeVisible();
+});
+
 test("keeps key mobile controls at a touch-safe size", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

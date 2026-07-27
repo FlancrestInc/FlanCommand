@@ -40,13 +40,23 @@
         </div>
       </header>
       <main class="workspace">
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar side-drawer" id="sidebar" aria-label="Conversations">
           <div class="sidebar-head">
             <div>
               <span class="eyebrow">WORKSPACE</span>
               <h1>Conversations</h1>
             </div>
-            <button class="new-button" id="new-session" aria-label="New conversation">＋</button>
+            <div class="sidebar-head-actions">
+              <button class="new-button" id="new-session" aria-label="New conversation">＋</button>
+              <button
+                class="drawer-close"
+                id="close-conversations"
+                type="button"
+                aria-label="Close conversations"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <label class="search"
             ><span>⌕</span
@@ -67,10 +77,10 @@
             </select>
             <button id="add-folder" type="button" aria-label="Create folder">＋</button>
           </div>
-          <div class="sidebar-section">
-            <span class="section-label">RECENT</span>
+          <details class="sidebar-section" id="recent-chats-section" open>
+            <summary class="section-label">RECENT</summary>
             <div id="session-list" class="session-list"></div>
-          </div>
+          </details>
           <div class="project-picker">
             <div class="library-heading">
               <span class="section-label">ACTIVE PROJECT</span>
@@ -160,8 +170,24 @@
                 <option value="">Model · auto</option></select
               ><button class="chip" id="context-chip">Context · —</button
               ><button class="chip dev-toggle" id="dev-toggle">Developer</button
-              ><button class="icon-button" id="mobile-sidebar" aria-label="Open conversations">
-                ☰
+              ><button
+                class="icon-button"
+                id="mobile-sidebar"
+                type="button"
+                aria-label="Open conversations"
+                aria-controls="sidebar"
+                aria-expanded="false"
+              >
+                ☰</button
+              ><button
+                class="icon-button"
+                id="details-trigger"
+                type="button"
+                aria-label="Open run details"
+                aria-controls="detail-panel"
+                aria-expanded="false"
+              >
+                ◫
               </button>
             </div>
           </div>
@@ -221,7 +247,9 @@
                     aria-label="Attach files"
                   >
                     ＋</button
-                  ><span class="hint">⌘ ↵ to send</span>
+                  ><span class="hint" id="composer-hint"
+                    >Enter to send · Shift+Enter for new line.</span
+                  >
                 </div>
                 <button
                   class="send-button"
@@ -236,10 +264,20 @@
             <div class="composer-note">Hermes can make mistakes. Check important work.</div>
           </div>
         </section>
-        <aside class="detail-panel">
+        <aside class="detail-panel side-drawer" id="detail-panel" aria-label="Run details">
           <div class="detail-head">
-            <span class="eyebrow">RUN STATUS</span
-            ><span class="status-badge" id="run-status" role="status" aria-live="polite">IDLE</span>
+            <span class="eyebrow">RUN STATUS</span>
+            <div class="detail-head-actions">
+              <span class="status-badge" id="run-status" role="status" aria-live="polite">IDLE</span
+              ><button
+                class="drawer-close"
+                id="close-details"
+                type="button"
+                aria-label="Close run details"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="detail-card focus-card">
             <div class="card-label">CURRENT FOCUS</div>
@@ -273,15 +311,15 @@
             </p>
             <pre id="raw-events">No events yet.</pre>
           </details>
-          <section class="detail-card audit-panel" id="audit-panel" hidden>
-            <div class="activity-heading">
+          <details class="detail-card audit-panel" id="audit-panel" hidden>
+            <summary class="activity-heading">
               <span class="card-label">AUDIT LOG</span>
               <button class="activity-summary" id="audit-refresh" type="button">Refresh</button>
-            </div>
+            </summary>
             <div id="audit-list" class="audit-list">
               <span>Loading audit events…</span>
             </div>
-          </section>
+          </details>
           <div class="detail-card artifact-panel">
             <div class="card-label">ARTIFACTS</div>
             <div id="artifact-list" class="artifact-list">
@@ -382,6 +420,13 @@ No terminal session.</pre>
             <div><span>Session ID</span><b id="session-id">—</b></div>
           </div>
         </aside>
+        <button
+          class="side-drawer-backdrop"
+          id="side-drawer-backdrop"
+          type="button"
+          aria-label="Close side panel"
+          hidden
+        ></button>
       </main>
     </div>
     <div class="palette-backdrop" id="palette-backdrop" hidden>

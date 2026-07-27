@@ -57,6 +57,8 @@ const state = {
   terminalReconnectAttempts: 0,
   terminalSize: "",
   drawerKind: null,
+  sideDrawerKind: null,
+  sideDrawerTrigger: null,
   pendingText: "",
   recovering: false,
   memory: null,
@@ -66,6 +68,43 @@ const themeOrder = ["dark", "light", "classic"];
 const $ = (id) => document.getElementById(id);
 document.documentElement.dataset.theme = state.theme;
 $("composer-input").value = state.draft;
+if (window.matchMedia("(min-width: 721px)").matches) {
+  $("sidebar").classList.add("open");
+  $("mobile-sidebar").setAttribute("aria-expanded", "true");
+}
+function sideDrawerElements(kind) {
+  return kind === "conversations"
+    ? { panel: $("sidebar"), trigger: $("mobile-sidebar"), close: $("close-conversations") }
+    : { panel: $("detail-panel"), trigger: $("details-trigger"), close: $("close-details") };
+}
+function closeSideDrawer({ restoreFocus = true } = {}) {
+  if (!state.sideDrawerKind) return;
+  const elements = sideDrawerElements(state.sideDrawerKind);
+  elements.panel.classList.remove("open");
+  elements.trigger.setAttribute("aria-expanded", "false");
+  $("side-drawer-backdrop").hidden = true;
+  const trigger = state.sideDrawerTrigger || elements.trigger;
+  state.sideDrawerKind = null;
+  state.sideDrawerTrigger = null;
+  if (restoreFocus && trigger?.isConnected) trigger.focus();
+}
+function openSideDrawer(kind, trigger = sideDrawerElements(kind).trigger) {
+  if (state.sideDrawerKind === kind) {
+    closeSideDrawer();
+    return;
+  }
+  if (state.sideDrawerKind) closeSideDrawer({ restoreFocus: false });
+  const other = sideDrawerElements(kind === "conversations" ? "details" : "conversations");
+  other.panel.classList.remove("open");
+  other.trigger.setAttribute("aria-expanded", "false");
+  const elements = sideDrawerElements(kind);
+  elements.panel.classList.add("open");
+  elements.trigger.setAttribute("aria-expanded", "true");
+  $("side-drawer-backdrop").hidden = false;
+  state.sideDrawerKind = kind;
+  state.sideDrawerTrigger = trigger;
+  elements.close.focus();
+}
 const escapeHtml = (value) =>
   String(value).replace(
     /[&<>"']/g,
@@ -1430,7 +1469,7 @@ async function openSession(id) {
     renderSession(session);
     renderFiles();
     await loadCommands(id);
-    $("sidebar").classList.remove("open");
+    closeSideDrawer({ restoreFocus: false });
   } catch (error) {
     toast(error.message);
   }
@@ -1663,7 +1702,7 @@ $("composer").addEventListener("submit", (event) => {
   if (text) void send(text);
 });
 $("composer-input").addEventListener("keydown", (event) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+  if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
     $("composer").requestSubmit();
   }
@@ -1952,14 +1991,29 @@ $("drawer-close").addEventListener("click", closeDrawer);
 $("drawer-backdrop").addEventListener("click", (event) => {
   if (event.target === $("drawer-backdrop")) closeDrawer();
 });
-$("mobile-sidebar").addEventListener("click", () => $("sidebar").classList.toggle("open"));
-$("brand").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+$("mobile-sidebar").addEventListener("click", (event) =>
+  openSideDrawer("conversations", event.currentTarget),
+);
+$("details-trigger").addEventListener("click", (event) =>
+  openSideDrawer("details", event.currentTarget),
+);
+$("close-conversations").addEventListener("click", () => closeSideDrawer());
+$("close-details").addEventListener("click", () => closeSideDrawer());
+$("side-drawer-backdrop").addEventListener("click", () => closeSideDrawer());
+$("brand").addEventListener("click", () => openSideDrawer("conversations"));
 $("diagnostics").addEventListener("click", async () => {
+  openSideDrawer("details");
   const panel = $("audit-panel");
   panel.hidden = !panel.hidden;
-  if (!panel.hidden) await loadAudit();
+  if (!panel.hidden) {
+    panel.open = true;
+    await loadAudit();
+  }
 });
-$("audit-refresh").addEventListener("click", () => void loadAudit());
+$("audit-refresh").addEventListener("click", (event) => {
+  event.stopPropagation();
+  void loadAudit();
+});
 document.querySelectorAll(".starter").forEach((button) =>
   button.addEventListener("click", () => {
     $("composer-input").value = button.dataset.prompt;
@@ -1974,6 +2028,10 @@ document.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
     event.preventDefault();
     togglePalette(true);
+  }
+  if (event.key === "Escape" && state.sideDrawerKind) {
+    closeSideDrawer();
+    return;
   }
   if (event.key === "Escape") togglePalette(false);
   if (event.key === "Escape" && state.drawerKind) closeDrawer();
