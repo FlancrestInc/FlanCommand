@@ -4,6 +4,7 @@ export interface HermesRuntimeConfig {
   origin: string;
   maxFrameBytes: number;
   auth?: { token: string };
+  dashboardAuth?: { username: string; password: string };
 }
 
 const defaultEndpoint = "ws://127.0.0.1:9119/api/ws";
@@ -24,6 +25,8 @@ export function readHermesRuntimeConfig(
   const endpoint = environment.HERMES_ENDPOINT || environment.HERMES_WS_ENDPOINT || defaultEndpoint;
   const origin = environment.HERMES_ORIGIN || environment.HERMES_WEB_ORIGIN || defaultOrigin;
   const token = environment.HERMES_AUTH_TOKEN?.trim();
+  const username = environment.HERMES_DASHBOARD_USERNAME?.trim();
+  const password = environment.HERMES_DASHBOARD_PASSWORD;
   const maxFrameBytes = readMaxFrameBytes(environment.HERMES_MAX_FRAME_BYTES);
 
   return {
@@ -32,5 +35,6 @@ export function readHermesRuntimeConfig(
     origin,
     maxFrameBytes,
     ...(token ? { auth: { token } } : {}),
+    ...(username && password ? { dashboardAuth: { username, password } } : {}),
   };
 }

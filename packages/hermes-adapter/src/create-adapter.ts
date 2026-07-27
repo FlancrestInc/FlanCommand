@@ -3,7 +3,12 @@ import type { HermesAdapter } from "./adapter.js";
 import { HermesAdapterImplementation } from "./hermes-adapter.js";
 import { createDefaultCapabilities } from "./capabilities.js";
 import { MockHermesTransport } from "./mock-transport.js";
-import { WebSocketHermesTransport, type HermesAuth, type SocketFactory } from "./ws-transport.js";
+import {
+  WebSocketHermesTransport,
+  type HermesAuth,
+  type HermesDashboardAuth,
+  type SocketFactory,
+} from "./ws-transport.js";
 
 export type AdapterTransportKind = "mock" | "websocket";
 
@@ -14,6 +19,7 @@ export interface CreateAdapterOptions {
   endpoint?: string;
   origin?: string;
   auth?: HermesAuth;
+  dashboardAuth?: HermesDashboardAuth;
   connectTimeoutMs?: number;
   requestTimeoutMs?: number;
   idleTimeoutMs?: number;
@@ -38,6 +44,7 @@ export function createHermesAdapter(options: CreateAdapterOptions): HermesAdapte
           endpoint: options.endpoint ?? "ws://127.0.0.1:9119/api/ws",
           origin: options.origin ?? "http://localhost:5173",
           ...(options.auth ? { auth: options.auth } : {}),
+          ...(options.dashboardAuth ? { dashboardAuth: options.dashboardAuth } : {}),
           ...(options.connectTimeoutMs !== undefined
             ? { connectTimeoutMs: options.connectTimeoutMs }
             : {}),

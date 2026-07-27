@@ -83,6 +83,14 @@ const rawEnvSchema = z
       (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
       z.string().trim().min(1).optional(),
     ),
+    HERMES_DASHBOARD_USERNAME: z.preprocess(
+      (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+      z.string().trim().min(1).optional(),
+    ),
+    HERMES_DASHBOARD_PASSWORD: z.preprocess(
+      (value) => (typeof value === "string" && value === "" ? undefined : value),
+      z.string().min(1).optional(),
+    ),
     PROBE_OUTPUT_DIR: z
       .string()
       .trim()
@@ -135,6 +143,8 @@ export interface AppEnv {
   hermesEndpoint: string;
   hermesOrigin: string;
   hermesAuthRef: string | undefined;
+  hermesDashboardUsername: string | undefined;
+  hermesDashboardPassword: string | undefined;
   probeOutputDir: string;
   limits: {
     connectTimeoutMs: number;
@@ -164,6 +174,8 @@ export function parseEnv(input: Record<string, string | undefined>): AppEnv {
     hermesEndpoint: env.HERMES_ENDPOINT,
     hermesOrigin: env.HERMES_ORIGIN,
     hermesAuthRef: env.HERMES_AUTH_REF,
+    hermesDashboardUsername: env.HERMES_DASHBOARD_USERNAME,
+    hermesDashboardPassword: env.HERMES_DASHBOARD_PASSWORD,
     probeOutputDir: env.PROBE_OUTPUT_DIR,
     limits: {
       connectTimeoutMs: env.PROBE_CONNECT_TIMEOUT_MS,

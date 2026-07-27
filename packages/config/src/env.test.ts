@@ -9,6 +9,8 @@ describe("parseEnv", () => {
       hermesEndpoint: "ws://127.0.0.1:9119/api/ws",
       hermesOrigin: "http://127.0.0.1:3000",
       hermesAuthRef: undefined,
+      hermesDashboardUsername: undefined,
+      hermesDashboardPassword: undefined,
       probeOutputDir: "probe-output",
       limits: {
         connectTimeoutMs: 5000,

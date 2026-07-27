@@ -14,8 +14,8 @@ never connects to Gospel directly.
 
 Run `hermes serve` on Gospel with a private bind address and authentication.
 Use the exact command and flags supported by the installed Hermes version.
-The gateway must accept the same secret that Barnabas receives as
-`HERMES_AUTH_TOKEN`.
+For Hermes v0.19, create a basic dashboard login. FlanCommand logs in from
+the API container and uses a short-lived WebSocket ticket.
 
 Check from Barnabas before enabling live mode:
 
@@ -35,8 +35,9 @@ Set the Hermes endpoint to Gospel's private address. Do not use
 NODE_ENV=production
 HERMES_TRANSPORT=websocket
 HERMES_ENDPOINT=ws://gospel.lan:9119/api/ws
-HERMES_ORIGIN=https://hermes.example.com
-HERMES_AUTH_TOKEN=<inject at runtime>
+HERMES_ORIGIN=http://192.168.22.22:9119
+HERMES_DASHBOARD_USERNAME=flan
+HERMES_DASHBOARD_PASSWORD=<inject at runtime>
 FLANC_PUBLIC_ORIGIN=https://hermes.example.com
 FLANC_ALLOWED_ORIGINS=https://hermes.example.com
 FLANC_REQUIRE_AUTH=true
@@ -46,6 +47,18 @@ FLANC_MAX_CONCURRENT_JOBS=2
 
 Inject secret values from the host or a secret provider. Do not put them in
 the repository, browser code, logs, or ordinary shell history.
+
+`HERMES_ORIGIN` is the private Hermes bind origin. It must match the Gospel
+host and port. `FLANC_PUBLIC_ORIGIN` is the public browser URL. They are not
+the same value in this deployment.
+
+The old `HERMES_AUTH_TOKEN` path remains available when both dashboard fields
+are blank. It is not used when dashboard username and password are set.
+
+If login fails, check the Hermes log for the `basic` provider, then test
+`curl http://<gospel-ip>:9119/auth/password-login` from Barnabas. If login
+works but the socket fails, check that the endpoint and `HERMES_ORIGIN` use
+the private Gospel address, not the public Cloudflare URL.
 
 Start and check the container:
 

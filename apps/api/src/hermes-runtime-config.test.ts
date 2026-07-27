@@ -10,6 +10,8 @@ describe("Hermes runtime configuration", () => {
         HERMES_ENDPOINT: "wss://gospel.lan/api/ws",
         HERMES_ORIGIN: "https://command.example",
         HERMES_AUTH_TOKEN: "server-only-token",
+        HERMES_DASHBOARD_USERNAME: "flan",
+        HERMES_DASHBOARD_PASSWORD: "server-only-password",
         HERMES_MAX_FRAME_BYTES: "4194304",
       }),
     ).toEqual({
@@ -17,6 +19,7 @@ describe("Hermes runtime configuration", () => {
       endpoint: "wss://gospel.lan/api/ws",
       origin: "https://command.example",
       auth: { token: "server-only-token" },
+      dashboardAuth: { username: "flan", password: "server-only-password" },
       maxFrameBytes: 4194304,
     });
   });
@@ -28,6 +31,15 @@ describe("Hermes runtime configuration", () => {
       origin: "http://127.0.0.1:3000",
       maxFrameBytes: 8 * 1024 * 1024,
     });
+  });
+
+  it("ignores incomplete dashboard credentials", () => {
+    expect(
+      readHermesRuntimeConfig({
+        HERMES_DASHBOARD_USERNAME: "flan",
+        HERMES_DASHBOARD_PASSWORD: "",
+      }),
+    ).not.toHaveProperty("dashboardAuth");
   });
 
   it("accepts the old API names during migration", () => {

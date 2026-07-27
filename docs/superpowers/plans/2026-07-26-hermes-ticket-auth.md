@@ -16,24 +16,24 @@
 - Modify: `packages/hermes-adapter/src/ws-transport.test.ts`
 - Test: existing WebSocket transport test suite
 
-- [ ] Add tests for password login request shape and cookie capture.
-- [ ] Add tests for ticket request and `?ticket=` socket URL.
-- [ ] Add a test proving each reconnect gets a new ticket.
-- [ ] Add a test proving password, cookie, and ticket values do not appear in safe state or errors.
-- [ ] Run `npx vitest run packages/hermes-adapter/src/ws-transport.test.ts` and confirm the new tests fail for missing behavior.
+- [x] Add tests for password login request shape and cookie capture.
+- [x] Add tests for ticket request and `?ticket=` socket URL.
+- [x] Add a test proving each reconnect gets a new ticket.
+- [x] Add a test proving password, cookie, and ticket values do not appear in safe state or errors.
+- [x] Run the focused transport test and confirm the new test failed before implementation.
 
 ### Task 2: Implement the gated Hermes session
 
 **Files:**
 - Modify: `packages/hermes-adapter/src/ws-transport.ts`
 
-- [ ] Add an injectable HTTP request function for deterministic tests.
-- [ ] Add in-memory cookie storage from `Set-Cookie` response headers.
-- [ ] Add login to `/auth/password-login` with provider `basic`.
-- [ ] Add ticket request to `/api/auth/ws-ticket` using the cookie.
-- [ ] Select ticket mode when username and password are both configured.
-- [ ] Mint a fresh ticket before each socket connection and preserve token mode otherwise.
-- [ ] Run the focused tests and make them pass.
+- [x] Add an injectable HTTP request function for deterministic tests.
+- [x] Add in-memory cookie storage from `Set-Cookie` response headers.
+- [x] Add login to `/auth/password-login` with provider `basic`.
+- [x] Add ticket request to `/api/auth/ws-ticket` using the cookie.
+- [x] Select ticket mode when username and password are both configured.
+- [x] Mint a fresh ticket before each socket connection and preserve token mode otherwise.
+- [x] Run the focused tests and make them pass.
 
 ### Task 3: Wire runtime configuration
 
@@ -44,10 +44,10 @@
 - Modify: `packages/config/src/env.ts`
 - Modify: `packages/config/src/env.test.ts`
 
-- [ ] Add optional dashboard username/password values without exposing them in returned health or metrics data.
-- [ ] Pass the values into the adapter.
-- [ ] Add tests for ticket-mode selection and blank credential handling.
-- [ ] Run focused API and config tests.
+- [x] Add optional dashboard username/password values without exposing them in returned health or metrics data.
+- [x] Pass the values into the adapter.
+- [x] Add tests for ticket-mode selection and blank credential handling.
+- [x] Run focused API and config tests.
 
 ### Task 4: Update deployment documentation
 
@@ -56,15 +56,15 @@
 - Modify: `README.md`
 - Modify: `docs/operations/deployment.md`
 
-- [ ] Document the new server-only Hermes dashboard credentials.
-- [ ] Clarify that `HERMES_ORIGIN` is the private Hermes handshake origin and `FLANC_PUBLIC_ORIGIN` is the public app origin.
-- [ ] Document the required Hermes basic-auth username/password setup and token fallback.
-- [ ] Add troubleshooting for ticket login and WebSocket handshake failures.
+- [x] Document the new server-only Hermes dashboard credentials.
+- [x] Clarify that `HERMES_ORIGIN` is the private Hermes handshake origin and `FLANC_PUBLIC_ORIGIN` is the public app origin.
+- [x] Document the required Hermes basic-auth username/password setup and token fallback.
+- [x] Add troubleshooting for ticket login and WebSocket handshake failures.
 
 ### Task 5: Verify and publish the implementation
 
-- [ ] Run focused adapter, API, and config tests.
-- [ ] Run `npm run check`.
-- [ ] Run `git diff --check` and `docker compose config`.
-- [ ] Review the diff for secret leakage.
-- [ ] Commit the feature branch.
+- [x] Run focused adapter, API, and config tests.
+- [x] Run `npm run check`.
+- [x] Run `git diff --check` and `docker compose config`.
+- [x] Review the diff for secret leakage.
+- [x] Commit the feature branch.

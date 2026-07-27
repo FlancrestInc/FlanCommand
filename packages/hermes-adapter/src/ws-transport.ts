@@ -35,10 +35,19 @@ export interface HermesAuth {
   internal?: string;
 }
 
+export interface HermesDashboardAuth {
+  username: string;
+  password: string;
+}
+
+export type HttpRequest = (input: string, init?: RequestInit) => Promise<Response>;
+
 export interface WebSocketTransportOptions {
   endpoint: string;
   origin?: string;
   auth?: HermesAuth;
+  dashboardAuth?: HermesDashboardAuth;
+  httpRequest?: HttpRequest;
   connectTimeoutMs?: number;
   requestTimeoutMs?: number;
   idleTimeoutMs?: number;
@@ -258,6 +267,7 @@ export class WebSocketHermesTransport {
   private pending = new Map<string, PendingRequest>();
   private readonly sessionAliases = new Map<string, string>();
   private sequence = 0;
+  private readonly cookies = new Map<string, string>();
   private readonly options: Required<
     Pick<
       WebSocketTransportOptions,
@@ -295,8 +305,11 @@ export class WebSocketHermesTransport {
     this.reconnecting = this.hasConnectedBefore;
     if (this.socket) this.detachSocket(this.socket);
     const generation = ++this.socketGeneration;
+    const endpoint = this.options.dashboardAuth
+      ? await this.dashboardAuthenticatedEndpoint()
+      : this.authenticatedEndpoint();
     const socket = (this.options.socketFactory ?? defaultSocketFactory)(
-      this.authenticatedEndpoint(),
+      endpoint,
       {
         ...(this.options.origin ? { origin: this.options.origin } : {}),
       },
@@ -666,6 +679,51 @@ export class WebSocketHermesTransport {
     return endpoint.toString();
   }
 
+  private async dashboardAuthenticatedEndpoint(): Promise<string> {
+    const endpoint = new URL(this.options.endpoint);
+    const dashboardAuth = this.options.dashboardAuth;
+    if (!dashboardAuth) return endpoint.toString();
+    const request = this.options.httpRequest ?? fetch;
+    const base = `${endpoint.protocol === "wss:" ? "https:" : "http:"}//${endpoint.host}`;
+    const login = await request(`${base}/auth/password-login`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          provider: "basic",
+          username: dashboardAuth.username,
+          password: dashboardAuth.password,
+          next: "/",
+        }),
+      });
+    if (!login.ok) throw this.error("TRANSPORT_AUTH_FAILED", "login");
+    this.captureCookies(login.headers);
+    const ticket = await request(`${base}/api/auth/ws-ticket`, {
+      method: "POST",
+      headers: this.cookies.size ? { Cookie: this.cookieHeader() } : undefined,
+    });
+    if (!ticket.ok) throw this.error("TRANSPORT_AUTH_FAILED", "ticket");
+    const payload = (await ticket.json()) as unknown;
+    if (!isRecord(payload) || typeof payload.ticket !== "string" || !payload.ticket) {
+      throw this.error("TRANSPORT_AUTH_FAILED", "ticket");
+    }
+    endpoint.searchParams.set("ticket", payload.ticket);
+    return endpoint.toString();
+  }
+
+  private captureCookies(headers: Headers): void {
+    const extended = headers as Headers & { getSetCookie?: () => string[] };
+    const values = extended.getSetCookie?.() ?? headers.get("set-cookie")?.split(/,(?=\s*[^;,=]+=)/) ?? [];
+    for (const value of values) {
+      const pair = value.split(";", 1)[0] ?? "";
+      const separator = pair.indexOf("=");
+      if (separator > 0) this.cookies.set(pair.slice(0, separator), pair.slice(separator + 1));
+    }
+  }
+
+  private cookieHeader(): string {
+    return [...this.cookies.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
+  }
+
   private isCurrentSocket(socket: SocketLike, generation: number): boolean {
     return this.socket === socket && this.socketGeneration === generation;
   }
@@ -697,6 +755,17 @@ export class WebSocketHermesTransport {
         !entries[0]![1]
       )
         throw this.error("TRANSPORT_CONFIG_INVALID", "constructor");
+    }
+    if (options.dashboardAuth !== undefined) {
+      if (
+        !isRecord(options.dashboardAuth) ||
+        typeof options.dashboardAuth.username !== "string" ||
+        !options.dashboardAuth.username ||
+        typeof options.dashboardAuth.password !== "string" ||
+        !options.dashboardAuth.password
+      )
+        throw this.error("TRANSPORT_CONFIG_INVALID", "constructor");
+      if (options.auth !== undefined) throw this.error("TRANSPORT_CONFIG_INVALID", "constructor");
     }
   }
 

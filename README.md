@@ -74,7 +74,7 @@ Generate a strong value with a password or secret manager, for example:
 openssl rand -hex 32
 ```
 
-Set that exact value in both places:
+Set that exact value in both places for older or loopback Hermes servers:
 
 1. On Gospel, give it to the Hermes gateway as
    `HERMES_DASHBOARD_SESSION_TOKEN`.
@@ -99,8 +99,12 @@ manager. FlanCommand does not resolve it. The deployment system must resolve
 that reference and inject the resulting value as `HERMES_AUTH_TOKEN`.
 
 `HERMES_ENDPOINT` is the gateway WebSocket address and `HERMES_ORIGIN` is the
-allowed web origin. Neither is a secret. Never commit `.env`, print the shared
-secret, or send it to browser code.
+private Hermes handshake origin. For Hermes v0.19 on a private network, set
+`HERMES_DASHBOARD_USERNAME` and `HERMES_DASHBOARD_PASSWORD` instead. The API
+logs in server-side and requests a fresh short-lived ticket for each socket.
+Set `HERMES_ORIGIN` to the private Hermes host and port. Set
+`FLANC_PUBLIC_ORIGIN` to the public app URL. Never commit `.env`, print a
+secret, or send a Hermes credential to browser code.
 
 ## Deploy to Barnabas and Gospel
 
@@ -237,8 +241,9 @@ Edit `.env` and set these values. Keep the angle brackets out of the file:
 NODE_ENV=production
 HERMES_TRANSPORT=websocket
 HERMES_ENDPOINT=ws://gospel.lan:9119/api/ws
-HERMES_ORIGIN=https://hermes.example.com
-HERMES_AUTH_TOKEN=the-exact-secret-created-in-step-1
+HERMES_ORIGIN=http://192.168.22.22:9119
+HERMES_DASHBOARD_USERNAME=flan
+HERMES_DASHBOARD_PASSWORD=the-Hermes-password-created-in-step-1
 FLANC_PUBLIC_ORIGIN=https://hermes.example.com
 FLANC_ALLOWED_ORIGINS=https://hermes.example.com
 FLANC_REQUIRE_AUTH=true
@@ -250,10 +255,10 @@ What these settings mean:
 
 - `HERMES_ENDPOINT` tells the Barnabas container where Gospel listens. Do not
   use `127.0.0.1` here; inside Docker, that means the Barnabas container.
-- `HERMES_ORIGIN` tells Hermes which browser origin the API presents during
-  the WebSocket handshake. It must match the public HTTPS address.
-- `HERMES_AUTH_TOKEN` must exactly match Gospel's
-  `HERMES_DASHBOARD_SESSION_TOKEN`.
+- `HERMES_ORIGIN` tells Hermes which private bind origin the API presents
+  during the WebSocket handshake. It must match Gospel's host and port.
+- `HERMES_DASHBOARD_USERNAME` and `HERMES_DASHBOARD_PASSWORD` are used only
+  by the server to obtain short-lived WebSocket tickets.
 - `FLANC_PUBLIC_ORIGIN` is used when FlanCommand creates links back to itself.
 - `FLANC_ALLOWED_ORIGINS` must contain the exact public origin, including
   `https://` and no trailing path.

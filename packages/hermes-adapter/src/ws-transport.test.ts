@@ -91,6 +91,55 @@ function openReady(socket: FakeSocket): void {
 }
 
 describe("WebSocket Hermes transport", () => {
+  it("logs in and uses a fresh Hermes dashboard ticket for each connection", async () => {
+    FakeSocket.instances.length = 0;
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    let ticketNumber = 0;
+    const httpRequest = async (url: string, init?: RequestInit): Promise<Response> => {
+      requests.push({ url, init });
+      if (url.endsWith("/auth/password-login")) {
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "set-cookie": "session=one; Path=/" },
+        });
+      }
+      ticketNumber += 1;
+      return new Response(JSON.stringify({ ticket: `ticket-${ticketNumber}` }), { status: 200 });
+    };
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://gospel.test:9119/api/ws",
+      origin: "http://gospel.test:9119",
+      dashboardAuth: { username: "flan", password: "password" },
+      httpRequest,
+      socketFactory: factory,
+    });
+
+    const first = transport.connect();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    const firstSocket = FakeSocket.instances[0]!;
+    expect(requests[0]).toMatchObject({
+      url: "http://gospel.test:9119/auth/password-login",
+      init: expect.objectContaining({ method: "POST" }),
+    });
+    openReady(firstSocket);
+    await first;
+    expect(firstSocket.endpoint).toBe("ws://gospel.test:9119/api/ws?ticket=ticket-1");
+
+    await transport.disconnect();
+    const second = transport.connect();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    const secondSocket = FakeSocket.instances[1]!;
+    openReady(secondSocket);
+    await second;
+    expect(secondSocket.endpoint).toBe("ws://gospel.test:9119/api/ws?ticket=ticket-2");
+    expect(requests.filter((request) => request.url.endsWith("/api/auth/ws-ticket"))).toHaveLength(2);
+    expect(requests[1]?.init).toEqual(
+      expect.objectContaining({ headers: { Cookie: "session=one" } }),
+    );
+    expect(JSON.stringify(await transport.safeState())).not.toContain("password");
+    expect(JSON.stringify(await transport.safeState())).not.toContain("ticket-1");
+  });
+
   it("configures the default server-side socket with the requested Origin header", async () => {
     DefaultWebSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({
