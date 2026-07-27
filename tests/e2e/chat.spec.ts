@@ -46,3 +46,23 @@ test("renders tables and task lists in streamed Hermes Markdown", async ({ page 
   await expect(page.locator("#messages .assistant .task-list input[type=checkbox]")).toHaveCount(2);
   await expect(page.locator("#messages .assistant").last()).toContainText("Hermes");
 });
+
+test("sends with Enter and keeps Shift+Enter as a newline", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const input = page.locator("#composer-input");
+  const before = await page.locator("#messages .user").count();
+
+  await expect(page.locator("#composer-hint")).toContainText("Enter to send");
+  await expect(page.locator("#composer-hint")).toContainText("Shift+Enter");
+
+  await input.fill("Message sent with Enter");
+  await input.press("Enter");
+  await expect(page.locator("#messages .user")).toHaveCount(before + 1);
+
+  await input.fill("First line");
+  await input.press("Shift+Enter");
+  await input.type("Second line");
+  await expect(input).toHaveValue("First line\nSecond line");
+  await expect(page.locator("#messages .user")).toHaveCount(before + 1);
+});
