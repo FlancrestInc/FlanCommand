@@ -718,6 +718,34 @@ describe("WebSocket Hermes transport", () => {
     });
   });
 
+  it("rejects a failed stream without creating an unhandled rejection", async () => {
+    FakeSocket.instances.length = 0;
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      socketFactory: factory,
+    });
+    const connecting = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connecting;
+
+    const iterator = transport.stream("sendMessage", { sessionId: "s-1" })[Symbol.asyncIterator]();
+    const waiting = iterator.next();
+    socket.receive(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: request(socket).id,
+        error: { code: "PROMPT_FAILED", message: "The gateway rejected the prompt." },
+      }),
+    );
+
+    await expect(waiting).rejects.toMatchObject({
+      code: "TRANSPORT_REQUEST_FAILED",
+      operation: "sendMessage",
+    });
+  });
+
   it("ignores duplicate responses after the first response", async () => {
     FakeSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({

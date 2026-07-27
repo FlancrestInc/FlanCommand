@@ -194,7 +194,12 @@ class StreamQueue {
   end(error?: HermesAdapterError): void {
     this.ended = true;
     this.failure = error;
-    while (this.waiters.length) this.finish(this.waiters.shift());
+    while (this.waiters.length) {
+      const waiter = this.waiters.shift();
+      if (!waiter) continue;
+      if (error) waiter.reject(error);
+      else waiter.resolve({ value: undefined, done: true });
+    }
   }
 
   next(): Promise<IteratorResult<unknown>> {
@@ -211,10 +216,7 @@ class StreamQueue {
         }
       | undefined,
   ) {
-    if (this.failure) {
-      if (waiter) waiter.reject(this.failure);
-      return Promise.reject(this.failure);
-    }
+    if (this.failure) return Promise.reject(this.failure);
     const result = { value: undefined, done: true } as const;
     if (waiter) waiter.resolve(result);
     return Promise.resolve(result);
