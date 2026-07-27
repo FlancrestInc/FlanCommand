@@ -652,6 +652,15 @@ h1 {
   padding-top: 18px;
   border-top: 1px solid var(--line);
 }
+.section-body {
+  display: grid;
+  gap: 12px;
+}
+.project-picker > .section-body,
+.credential-library > .section-body,
+.file-library > .section-body {
+  margin-top: 9px;
+}
 .project-picker select {
   width: 100%;
   padding: 9px 10px;
@@ -1404,6 +1413,69 @@ h1 {
   padding-top: 19px;
   border-top: 1px solid var(--line);
 }
+.detail-card > summary,
+.sidebar-section > summary,
+.project-picker > summary,
+.credential-library > summary,
+.file-library > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.sidebar-footer > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.sidebar-footer > summary::-webkit-details-marker {
+  display: none;
+}
+.sidebar-footer > summary::after {
+  float: right;
+  color: var(--muted);
+  content: "＋";
+  font-size: 12px;
+}
+.sidebar-footer[open] > summary::after {
+  content: "−";
+}
+.detail-card > summary::-webkit-details-marker,
+.sidebar-section > summary::-webkit-details-marker,
+.project-picker > summary::-webkit-details-marker,
+.credential-library > summary::-webkit-details-marker,
+.file-library > summary::-webkit-details-marker {
+  display: none;
+}
+.detail-card > summary::after,
+.sidebar-section > summary::after,
+.project-picker > summary::after,
+.credential-library > summary::after,
+.file-library > summary::after {
+  float: right;
+  color: var(--muted);
+  content: "＋";
+  font-size: 12px;
+}
+.detail-card[open] > summary::after,
+.sidebar-section[open] > summary::after,
+.project-picker[open] > summary::after,
+.credential-library[open] > summary::after,
+.file-library[open] > summary::after {
+  content: "−";
+}
+.detail-card > summary.activity-heading::after {
+  margin-left: 12px;
+}
+.drawer-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--line) 90%, var(--accent));
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+}
 .card-label {
   display: block;
   margin-bottom: 13px;
@@ -1992,6 +2064,19 @@ kbd {
     width: 100vw;
     padding: 20px 16px;
   }
+}
+
+.drawer-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--line) 90%, var(--accent));
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
 }
 
 /* Side drawers keep the chat as the only primary work surface. */

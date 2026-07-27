@@ -65,7 +65,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v1");
+    const cache = await browser.caches.open("flancommand-shell-v2");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -160,6 +160,33 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
   await audit.locator("summary").click();
   await expect(audit).not.toHaveAttribute("open", "");
   await expect(page.locator("#audit-refresh")).toBeVisible();
+});
+
+test("exposes every long side-panel section as a disclosure", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  for (const selector of [
+    "#recent-chats-section",
+    "#project-section",
+    "#credential-section",
+    "#file-section",
+    "#tools-section",
+  ]) {
+    await expect(page.locator(selector).locator("summary")).toBeVisible();
+  }
+
+  await page.locator("#details-trigger").click();
+  for (const selector of [
+    "#focus-section",
+    "#activity-section",
+    "#developer-panel",
+    "#artifact-section",
+    "#workspace-section",
+    "#session-section",
+  ]) {
+    await expect(page.locator(selector).locator("summary")).toBeVisible();
+  }
 });
 
 test("keeps key mobile controls at a touch-safe size", async ({ page }) => {

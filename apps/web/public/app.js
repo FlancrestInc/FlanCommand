@@ -1326,6 +1326,7 @@ async function openFilePreview(id) {
   if (!file) return;
   const kind = previewKind(file);
   $("file-preview-card").hidden = false;
+  $("file-preview-card").open = true;
   $("file-preview-title").textContent = file.safeName || file.name;
   const body = $("file-preview-body");
   body.innerHTML = "<span>Loading preview…</span>";
@@ -1868,6 +1869,9 @@ $("terminal-hide").addEventListener("click", hideTerminal);
 $("show-terminal").addEventListener("click", showTerminal);
 $("terminal-copy").addEventListener("click", () => void copyTerminalOutput());
 $("terminal-paste").addEventListener("click", () => void pasteTerminalInput());
+document
+  .querySelectorAll("summary button")
+  .forEach((button) => button.addEventListener("click", (event) => event.stopPropagation()));
 if ("ResizeObserver" in window) {
   new ResizeObserver(() => void resizeTerminal()).observe($("terminal-output"));
 }
