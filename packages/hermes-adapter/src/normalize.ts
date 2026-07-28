@@ -788,11 +788,13 @@ function safeError(payload: Record<string, unknown>): Record<string, unknown> {
             ? payload.error_code
             : "HERMES_EVENT_FAILED",
     message:
-      nested || payload.error_code !== undefined
-        ? "Hermes reported a failure."
-        : typeof payload.message === "string"
-          ? redactSafeText(payload.message)
-          : "Hermes reported a failure.",
+      typeof nested?.message === "string"
+        ? redactSafeText(nested.message)
+        : nested || payload.error_code !== undefined
+          ? "Hermes reported a failure."
+          : typeof payload.message === "string"
+            ? redactSafeText(payload.message)
+            : "Hermes reported a failure.",
     ...(typeof payload.component === "string"
       ? { component: redactSafeText(payload.component) }
       : {}),

@@ -526,7 +526,7 @@ describe("native Hermes frames", () => {
       type: "run.failed",
       runId: "run-error",
       sessionId: "session-1",
-      error: { code: "UPSTREAM_FAILED", message: "Hermes reported a failure." },
+      error: { code: "UPSTREAM_FAILED", message: "secret=[REDACTED]" },
     });
     expect(events).not.toContainEqual(expect.objectContaining({ type: "run.completed" }));
     expect(JSON.stringify(events)).not.toContain("do-not-leak");
