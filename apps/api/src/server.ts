@@ -327,11 +327,20 @@ function isDeclaredRemotePath(candidate: string, roots: string[]): boolean {
   });
 }
 
+function activeAssistantForRun(state: SessionState, runId: string): ChatMessage | undefined {
+  return [...state.messages]
+    .reverse()
+    .find(
+      (item) =>
+        item.role === "assistant" &&
+        item.runId === runId &&
+        !["complete", "failed", "stopped"].includes(item.status ?? "working"),
+    );
+}
+
 function applyEvent(state: SessionState, event: AgentEvent): void {
   if (event.type === "message.delta") {
-    const current = state.messages.find(
-      (item) => item.runId === event.runId && item.role === "assistant",
-    );
+    const current = activeAssistantForRun(state, event.runId);
     if (current) current.text += event.text;
     else
       state.messages.push({
@@ -343,21 +352,15 @@ function applyEvent(state: SessionState, event: AgentEvent): void {
         status: "working",
       });
   } else if (event.type === "message.completed") {
-    const current = state.messages.find(
-      (item) => item.runId === event.runId && item.role === "assistant",
-    );
+    const current = activeAssistantForRun(state, event.runId);
     if (current) current.turnId = event.messageId;
   } else if (event.type === "run.completed") {
-    const current = state.messages.find(
-      (item) => item.runId === event.runId && item.role === "assistant",
-    );
+    const current = activeAssistantForRun(state, event.runId);
     if (current) current.status = "complete";
     state.activeRunId = undefined;
     state.session.status = "idle";
   } else if (event.type === "run.failed") {
-    const current = state.messages.find(
-      (item) => item.runId === event.runId && item.role === "assistant",
-    );
+    const current = activeAssistantForRun(state, event.runId);
     if (current) {
       current.status = "failed";
       current.text += `\n\n_${event.error.message}_`;
@@ -365,13 +368,28 @@ function applyEvent(state: SessionState, event: AgentEvent): void {
     state.activeRunId = undefined;
     state.session.status = "failed";
   } else if (event.type === "run.stopped") {
-    const current = state.messages.find(
-      (item) => item.runId === event.runId && item.role === "assistant",
-    );
+    const current = activeAssistantForRun(state, event.runId);
     if (current) current.status = "stopped";
     state.activeRunId = undefined;
     state.session.status = "idle";
   } else if (event.type === "run.started") {
+    if (
+      state.messages.some(
+        (item) =>
+          item.role === "assistant" &&
+          item.runId === event.runId &&
+          ["complete", "failed", "stopped"].includes(item.status ?? "working"),
+      )
+    ) {
+      state.messages.push({
+        id: `message-${event.runId}-${Date.now()}`,
+        role: "assistant",
+        text: "",
+        at: new Date().toISOString(),
+        runId: event.runId,
+        status: "working",
+      });
+    }
     state.activeRunId = event.runId;
     state.session.status = "running";
   }
