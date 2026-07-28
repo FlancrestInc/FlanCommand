@@ -153,10 +153,32 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
 
   await page.locator("#conversations-tab").click();
   await expect(page.locator("#sidebar")).toHaveClass(/open/);
+  const leftDrawer = await page.locator("#sidebar").boundingBox();
+  const leftTab = await page.locator("#conversations-tab").boundingBox();
+  expect(leftDrawer).not.toBeNull();
+  expect(leftTab).not.toBeNull();
+  await expect
+    .poll(async () => {
+      const drawer = await page.locator("#sidebar").boundingBox();
+      const tab = await page.locator("#conversations-tab").boundingBox();
+      return drawer && tab ? Math.abs(tab.x - (drawer.x + drawer.width)) : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(2);
   await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "true");
 
   await page.locator("#details-tab").click();
   await expect(page.locator("#detail-panel")).toHaveClass(/open/);
+  const rightDrawer = await page.locator("#detail-panel").boundingBox();
+  const rightTab = await page.locator("#details-tab").boundingBox();
+  expect(rightDrawer).not.toBeNull();
+  expect(rightTab).not.toBeNull();
+  await expect
+    .poll(async () => {
+      const drawer = await page.locator("#detail-panel").boundingBox();
+      const tab = await page.locator("#details-tab").boundingBox();
+      return drawer && tab ? Math.abs(tab.x + tab.width - drawer.x) : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(2);
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
   await expect(page.locator("#close-details")).toBeFocused();
 

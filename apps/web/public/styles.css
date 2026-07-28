@@ -2183,6 +2183,7 @@ kbd {
   display: block;
   min-height: 0;
   overflow: hidden;
+  --drawer-width: min(340px, 92vw);
 }
 .chat-column {
   width: 100%;
@@ -2201,7 +2202,7 @@ kbd {
   z-index: 10;
   top: 0;
   bottom: 0;
-  width: min(340px, 92vw);
+  width: var(--drawer-width);
   overflow-y: auto;
   overscroll-behavior: contain;
   transition:
@@ -2292,11 +2293,6 @@ kbd {
   .chat-header {
     padding-right: 10px;
   }
-  #details-trigger,
-  #mobile-sidebar {
-    min-width: 44px;
-    min-height: 44px;
-  }
 }
 
 /* Persistent edge tabs keep both side drawers discoverable without crowding the chat header. */
@@ -2318,7 +2314,17 @@ kbd {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   writing-mode: vertical-rl;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(0);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease;
+}
+.workspace:has(#sidebar.open) .drawer-tab-left {
+  transform: translateY(-50%) translateX(var(--drawer-width));
+}
+.workspace:has(#detail-panel.open) .drawer-tab-right {
+  transform: translateY(-50%) translateX(calc(-1 * var(--drawer-width)));
 }
 .drawer-tab:hover,
 .drawer-tab[aria-expanded="true"] {
