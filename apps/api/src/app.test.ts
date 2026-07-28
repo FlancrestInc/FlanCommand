@@ -522,6 +522,28 @@ describe("API BFF", () => {
     });
     expect(replay.status).toBe(404);
 
+    const directEvaluation = await fetch(`${base}/api/policy/evaluate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        projectId: "project-local",
+        action: "write",
+        path: "/tmp/direct.txt",
+      }),
+    });
+    const directEvaluationBody = (await directEvaluation.json()) as {
+      approval: { id: string; decision: string };
+    };
+    const directApprove = await fetch(
+      `${base}/api/approvals/${directEvaluationBody.approval.id}/approve`,
+      { method: "POST", headers: { "content-type": "application/json" } },
+    );
+    expect(directApprove.status).toBe(200);
+    await expect(directApprove.json()).resolves.toMatchObject({
+      id: directEvaluationBody.approval.id,
+      decision: "approved",
+    });
+
     const linked = await fetch(`${base}/api/sessions/session-1/project`, {
       method: "POST",
       headers: { "content-type": "application/json" },

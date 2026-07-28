@@ -142,6 +142,76 @@ function renderSessions() {
       button.addEventListener("click", () => openSession(button.dataset.session)),
     );
 }
+function renderConversationApprovals(sessionId) {
+  const messages = $("messages");
+  if (!messages || !sessionId) return;
+  messages.querySelectorAll(".inline-approval").forEach((item) => item.remove());
+  const approvals = sortNewest(state.approvals).filter((item) => item.sessionId === sessionId);
+  if (!approvals.length) return;
+  messages.insertAdjacentHTML(
+    "beforeend",
+    approvals
+      .map((approval) => {
+        const pending = approval.decision === "pending";
+        return `<article class="inline-approval ${pending ? "pending" : "decided"}" data-inline-approval="${escapeHtml(approval.id)}" tabindex="-1" aria-label="Approval request: ${escapeHtml(approval.description)}"><div class="inline-approval-head"><strong>${pending ? "Approval required" : `Approval ${escapeHtml(approval.decision)}`}</strong><span>${escapeHtml(approval.evaluation?.risk || "Review")}</span></div><p>${escapeHtml(approval.description)}</p>${pending ? `<div class="inline-approval-actions"><button class="primary-button" type="button" data-inline-approve="${escapeHtml(approval.id)}" accesskey="a" title="Approve this action (keyboard: A)">Approve <kbd>A</kbd></button><button type="button" data-inline-deny="${escapeHtml(approval.id)}" accesskey="d" title="Deny this action (keyboard: D)">Deny <kbd>D</kbd></button></div><small>Tab to an option, then press Enter · or press A/D</small>` : ""}</article>`;
+      })
+      .join(""),
+  );
+  messages
+    .querySelectorAll("[data-inline-approve]")
+    .forEach((button) =>
+      button.addEventListener(
+        "click",
+        () => void decideInlineApproval(button.dataset.inlineApprove, "approve"),
+      ),
+    );
+  messages
+    .querySelectorAll("[data-inline-deny]")
+    .forEach((button) =>
+      button.addEventListener(
+        "click",
+        () => void decideInlineApproval(button.dataset.inlineDeny, "deny"),
+      ),
+    );
+}
+async function decideInlineApproval(id, decision) {
+  const card = document.querySelector(`[data-inline-approval="${CSS.escape(id)}"]`);
+  const buttons = card?.querySelectorAll("button");
+  buttons?.forEach((button) => (button.disabled = true));
+  const reason =
+    decision === "deny" ? window.prompt("Why deny this action?", "Not approved.") : undefined;
+  if (decision === "deny" && reason === null) {
+    buttons?.forEach((button) => (button.disabled = false));
+    return;
+  }
+  try {
+    await api(`/approvals/${encodeURIComponent(id)}/${decision}`, {
+      method: "POST",
+      ...(reason ? { body: JSON.stringify({ reason }) } : {}),
+    });
+    await loadApprovals();
+    await loadJobs();
+    toast(decision === "approve" ? "Action approved." : "Action denied.");
+  } catch (error) {
+    buttons?.forEach((button) => (button.disabled = false));
+    toast(error.message);
+  }
+}
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+  if (event.key !== "a" && event.key !== "d") return;
+  const approval = sortNewest(state.approvals).find(
+    (item) => item.sessionId === state.activeId && item.decision === "pending",
+  );
+  if (!approval) return;
+  event.preventDefault();
+  document
+    .querySelector(
+      `[data-inline-${event.key === "a" ? "approve" : "deny"}="${CSS.escape(approval.id)}"]`,
+    )
+    ?.click();
+});
 function renderSessionLoading() {
   $("session-list").innerHTML = Array.from(
     { length: 3 },
@@ -172,6 +242,7 @@ function renderSession(session) {
     .join("");
   bindMarkdownActions($("messages"));
   bindRetryActions($("messages"));
+  renderConversationApprovals(session.id);
   $("welcome").style.display = session.messages?.length ? "none" : "block";
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
   renderSessions();
@@ -796,6 +867,7 @@ async function loadApprovals() {
     $("approval-count").textContent = String(
       state.approvals.filter((item) => item.decision === "pending").length,
     );
+    renderConversationApprovals(state.activeId);
   } catch {
     $("approval-count").textContent = "—";
   }
@@ -1703,6 +1775,20 @@ async function send(text) {
         }
         if (eventName === "agent") {
           addActivity(event);
+          if (event.type === "approval.requested") {
+            state.approvals = [
+              ...state.approvals.filter((item) => item.id !== event.approval.id),
+              {
+                id: event.approval.id,
+                description: event.approval.description || event.approval.action,
+                sessionId: state.activeId,
+                decision: "pending",
+                evaluation: { risk: "Review" },
+                createdAt: new Date().toISOString(),
+              },
+            ];
+            renderConversationApprovals(state.activeId);
+          }
           if (event.type === "message.delta") {
             liveText += event.text;
             live().innerHTML = renderText(liveText);

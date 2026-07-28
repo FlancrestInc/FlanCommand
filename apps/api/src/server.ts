@@ -1819,6 +1819,43 @@ export function createApiServer(options: ApiServerOptions = {}) {
         parts[0] === "api" &&
         parts[1] === "approvals" &&
         parts.length === 4 &&
+        (parts[3] === "approve" || parts[3] === "deny")
+      ) {
+        const input = await body(request);
+        const approval = approvals.get(parts[2]!);
+        if (!approval) {
+          json(response, 404, {
+            error: { code: "APPROVAL_NOT_FOUND", message: "This approval was not found." },
+          });
+          return;
+        }
+        if (approval.decision !== "pending") {
+          json(response, 409, {
+            error: {
+              code: "APPROVAL_ALREADY_DECIDED",
+              message: "This approval was already decided.",
+            },
+          });
+          return;
+        }
+        const decision = parts[3] === "approve" ? "approve" : "deny";
+        if (decision === "approve") await adapter.approveAction(approval.id, approval.sessionId);
+        else
+          await adapter.denyAction(
+            approval.id,
+            typeof input.reason === "string" ? input.reason : "Denied from FlanCommand.",
+            approval.sessionId,
+          );
+        approval.decision = decision === "approve" ? "approved" : "denied";
+        await persistMetadata();
+        json(response, 200, approval);
+        return;
+      }
+      if (
+        request.method === "POST" &&
+        parts[0] === "api" &&
+        parts[1] === "approvals" &&
+        parts.length === 4 &&
         parts[3] === "review"
       ) {
         const input = await body(request);
