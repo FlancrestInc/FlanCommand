@@ -1394,6 +1394,7 @@ function uploadFile(file, { autoAttach = false } = {}) {
             else toast("Attach up to four files per message.");
           }
           await loadFiles();
+          renderPendingAttachments();
           toast(`${file.name} uploaded.`);
         } else toast(`${file.name} could not be uploaded.`);
         resolve();
@@ -1668,6 +1669,9 @@ async function send(text) {
           ?.slice(7);
         if (!data) continue;
         const event = JSON.parse(data);
+        if (eventName === "error") {
+          throw new Error(event.error?.message || "Hermes rejected the message.");
+        }
         if (eventName === "agent") {
           addActivity(event);
           if (event.type === "message.delta") {
@@ -1697,6 +1701,10 @@ async function send(text) {
       $("run-label").textContent = "Connection lost. Your message is saved.";
       $("stop-run").hidden = true;
       $("reconnect-run").hidden = false;
+      toast(error.message);
+    } else {
+      const liveBubble = document.querySelector("#live-message .bubble");
+      if (liveBubble) liveBubble.textContent = error.message;
       toast(error.message);
     }
   } finally {
