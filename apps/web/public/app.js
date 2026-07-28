@@ -1450,6 +1450,7 @@ async function loadModels() {
   }
 }
 async function createSession() {
+  hideCommandMenu();
   try {
     const session = await api("/sessions", {
       method: "POST",
@@ -1495,11 +1496,14 @@ async function loadCommands(id) {
     state.commands = [];
   }
 }
+function hideCommandMenu() {
+  $("command-menu").hidden = true;
+}
 function renderCommandMenu() {
   const menu = $("command-menu");
   const value = $("composer-input").value;
   if (!value.startsWith("/") || !state.commands.length) {
-    menu.hidden = true;
+    hideCommandMenu();
     return;
   }
   const query = value.slice(1).toLowerCase();
@@ -1516,8 +1520,8 @@ function renderCommandMenu() {
   menu.querySelectorAll("[data-command]").forEach((button) =>
     button.addEventListener("click", () => {
       $("composer-input").value = `${button.dataset.command} `;
+      hideCommandMenu();
       $("composer-input").focus();
-      menu.hidden = true;
     }),
   );
 }
@@ -1741,6 +1745,7 @@ async function send(text) {
 }
 $("composer").addEventListener("submit", (event) => {
   event.preventDefault();
+  hideCommandMenu();
   const text = $("composer-input").value.trim();
   if (text) void send(text);
 });

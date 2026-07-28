@@ -1,5 +1,22 @@
 import { expect, test } from "@playwright/test";
 
+test("closes the slash command picker when canceled or selected", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const input = page.locator("#composer-input");
+  const menu = page.locator("#command-menu");
+
+  await input.fill("/");
+  await expect(menu).toBeVisible();
+  await input.fill("A normal message");
+  await expect(menu).toBeHidden();
+
+  await input.fill("/");
+  await expect(menu).toBeVisible();
+  await page.locator("[data-command]").first().click();
+  await expect(menu).toBeHidden();
+});
+
 test("creates a conversation and renders one streamed Hermes reply", async ({ page }) => {
   await page.goto("/");
 
@@ -29,6 +46,7 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await page.locator("#model-select").selectOption("mock-model-fast");
   await expect(page.locator("#model-select")).toHaveValue("mock-model-fast");
 
+  await page.locator("#mobile-sidebar").click();
   await page.locator("#job-dashboard").click();
   await expect(page.locator("#drawer-content")).toContainText("Give me a workspace pulse.");
   await expect(page.locator("[data-duplicate-job]")).toBeVisible();
