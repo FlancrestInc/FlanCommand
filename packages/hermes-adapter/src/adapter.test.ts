@@ -1042,8 +1042,8 @@ describe("HermesAdapter", () => {
     await expect(consume()).rejects.toMatchObject({
       code: "TRANSPORT_STREAM_FAILED",
       operation: "sendMessage",
+      message: "Hermes transport stream failed: token=[REDACTED]",
     });
-    await expect(consume()).rejects.toMatchObject({ message: "Hermes transport stream failed." });
   });
 
   it("wraps connect and disconnect transport errors without exposing upstream text", async () => {

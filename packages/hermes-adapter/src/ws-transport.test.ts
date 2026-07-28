@@ -270,6 +270,27 @@ describe("WebSocket Hermes transport", () => {
     vi.useRealTimers();
   });
 
+  it("fails active streams immediately with the peer close code", async () => {
+    FakeSocket.instances.length = 0;
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      socketFactory: factory,
+    });
+    const connecting = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connecting;
+
+    const stream = transport.stream("sendMessage", { sessionId: "s-1" })[Symbol.asyncIterator]();
+    const rejection = expect(stream.next()).rejects.toMatchObject({
+      code: "TRANSPORT_CLOSED",
+      message: "Hermes WebSocket transport failed: WebSocket closed with code 1011.",
+    });
+    socket.closeFromPeer({ code: 1011 });
+    await rejection;
+  });
+
   it("fails an inactive stream after its configured idle timeout", async () => {
     FakeSocket.instances.length = 0;
     vi.useFakeTimers();
@@ -285,7 +306,9 @@ describe("WebSocket Hermes transport", () => {
     await connecting;
 
     const stream = transport.stream("sendMessage", { sessionId: "s-1" })[Symbol.asyncIterator]();
-    const rejection = expect(stream.next()).rejects.toMatchObject({ code: "TRANSPORT_IDLE_TIMEOUT" });
+    const rejection = expect(stream.next()).rejects.toMatchObject({
+      code: "TRANSPORT_IDLE_TIMEOUT",
+    });
     await vi.advanceTimersByTimeAsync(21);
     await rejection;
     vi.useRealTimers();
@@ -702,7 +725,7 @@ describe("WebSocket Hermes transport", () => {
     vi.useRealTimers();
   });
 
-  it("waits for gateway.ready, emits reconnect gaps, and sends no replay RPC", async () => {
+  it("fails pending streams on disconnect and does not send replay RPCs", async () => {
     FakeSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({
       endpoint: "ws://test",
@@ -754,8 +777,9 @@ describe("WebSocket Hermes transport", () => {
     const gapReconnectSocket = FakeSocket.instances[3]!;
     openReady(gapReconnectSocket);
     await gapReconnect;
-    await expect(gapStream.next()).resolves.toMatchObject({
-      value: { type: "reconnect.gap", sessionId: "s-2" },
+    await expect(gapStream.next()).rejects.toMatchObject({
+      code: "TRANSPORT_CLOSED",
+      message: "Hermes WebSocket transport failed: WebSocket closed.",
     });
   });
 
@@ -863,7 +887,7 @@ describe("WebSocket Hermes transport", () => {
       authSocket.onclose?.({ code });
       await expect(authConnect).rejects.toMatchObject({
         code: "TRANSPORT_AUTH_FAILED",
-        message: "Hermes WebSocket transport failed.",
+        message: `Hermes WebSocket transport failed: WebSocket closed with code ${code}.`,
       });
       await expect(authConnect).rejects.not.toThrow("initial-secret");
 
@@ -907,7 +931,7 @@ describe("WebSocket Hermes transport", () => {
 
     await expect(reconnect).rejects.toMatchObject({
       code: "TRANSPORT_AUTH_FAILED",
-      message: "Hermes WebSocket transport failed.",
+      message: "Hermes WebSocket transport failed: WebSocket closed with code 4401.",
     });
     await expect(reconnect).rejects.not.toThrow("reconnect-secret");
   });
@@ -1005,7 +1029,7 @@ describe("WebSocket Hermes transport", () => {
     );
   });
 
-  it("emits a per-stream gap after reconnect because Hermes has no supported replay method", async () => {
+  it("fails a stream after reconnect because Hermes has no supported replay method", async () => {
     FakeSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({
       endpoint: "ws://test",
@@ -1043,13 +1067,9 @@ describe("WebSocket Hermes transport", () => {
     expect(secondSocket.sent.map((value) => JSON.parse(value))).not.toContainEqual(
       expect.objectContaining({ method: "reconnect" }),
     );
-    await expect(stream.next()).resolves.toMatchObject({
-      value: {
-        type: "reconnect.gap",
-        sessionId: "s-1",
-        runId: "r-1",
-        reason: "Hermes v0.19 has no supported stream replay method; call session.resume.",
-      },
+    await expect(stream.next()).rejects.toMatchObject({
+      code: "TRANSPORT_CLOSED",
+      message: "Hermes WebSocket transport failed: WebSocket closed.",
     });
 
     const gapTransport = new WebSocketHermesTransport({
@@ -1069,8 +1089,9 @@ describe("WebSocket Hermes transport", () => {
     const gapReconnectSocket = FakeSocket.instances[3]!;
     openReady(gapReconnectSocket);
     await connected;
-    await expect(gapStream.next()).resolves.toMatchObject({
-      value: { type: "reconnect.gap", sessionId: "s-2" },
+    await expect(gapStream.next()).rejects.toMatchObject({
+      code: "TRANSPORT_CLOSED",
+      message: "Hermes WebSocket transport failed: WebSocket closed.",
     });
   });
 

@@ -433,7 +433,9 @@ export class HermesAdapterImplementation implements HermesAdapter {
           if (error instanceof HermesAdapterError) throw error;
           throw new HermesAdapterError({
             code: "TRANSPORT_STREAM_FAILED",
-            message: "Hermes transport stream failed.",
+            message: `Hermes transport stream failed: ${redactSafeText(
+              error instanceof Error ? error.message : String(error),
+            )}`,
             component: "hermes-adapter",
             operation,
             likelyCause: "The Hermes transport failed while streaming the operation.",

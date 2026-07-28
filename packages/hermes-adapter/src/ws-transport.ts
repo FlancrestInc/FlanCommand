@@ -15,6 +15,10 @@ function isAuthCloseCode(code: number | undefined): boolean {
   return code === 1008 || code === 4401;
 }
 
+function closeDetail(code: number | undefined): string {
+  return `WebSocket closed${code === undefined ? "" : ` with code ${code}`}.`;
+}
+
 export interface SocketLike {
   readyState: number;
   onopen: (() => void) | null | undefined;
@@ -352,8 +356,8 @@ export class WebSocketHermesTransport {
         socket.onclose = (event) => {
           if (!this.isCurrentSocket(socket, generation)) return;
           const error = isAuthCloseCode(event?.code)
-            ? this.error("TRANSPORT_AUTH_FAILED", "close")
-            : this.error("TRANSPORT_HANDSHAKE_FAILED", "close");
+            ? this.error("TRANSPORT_AUTH_FAILED", "close", closeDetail(event?.code))
+            : this.error("TRANSPORT_HANDSHAKE_FAILED", "close", closeDetail(event?.code));
           if (!this.connected) reject(error);
           this.handleClose(event);
         };
@@ -639,9 +643,13 @@ export class WebSocketHermesTransport {
   private handleClose(event?: SocketCloseEvent): void {
     if (this.socket) this.detachSocket(this.socket);
     const error = isAuthCloseCode(event?.code)
-      ? this.error("TRANSPORT_AUTH_FAILED", "close")
-      : this.error("TRANSPORT_CLOSED", "close");
-    this.closeState(error, true);
+      ? this.error("TRANSPORT_AUTH_FAILED", "close", closeDetail(event?.code))
+      : this.error("TRANSPORT_CLOSED", "close", closeDetail(event?.code));
+    // A Hermes v0.19 stream cannot be replayed by the transport. Leaving
+    // pending streams alive here makes the API wait until the idle timeout
+    // and leaves the conversation looking permanently busy. Fail them now;
+    // the API can mark the run terminal and the user can retry safely.
+    this.closeState(error, false);
   }
 
   private detachSocket(socket: SocketLike): void {

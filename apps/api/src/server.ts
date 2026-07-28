@@ -815,14 +815,36 @@ export function createApiServer(options: ApiServerOptions = {}) {
       }
       if (response && !response.destroyed) sse(response, "state", sessionPayload(state));
     } catch (error) {
-      await updateJob(job, { status: "failed", error: safeError(error) });
+      const failure = safeError(error);
+      const activeRunId =
+        state.activeRunId ??
+        [...state.messages]
+          .reverse()
+          .find((message) => message.role === "assistant" && message.status === "working")?.runId ??
+        job.runId;
+      if (activeRunId) {
+        const failureEvent: Extract<AgentEvent, { type: "run.failed" }> = {
+          type: "run.failed",
+          runId: activeRunId,
+          sessionId: state.session.id,
+          error: failure,
+        };
+        const events = runEventLog.get(job.id) ?? [];
+        events.push(failureEvent);
+        runEventLog.set(job.id, events.slice(-256));
+        applyEvent(state, failureEvent);
+        if (response && !response.destroyed) sse(response, "agent", failureEvent);
+      } else {
+        state.session.status = "failed";
+      }
+      await updateJob(job, { status: "failed", error: failure });
       await notify({
         kind: "job",
         title: "Hermes run failed",
         body: "The background run failed.",
         jobId: job.id,
       });
-      if (response && !response.destroyed) sse(response, "error", { error: safeError(error) });
+      if (response && !response.destroyed) sse(response, "error", { error: failure });
     } finally {
       await persistMetadata();
       if (response && !response.destroyed) response.end();
