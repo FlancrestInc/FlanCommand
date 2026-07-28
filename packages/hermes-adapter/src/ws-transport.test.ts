@@ -270,6 +270,27 @@ describe("WebSocket Hermes transport", () => {
     vi.useRealTimers();
   });
 
+  it("fails an inactive stream after its configured idle timeout", async () => {
+    FakeSocket.instances.length = 0;
+    vi.useFakeTimers();
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      idleTimeoutMs: 20,
+      socketFactory: factory,
+    });
+    const connecting = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connecting;
+
+    const stream = transport.stream("sendMessage", { sessionId: "s-1" })[Symbol.asyncIterator]();
+    const rejection = expect(stream.next()).rejects.toMatchObject({ code: "TRANSPORT_IDLE_TIMEOUT" });
+    await vi.advanceTimersByTimeAsync(21);
+    await rejection;
+    vi.useRealTimers();
+  });
+
   it("routes real Hermes events using snake and camel IDs from params and payload", async () => {
     FakeSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({

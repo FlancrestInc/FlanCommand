@@ -294,7 +294,7 @@ export class WebSocketHermesTransport {
     this.options = {
       connectTimeoutMs: 5_000,
       requestTimeoutMs: 10_000,
-      idleTimeoutMs: 30_000,
+      idleTimeoutMs: 120_000,
       totalTimeoutMs: 120_000,
       maxFrameBytes: 1_048_576,
       ...options,

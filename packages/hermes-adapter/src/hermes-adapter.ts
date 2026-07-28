@@ -419,10 +419,11 @@ export class HermesAdapterImplementation implements HermesAdapter {
           for (const frame of redactor.flushAll()) {
             yield* normalizeFlushedFrame(frame);
           }
-        } catch {
+        } catch (error) {
           for (const frame of redactor.flushAll()) {
             yield* normalizeFlushedFrame(frame);
           }
+          if (error instanceof HermesAdapterError) throw error;
           throw new HermesAdapterError({
             code: "TRANSPORT_STREAM_FAILED",
             message: "Hermes transport stream failed.",
