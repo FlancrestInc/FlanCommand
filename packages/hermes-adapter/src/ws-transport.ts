@@ -90,7 +90,7 @@ interface PendingRequest {
   runId?: string;
   input?: unknown;
   awaitTerminal?: boolean;
-  timer: ReturnType<typeof setTimeout>;
+  timer?: ReturnType<typeof setTimeout>;
   idleTimer?: ReturnType<typeof setTimeout>;
   resolve: (value: unknown) => void;
   reject: (error: HermesAdapterError) => void;
@@ -294,8 +294,8 @@ export class WebSocketHermesTransport {
     this.options = {
       connectTimeoutMs: 5_000,
       requestTimeoutMs: 10_000,
-      idleTimeoutMs: 120_000,
-      totalTimeoutMs: 120_000,
+      idleTimeoutMs: 300_000,
+      totalTimeoutMs: 0,
       maxFrameBytes: 1_048_576,
       ...options,
     };
@@ -416,10 +416,13 @@ export class WebSocketHermesTransport {
     const sessionId =
       isRecord(input) && typeof input.sessionId === "string" ? input.sessionId : undefined;
     const runId = isRecord(input) && typeof input.runId === "string" ? input.runId : undefined;
-    const timer = setTimeout(
-      () => this.fail(id, this.error("TRANSPORT_TIMEOUT", operation)),
-      this.options.totalTimeoutMs,
-    );
+    const timer =
+      this.options.totalTimeoutMs > 0
+        ? setTimeout(
+            () => this.fail(id, this.error("TRANSPORT_TIMEOUT", operation)),
+            this.options.totalTimeoutMs,
+          )
+        : undefined;
     this.pending.set(id, {
       id,
       operation,

@@ -3,6 +3,8 @@ export interface HermesRuntimeConfig {
   endpoint: string;
   origin: string;
   maxFrameBytes: number;
+  idleTimeoutMs: number;
+  totalTimeoutMs: number;
   auth?: { token: string };
   dashboardAuth?: { username: string; password: string };
 }
@@ -10,13 +12,23 @@ export interface HermesRuntimeConfig {
 const defaultEndpoint = "ws://127.0.0.1:9119/api/ws";
 const defaultOrigin = "http://127.0.0.1:3000";
 const defaultMaxFrameBytes = 8 * 1024 * 1024;
+const defaultIdleTimeoutMs = 5 * 60 * 1000;
+const defaultTotalTimeoutMs = 0;
 const maxAllowedFrameBytes = 32 * 1024 * 1024;
+const maxAllowedTimeoutMs = 24 * 60 * 60 * 1000;
 
 function readMaxFrameBytes(value: string | undefined): number {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed >= 1024 * 1024 && parsed <= maxAllowedFrameBytes
     ? parsed
     : defaultMaxFrameBytes;
+}
+
+function readTimeoutMs(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 && parsed <= maxAllowedTimeoutMs
+    ? parsed
+    : fallback;
 }
 
 export function readHermesRuntimeConfig(
@@ -28,12 +40,16 @@ export function readHermesRuntimeConfig(
   const username = environment.HERMES_DASHBOARD_USERNAME?.trim();
   const password = environment.HERMES_DASHBOARD_PASSWORD;
   const maxFrameBytes = readMaxFrameBytes(environment.HERMES_MAX_FRAME_BYTES);
+  const idleTimeoutMs = readTimeoutMs(environment.HERMES_IDLE_TIMEOUT_MS, defaultIdleTimeoutMs);
+  const totalTimeoutMs = readTimeoutMs(environment.HERMES_TOTAL_TIMEOUT_MS, defaultTotalTimeoutMs);
 
   return {
     transport: environment.HERMES_TRANSPORT === "websocket" ? "websocket" : "mock",
     endpoint,
     origin,
     maxFrameBytes,
+    idleTimeoutMs,
+    totalTimeoutMs,
     ...(token ? { auth: { token } } : {}),
     ...(username && password ? { dashboardAuth: { username, password } } : {}),
   };

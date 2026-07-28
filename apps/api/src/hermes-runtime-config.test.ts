@@ -13,6 +13,8 @@ describe("Hermes runtime configuration", () => {
         HERMES_DASHBOARD_USERNAME: "flan",
         HERMES_DASHBOARD_PASSWORD: "server-only-password",
         HERMES_MAX_FRAME_BYTES: "4194304",
+        HERMES_IDLE_TIMEOUT_MS: "600000",
+        HERMES_TOTAL_TIMEOUT_MS: "1800000",
       }),
     ).toEqual({
       transport: "websocket",
@@ -21,6 +23,8 @@ describe("Hermes runtime configuration", () => {
       auth: { token: "server-only-token" },
       dashboardAuth: { username: "flan", password: "server-only-password" },
       maxFrameBytes: 4194304,
+      idleTimeoutMs: 600000,
+      totalTimeoutMs: 1800000,
     });
   });
 
@@ -30,6 +34,8 @@ describe("Hermes runtime configuration", () => {
       endpoint: "ws://127.0.0.1:9119/api/ws",
       origin: "http://127.0.0.1:3000",
       maxFrameBytes: 8 * 1024 * 1024,
+      idleTimeoutMs: 5 * 60 * 1000,
+      totalTimeoutMs: 0,
     });
   });
 
