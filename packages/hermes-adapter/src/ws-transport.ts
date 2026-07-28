@@ -71,6 +71,17 @@ function stringValue(
   return typeof camelValue === "string" ? camelValue : undefined;
 }
 
+function rpcErrorDetail(value: unknown): string | undefined {
+  if (!isRecord(value)) return undefined;
+  const code =
+    typeof value.code === "string" || typeof value.code === "number"
+      ? String(value.code)
+      : undefined;
+  const message = typeof value.message === "string" ? redactSafeText(value.message) : undefined;
+  if (!code && !message) return undefined;
+  return [code, message].filter(Boolean).join(": ");
+}
+
 interface PendingRequest {
   id: string;
   operation: string;
@@ -532,7 +543,9 @@ export class WebSocketHermesTransport {
         clearTimeout(request.timer);
         if (request.idleTimer) clearTimeout(request.idleTimer);
         this.pending.delete(id);
-        request.stream.end(this.error("TRANSPORT_REQUEST_FAILED", request.operation));
+        request.stream.end(
+          this.error("TRANSPORT_REQUEST_FAILED", request.operation, rpcErrorDetail(frame.error)),
+        );
         return;
       }
       if (Array.isArray(frame.result)) frame.result.forEach((value) => request.stream?.push(value));
@@ -554,7 +567,10 @@ export class WebSocketHermesTransport {
     clearTimeout(request.timer);
     if (request.idleTimer) clearTimeout(request.idleTimer);
     this.pending.delete(id);
-    if (hasError) request.reject(this.error("TRANSPORT_REQUEST_FAILED", request.operation));
+    if (hasError)
+      request.reject(
+        this.error("TRANSPORT_REQUEST_FAILED", request.operation, rpcErrorDetail(frame.error)),
+      );
     else request.resolve(frame.result);
   }
 
@@ -791,10 +807,12 @@ export class WebSocketHermesTransport {
     return `hermes-${this.sequence}`;
   }
 
-  private error(code: string, operation: string): HermesAdapterError {
+  private error(code: string, operation: string, detail?: string): HermesAdapterError {
     return new HermesAdapterError({
       code,
-      message: "Hermes WebSocket transport failed.",
+      message: detail
+        ? `Hermes WebSocket transport failed: ${detail}`
+        : "Hermes WebSocket transport failed.",
       component: "hermes-websocket",
       operation,
       likelyCause:
