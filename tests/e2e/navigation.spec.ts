@@ -71,6 +71,9 @@ test("shows conversation actions in the recent conversations menu", async ({ pag
     return topmost === element || element.contains(topmost);
   });
   expect(menuToggleIsTopmost).toBe(true);
+  const sessionButtonBox = await menuToggle.locator("..").locator("[data-session]").boundingBox();
+  const menuToggleBox = await menuToggle.boundingBox();
+  expect(menuToggleBox!.x).toBeGreaterThanOrEqual(sessionButtonBox!.x + sessionButtonBox!.width);
   await menuToggle.click();
   const menu = page.locator("[data-session-menu]").first();
   await expect(menu).toBeVisible();

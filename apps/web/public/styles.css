@@ -865,19 +865,24 @@ h1 {
 }
 .session-entry {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
 }
 .session-entry .session-item {
-  padding-right: 38px;
+  width: auto;
+  min-width: 0;
+  padding-right: 10px;
 }
 .session-menu-toggle {
-  position: absolute;
+  position: static;
   z-index: 1;
-  top: 8px;
-  right: 6px;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  align-self: start;
+  width: 32px;
+  height: 32px;
+  margin: 8px 6px 0 0;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: color-mix(in oklab, var(--panel-2) 72%, transparent);
