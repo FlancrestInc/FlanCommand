@@ -38,6 +38,7 @@ const state = {
   credentials: [],
   credentialHealth: [],
   pendingAttachments: [],
+  uploadToComposer: false,
   jobs: [],
   notifications: [],
   audit: [],
@@ -1302,9 +1303,17 @@ function renderPendingAttachments() {
   container.innerHTML = files
     .map(
       (file) =>
-        `<span class="attachment-chip">${escapeHtml(file.safeName || file.name)}<button type="button" data-remove-attachment="${escapeHtml(file.id)}" aria-label="Remove ${escapeHtml(file.safeName || file.name)}">×</button></span>`,
+        `<span class="attachment-chip">${file.mimeType.startsWith("image/") ? `<img src="/api/files/${encodeURIComponent(file.id)}/preview" alt="" aria-hidden="true" />` : '<span class="attachment-icon" aria-hidden="true">▤</span>'}<button class="attachment-name" type="button" data-preview-attachment="${escapeHtml(file.id)}">${escapeHtml(file.safeName || file.name)}</button><button type="button" data-remove-attachment="${escapeHtml(file.id)}" aria-label="Remove ${escapeHtml(file.safeName || file.name)}">×</button></span>`,
     )
     .join("");
+  container
+    .querySelectorAll("[data-preview-attachment]")
+    .forEach((button) =>
+      button.addEventListener(
+        "click",
+        () => void openFilePreview(button.dataset.previewAttachment),
+      ),
+    );
   container
     .querySelectorAll("[data-remove-attachment]")
     .forEach((button) =>
@@ -1361,7 +1370,7 @@ async function deleteFile(id) {
     toast(error.message);
   }
 }
-function uploadFile(file) {
+function uploadFile(file, { autoAttach = false } = {}) {
   if (file.size > 10 * 1024 * 1024) {
     toast(`${file.name} is too large.`);
     return Promise.resolve();
@@ -1379,6 +1388,11 @@ function uploadFile(file) {
       };
       xhr.onload = async () => {
         if (xhr.status >= 200 && xhr.status < 300) {
+          const uploaded = JSON.parse(xhr.responseText);
+          if (autoAttach && uploaded.id && !state.pendingAttachments.includes(uploaded.id)) {
+            if (state.pendingAttachments.length < 4) state.pendingAttachments.push(uploaded.id);
+            else toast("Attach up to four files per message.");
+          }
           await loadFiles();
           toast(`${file.name} uploaded.`);
         } else toast(`${file.name} could not be uploaded.`);
@@ -1418,8 +1432,8 @@ function uploadFile(file) {
     reader.readAsDataURL(file);
   });
 }
-async function uploadFiles(files) {
-  for (const file of files) await uploadFile(file);
+async function uploadFiles(files, options = {}) {
+  for (const file of files) await uploadFile(file, options);
 }
 async function loadModels() {
   try {
@@ -1879,10 +1893,18 @@ $("terminal-input").addEventListener("keydown", (event) => {
   if (event.key === "Enter") void sendTerminalInput();
 });
 $("add-credential").addEventListener("click", openCredentialForm);
-$("attach-file").addEventListener("click", () => $("file-input").click());
-$("attach-file-composer").addEventListener("click", () => $("file-input").click());
+$("attach-file").addEventListener("click", () => {
+  state.uploadToComposer = false;
+  $("file-input").click();
+});
+$("attach-file-composer").addEventListener("click", () => {
+  state.uploadToComposer = true;
+  $("file-input").click();
+});
 $("file-input").addEventListener("change", (event) => {
-  void uploadFiles([...event.target.files]);
+  const autoAttach = state.uploadToComposer;
+  state.uploadToComposer = false;
+  void uploadFiles([...event.target.files], { autoAttach });
   event.target.value = "";
 });
 let fileSearchTimer;
@@ -1901,7 +1923,7 @@ $("composer").addEventListener("dragleave", () => $("composer").classList.remove
 $("composer").addEventListener("drop", (event) => {
   event.preventDefault();
   $("composer").classList.remove("drop-ready");
-  void uploadFiles([...event.dataTransfer.files]);
+  void uploadFiles([...event.dataTransfer.files], { autoAttach: true });
 });
 $("approval-inbox").addEventListener("click", async () => {
   await loadApprovals();

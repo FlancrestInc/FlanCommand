@@ -1332,6 +1332,30 @@ h1 {
   background: color-mix(in oklab, var(--accent) 8%, var(--panel-2));
   font-size: 11px;
 }
+.attachment-chip img {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.attachment-icon {
+  color: var(--accent);
+  font-size: 13px;
+}
+.attachment-name {
+  min-width: 0;
+  max-width: 260px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .attachment-chip button {
   border: 0;
   padding: 0;
