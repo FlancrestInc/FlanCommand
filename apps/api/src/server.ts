@@ -2029,6 +2029,25 @@ export function createApiServer(options: ApiServerOptions = {}) {
         return;
       }
       if (
+        request.method === "DELETE" &&
+        parts[0] === "api" &&
+        parts[1] === "notifications" &&
+        parts.length === 3
+      ) {
+        const notification = notifications.get(parts[2]!);
+        if (!notification) {
+          json(response, 404, {
+            error: { code: "NOTIFICATION_NOT_FOUND", message: "Notification was not found." },
+          });
+          return;
+        }
+        notifications.delete(notification.id);
+        await persistMetadata();
+        response.writeHead(204);
+        response.end();
+        return;
+      }
+      if (
         request.method === "POST" &&
         parts[0] === "api" &&
         parts[1] === "notifications" &&

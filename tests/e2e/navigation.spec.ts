@@ -21,6 +21,41 @@ test("starts with the conversations drawer closed and closes it with the close b
   await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "false");
 });
 
+test("dismisses a notification from the notifications drawer", async ({ page }) => {
+  let dismissed = false;
+  await page.route("**/api/notifications", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        notifications: dismissed
+          ? []
+          : [
+              {
+                id: "notification-e2e",
+                kind: "system",
+                title: "Test notification",
+                body: "This notification should disappear.",
+                read: true,
+                createdAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+      }),
+    });
+  });
+  await page.route("**/api/notifications/notification-e2e", async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    dismissed = true;
+    await route.fulfill({ status: 204, body: "" });
+  });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#notification-bell").click();
+  await expect(page.locator(".notification-card")).toContainText("Test notification");
+  await page.locator("[data-delete-notification='notification-e2e']").click();
+  await expect(page.locator("#drawer-content")).toContainText("All caught up");
+  await expect(page.locator(".notification-card")).toHaveCount(0);
+});
+
 test("loads without browser policy console warnings", async ({ page }) => {
   const warnings: string[] = [];
   page.on("console", (message) => {

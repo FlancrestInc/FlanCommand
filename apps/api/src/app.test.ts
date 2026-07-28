@@ -1047,8 +1047,21 @@ describe("API BFF", () => {
       jobs: [{ status: "waiting_for_credential" }],
     });
     const notifications = await fetch(`${base}/api/notifications`);
-    await expect(notifications.json()).resolves.toMatchObject({
-      notifications: [{ title: "Hermes needs a credential" }],
+    const notificationData = (await notifications.json()) as {
+      notifications: Array<{ id: string; title: string }>;
+    };
+    expect(notificationData.notifications).toEqual([
+      expect.objectContaining({ title: "Hermes needs a credential" }),
+    ]);
+    const deleted = await fetch(
+      `${base}/api/notifications/${encodeURIComponent(notificationData.notifications[0]!.id)}`,
+      { method: "DELETE" },
+    );
+    expect(deleted.status).toBe(204);
+    await expect(
+      fetch(`${base}/api/notifications`).then((result) => result.json()),
+    ).resolves.toEqual({
+      notifications: [],
     });
   });
 

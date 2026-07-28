@@ -270,8 +270,8 @@ async function api(path, options = {}) {
     headers: { "content-type": "application/json" },
     ...options,
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(formatApiError(data.error));
+  const data = response.status === 204 ? undefined : await response.json();
+  if (!response.ok) throw new Error(formatApiError(data?.error));
   return data;
 }
 async function load() {
@@ -629,7 +629,7 @@ function renderNotificationDrawer(content) {
     ? notifications
         .map(
           (item) =>
-            `<article class="drawer-card notification-card ${item.read ? "read" : "unread"}"><div class="drawer-card-head"><span>${escapeHtml(item.kind || "system")}</span><time>${escapeHtml(new Date(item.createdAt).toLocaleString())}</time></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p>${item.reviewUrl ? `<a href="${escapeHtml(item.reviewUrl)}" target="_blank" rel="noreferrer">Open review page ↗</a>` : ""}${item.read ? "" : `<button data-read-notification="${escapeHtml(item.id)}">Mark read</button>`}</article>`,
+            `<article class="drawer-card notification-card ${item.read ? "read" : "unread"}"><div class="drawer-card-head"><span>${escapeHtml(item.kind || "system")}</span><time>${escapeHtml(new Date(item.createdAt).toLocaleString())}</time></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p>${item.reviewUrl ? `<a href="${escapeHtml(item.reviewUrl)}" target="_blank" rel="noreferrer">Open review page ↗</a>` : ""}<div class="drawer-actions">${item.read ? "" : `<button data-read-notification="${escapeHtml(item.id)}">Mark read</button>`}<button data-delete-notification="${escapeHtml(item.id)}">Dismiss</button></div></article>`,
         )
         .join("")
     : '<div class="drawer-empty"><span>♢</span><h3>All caught up</h3><p>Notifications about jobs and approvals will appear here.</p></div>';
@@ -641,10 +641,27 @@ function renderNotificationDrawer(content) {
         () => void markDrawerNotification(button.dataset.readNotification),
       ),
     );
+  content
+    .querySelectorAll("[data-delete-notification]")
+    .forEach((button) =>
+      button.addEventListener(
+        "click",
+        () => void deleteDrawerNotification(button.dataset.deleteNotification),
+      ),
+    );
 }
 async function markDrawerNotification(id) {
   try {
     await api(`/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
+    await loadNotifications();
+    renderDrawer();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+async function deleteDrawerNotification(id) {
+  try {
+    await api(`/notifications/${encodeURIComponent(id)}`, { method: "DELETE" });
     await loadNotifications();
     renderDrawer();
   } catch (error) {
