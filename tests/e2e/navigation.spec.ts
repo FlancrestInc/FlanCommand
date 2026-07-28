@@ -56,6 +56,64 @@ test("dismisses a notification from the notifications drawer", async ({ page }) 
   await expect(page.locator(".notification-card")).toHaveCount(0);
 });
 
+test("shows conversation actions in the recent conversations menu", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#conversations-tab").click();
+  const menuToggle = page.locator("[data-session-menu-toggle]").first();
+  await expect(menuToggle).toBeVisible();
+  await menuToggle.click();
+  const menu = page.locator("[data-session-menu]").first();
+  await expect(menu).toBeVisible();
+  await expect(menu.locator("[data-session-action='archive']")).toBeVisible();
+  await expect(menu.locator("[data-session-action='pin']")).toBeVisible();
+  await expect(menu.locator("[data-session-action='rename']")).toBeVisible();
+  await expect(menu.locator("[data-session-project]")).toBeVisible();
+});
+
+test("dismisses all notifications from the notifications drawer", async ({ page }) => {
+  let dismissed = false;
+  await page.route("**/api/notifications", async (route) => {
+    if (route.request().method() === "DELETE") {
+      dismissed = true;
+      await route.fulfill({ status: 204, body: "" });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        notifications: dismissed
+          ? []
+          : [
+              {
+                id: "notification-one",
+                kind: "system",
+                title: "First notification",
+                body: "First body",
+                read: false,
+                createdAt: "2026-01-01T00:00:00.000Z",
+              },
+              {
+                id: "notification-two",
+                kind: "job",
+                title: "Second notification",
+                body: "Second body",
+                read: true,
+                createdAt: "2026-01-02T00:00:00.000Z",
+              },
+            ],
+      }),
+    });
+  });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#notification-bell").click();
+  await expect(page.locator("[data-delete-all-notifications]")).toBeVisible();
+  await page.locator("[data-delete-all-notifications]").click();
+  await expect(page.locator("#drawer-content")).toContainText("All caught up");
+  await expect(page.locator(".notification-card")).toHaveCount(0);
+});
+
 test("loads without browser policy console warnings", async ({ page }) => {
   const warnings: string[] = [];
   page.on("console", (message) => {

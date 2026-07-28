@@ -1909,6 +1909,13 @@ export function createApiServer(options: ApiServerOptions = {}) {
         json(response, 200, { jobs: [...jobs.values()] });
         return;
       }
+      if (request.method === "DELETE" && url.pathname === "/api/notifications") {
+        notifications.clear();
+        await persistMetadata();
+        response.writeHead(204);
+        response.end();
+        return;
+      }
       if (request.method === "GET" && url.pathname === "/api/notifications") {
         json(response, 200, { notifications: [...notifications.values()] });
         return;

@@ -128,11 +128,19 @@ function setConnection(text, good = true) {
     `<i style="background:${good ? "var(--accent)" : "var(--warm)"}"></i> ${text}`;
 }
 function renderSessions() {
+  const projectOptions = (selectedId) =>
+    '<option value="">No project</option>' +
+    state.projects
+      .map(
+        (project) =>
+          `<option value="${escapeHtml(project.id)}" ${project.id === selectedId ? "selected" : ""}>${escapeHtml(project.name)}</option>`,
+      )
+      .join("");
   $("session-list").innerHTML =
     state.sessions
       .map(
         (session) =>
-          `<button class="session-item ${session.id === state.activeId ? "active" : ""}" data-session="${escapeHtml(session.id)}"><strong>${session.isPinned ? "◆ " : ""}${escapeHtml(session.title || "Untitled conversation")}</strong><small>${session.status === "running" ? "Working now" : "Ready to continue"}</small></button>`,
+          `<div class="session-entry" data-session-entry="${escapeHtml(session.id)}"><button class="session-item ${session.id === state.activeId ? "active" : ""}" data-session="${escapeHtml(session.id)}"><strong>${session.isPinned ? "◆ " : ""}${escapeHtml(session.title || "Untitled conversation")}</strong><small>${session.status === "running" ? "Working now" : "Ready to continue"}</small></button><button class="session-menu-toggle" type="button" data-session-menu-toggle="${escapeHtml(session.id)}" aria-label="Conversation actions for ${escapeHtml(session.title || "Untitled conversation")}" aria-expanded="false">…</button><div class="session-menu" data-session-menu="${escapeHtml(session.id)}" role="menu" hidden><button type="button" data-session-action="archive" data-session-id="${escapeHtml(session.id)}">Archive</button><button type="button" data-session-action="pin" data-session-id="${escapeHtml(session.id)}">${session.isPinned ? "Unpin" : "Pin"}</button><button type="button" data-session-action="rename" data-session-id="${escapeHtml(session.id)}">Rename</button><label>Project<select data-session-project="${escapeHtml(session.id)}" aria-label="Add conversation to a project">${projectOptions(session.projectId)}</select></label></div></div>`,
       )
       .join("") ||
     `<p style="color:var(--faint);font-size:11px;padding:10px">No conversations found.</p>`;
@@ -141,6 +149,45 @@ function renderSessions() {
     .forEach((button) =>
       button.addEventListener("click", () => openSession(button.dataset.session)),
     );
+  document.querySelectorAll("[data-session-menu-toggle]").forEach((button) =>
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const menu = document.querySelector(
+        `[data-session-menu="${CSS.escape(button.dataset.sessionMenuToggle)}"]`,
+      );
+      document.querySelectorAll("[data-session-menu]").forEach((item) => {
+        item.hidden = item !== menu;
+      });
+      document
+        .querySelectorAll("[data-session-menu-toggle]")
+        .forEach((item) => item.setAttribute("aria-expanded", String(item === button)));
+    }),
+  );
+  document
+    .querySelectorAll("[data-session-action]")
+    .forEach((button) => button.addEventListener("click", () => void handleSessionAction(button)));
+  document.querySelectorAll("[data-session-project]").forEach((select) =>
+    select.addEventListener("change", () => {
+      void updateSessionOrganization(select.dataset.sessionProject, {
+        projectId: select.value || null,
+      });
+    }),
+  );
+}
+async function handleSessionAction(button) {
+  const id = button.dataset.sessionId;
+  const session = state.sessions.find((item) => item.id === id);
+  if (!id || !session) return;
+  if (button.dataset.sessionAction === "archive") {
+    if (!window.confirm("Archive this conversation?")) return;
+    await updateSessionOrganization(id, { archived: true });
+  }
+  if (button.dataset.sessionAction === "pin")
+    await updateSessionOrganization(id, { isPinned: !session.isPinned });
+  if (button.dataset.sessionAction === "rename") {
+    const title = window.prompt("Conversation name:", session.title || "");
+    if (title !== null) await updateSessionOrganization(id, { customTitle: title });
+  }
 }
 function renderConversationApprovals(sessionId) {
   const messages = $("messages");
@@ -626,13 +673,13 @@ async function provideDrawerCredential(event) {
 function renderNotificationDrawer(content) {
   const notifications = sortNewest(state.notifications);
   content.innerHTML = notifications.length
-    ? notifications
+    ? `<div class="notification-toolbar"><span>${notifications.length} notification${notifications.length === 1 ? "" : "s"}</span><button type="button" data-delete-all-notifications>Dismiss all</button></div>${notifications
         .map(
           (item) =>
             `<article class="drawer-card notification-card ${item.read ? "read" : "unread"}"><div class="drawer-card-head"><span>${escapeHtml(item.kind || "system")}</span><time>${escapeHtml(new Date(item.createdAt).toLocaleString())}</time></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p>${item.reviewUrl ? `<a href="${escapeHtml(item.reviewUrl)}" target="_blank" rel="noreferrer">Open review page ↗</a>` : ""}<div class="drawer-actions">${item.read ? "" : `<button data-read-notification="${escapeHtml(item.id)}">Mark read</button>`}<button data-delete-notification="${escapeHtml(item.id)}">Dismiss</button></div></article>`,
         )
-        .join("")
-    : '<div class="drawer-empty"><span>♢</span><h3>All caught up</h3><p>Notifications about jobs and approvals will appear here.</p></div>';
+        .join("")}`
+    : '<div class="drawer-empty"><span>♢</span><h3>All caught up</h3><p>Notifications about jobs and approvals will appear here.</p>';
   content
     .querySelectorAll("[data-read-notification]")
     .forEach((button) =>
@@ -649,6 +696,9 @@ function renderNotificationDrawer(content) {
         () => void deleteDrawerNotification(button.dataset.deleteNotification),
       ),
     );
+  content
+    .querySelector("[data-delete-all-notifications]")
+    ?.addEventListener("click", () => void deleteAllDrawerNotifications());
 }
 async function markDrawerNotification(id) {
   try {
@@ -662,6 +712,15 @@ async function markDrawerNotification(id) {
 async function deleteDrawerNotification(id) {
   try {
     await api(`/notifications/${encodeURIComponent(id)}`, { method: "DELETE" });
+    await loadNotifications();
+    renderDrawer();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+async function deleteAllDrawerNotifications() {
+  try {
+    await api("/notifications", { method: "DELETE" });
     await loadNotifications();
     renderDrawer();
   } catch (error) {
@@ -723,10 +782,12 @@ async function loadProjects() {
       .join("");
     renderPermissionMode();
     renderTerminalHosts();
+    renderSessions();
   } catch {
     $("project-select").innerHTML = '<option value="">No projects available</option>';
     renderPermissionMode();
     renderTerminalHosts();
+    renderSessions();
   }
 }
 function renderPermissionMode() {
@@ -1558,19 +1619,22 @@ async function createSession() {
     toast(error.message);
   }
 }
-async function updateOrganization(patch) {
-  if (!state.activeId) return toast("Choose a conversation first.");
+async function updateSessionOrganization(sessionId, patch) {
+  if (!sessionId) return toast("Choose a conversation first.");
   try {
-    const session = await api(`/sessions/${encodeURIComponent(state.activeId)}/organization`, {
+    const session = await api(`/sessions/${encodeURIComponent(sessionId)}/organization`, {
       method: "POST",
       body: JSON.stringify(patch),
     });
-    renderSession(session);
+    if (sessionId === state.activeId) renderSession(session);
     await loadSessions();
     toast("Conversation organization updated.");
   } catch (error) {
     toast(error.message);
   }
+}
+async function updateOrganization(patch) {
+  return updateSessionOrganization(state.activeId, patch);
 }
 async function openSession(id) {
   try {
