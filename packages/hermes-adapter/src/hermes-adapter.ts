@@ -156,6 +156,13 @@ function normalizeModelOptionsResponse(response: unknown): unknown[] {
           ...(typeof modelCapabilities.reasoning === "boolean"
             ? { reasoning: modelCapabilities.reasoning }
             : {}),
+          ...(typeof modelCapabilities.contextWindow === "number"
+            ? { contextWindow: modelCapabilities.contextWindow }
+            : typeof modelCapabilities.context_window === "number"
+              ? { contextWindow: modelCapabilities.context_window }
+              : typeof modelCapabilities.context_max === "number"
+                ? { contextWindow: modelCapabilities.context_max }
+                : {}),
         },
       ];
     });

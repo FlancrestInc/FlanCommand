@@ -502,6 +502,26 @@ describe("native Hermes frames", () => {
     ]);
   });
 
+  it("preserves TUI context-used and context-max usage fields", () => {
+    expect(
+      normalizeNativeFrame({
+        jsonrpc: "2.0",
+        method: "event",
+        params: {
+          type: "context.update",
+          session_id: "session-1",
+          payload: { usage: { context_used: 1234, context_max: 8192 } },
+        },
+      }),
+    ).toEqual([
+      {
+        type: "context.updated",
+        sessionId: "session-1",
+        usage: { totalTokens: 1234, contextWindow: 8192 },
+      },
+    ]);
+  });
+
   it("fails an errored message without claiming a successful run", () => {
     const events = normalizeNativeFrame({
       jsonrpc: "2.0",

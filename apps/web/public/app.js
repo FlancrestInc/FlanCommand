@@ -279,6 +279,12 @@ function renderSession(session) {
   $("source-value").textContent = session.source || "Hermes";
   $("session-id").textContent = session.id;
   $("model-select").value = session.modelId || state.defaultModelId || "";
+  const selectedModel = state.modelOptions.find(
+    (model) => model.id === (session.modelId || state.defaultModelId),
+  );
+  if (!state.contextUsage.contextWindow && selectedModel?.contextWindow) {
+    state.contextUsage = { ...state.contextUsage, contextWindow: selectedModel.contextWindow };
+  }
   $("project-select").value = session.projectId || "";
   renderConversationPermission(session);
   $("folder-select").value = session.folderId || "";
@@ -1779,8 +1785,8 @@ function addActivity(event) {
   }
   if (event.type === "context.updated") {
     state.contextUsage = {
-      totalTokens: event.usage?.totalTokens || 0,
-      contextWindow: event.usage?.contextWindow || 0,
+      ...state.contextUsage,
+      ...event.usage,
     };
     renderRunMonitors();
   }

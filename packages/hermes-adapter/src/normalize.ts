@@ -809,9 +809,19 @@ function normalizeUsage(payload: Record<string, unknown>): Record<string, number
   const aliases: Record<string, string[]> = {
     inputTokens: ["input", "inputTokens", "input_tokens"],
     outputTokens: ["output", "outputTokens", "output_tokens"],
-    totalTokens: ["total", "totalTokens", "total_tokens"],
+    // Hermes' TUI usage payload calls the current context size
+    // `context_used`/`context_max`, while some providers report the same
+    // values as total/context_window. Normalize both shapes here.
+    totalTokens: ["context_used", "contextUsed", "total", "totalTokens", "total_tokens"],
     reasoningTokens: ["reasoning", "reasoningTokens", "reasoning_tokens"],
     cachedInputTokens: ["cached", "cachedInputTokens", "cached_input_tokens"],
+    contextWindow: [
+      "context_max",
+      "contextMax",
+      "contextWindow",
+      "context_window",
+      "maxContextTokens",
+    ],
   };
   const usage: Record<string, number> = {};
   for (const [name, keys] of Object.entries(aliases)) {
