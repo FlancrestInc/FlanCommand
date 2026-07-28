@@ -212,7 +212,7 @@ export const memoryReferenceSchema = z
   .object({ id: safeText.optional(), label: safeTextRequired, source: safeText.optional() })
   .strict();
 export const runSummarySchema = z
-  .object({ text: safeText.optional(), usage: usageSchema.optional() })
+  .object({ text: safeText.optional(), usage: contextUsageSchema.optional() })
   .strict();
 
 const baseRun = { runId: safeTextRequired, sessionId: safeTextRequired.optional() };
