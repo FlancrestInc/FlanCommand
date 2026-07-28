@@ -1,5 +1,16 @@
 export function activityLabel(event: unknown): string | null;
 export function activityDetail(event: unknown): string;
+export function activitySummaryLabel(
+  summary:
+    | {
+        status?: string;
+        toolCalls?: number;
+        approvals?: number;
+        durationSeconds?: number;
+      }
+    | null
+    | undefined,
+): string;
 export function formatApiError(error: unknown): string;
 export function jobStatusLabel(status: string): string;
 export function jobActions(job: {

@@ -2,6 +2,7 @@ import { bindMarkdownActions, renderMarkdown } from "./markdown.js";
 import {
   activityDetail,
   activityLabel,
+  activitySummaryLabel,
   formatApiError,
   jobActions,
   jobStatusLabel,
@@ -1538,6 +1539,11 @@ function addActivity(event) {
     while (activity.children.length > 12) activity.firstElementChild.remove();
   }
   $("focus-title").textContent = label;
+  const liveActivity = $("live-activity");
+  if (liveActivity) {
+    liveActivity.hidden = false;
+    liveActivity.querySelector("span:last-child").textContent = label;
+  }
   if (event.type === "run.started") {
     state.startedAt = Date.now();
     state.elapsedTimer = setInterval(() => {
@@ -1596,6 +1602,22 @@ function renderActivitySummary() {
     approvalLabel +
     "</span></div>";
 }
+function renderCompletedActivityChip(summary) {
+  const assistant = $("messages").querySelector(".message.assistant:last-of-type");
+  if (!assistant || !summary) return;
+  const meta = assistant.querySelector(".message-meta");
+  if (!meta || meta.querySelector(".activity-chip")) return;
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "activity-chip";
+  chip.setAttribute("aria-label", "Show Hermes activity details");
+  chip.textContent = activitySummaryLabel(summary);
+  chip.addEventListener("click", () => {
+    openSideDrawer("details", chip);
+    if (!state.activityExpanded) $("activity-toggle").click();
+  });
+  meta.append(" ", chip);
+}
 function activityRow(event, label = activityLabel(event)) {
   const item = document.createElement("div");
   item.className = "activity-item";
@@ -1635,7 +1657,7 @@ async function send(text) {
   $("welcome").style.display = "none";
   messages.insertAdjacentHTML(
     "beforeend",
-    `<article class="message user"><div class="bubble">${renderText(text)}${attachmentNames.length ? `<div class="message-attachments">Attached: ${attachmentNames.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">You</span></article><article class="message assistant" id="live-message"><div class="bubble"></div><span class="message-meta">Hermes · working</span></article>`,
+    `<article class="message user"><div class="bubble">${renderText(text)}${attachmentNames.length ? `<div class="message-attachments">Attached: ${attachmentNames.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">You</span></article><article class="message assistant" id="live-message"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working</span></article>`,
   );
   $("composer-input").value = "";
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
@@ -1682,7 +1704,9 @@ async function send(text) {
       }
       $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
     }
+    const completedActivity = state.activitySummary;
     await openSession(state.activeId);
+    renderCompletedActivityChip(completedActivity);
     state.pendingText = "";
     state.draft = "";
     state.pendingAttachments = [];

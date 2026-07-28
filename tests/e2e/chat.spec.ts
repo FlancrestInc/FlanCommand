@@ -14,6 +14,7 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await expect(page.locator("#messages .assistant").last()).toContainText("Mock reply");
   await expect(page.locator("#run-strip")).toBeHidden();
   await expect(page.locator("#run-status")).toHaveText("IDLE");
+  await expect(page.locator(".activity-chip").last()).toContainText("tool call");
   await expect(page.locator("#activity")).toContainText("tool call");
   await expect(page.locator("#activity")).toContainText("approval");
 

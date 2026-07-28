@@ -45,6 +45,13 @@ export function activityDetail(event) {
   return event.detail || "";
 }
 
+export function activitySummaryLabel(summary) {
+  if (!summary) return "Activity";
+  const tools = `${summary.toolCalls || 0} tool call${summary.toolCalls === 1 ? "" : "s"}`;
+  const approvals = `${summary.approvals || 0} approval${summary.approvals === 1 ? "" : "s"}`;
+  return `${summary.status || "Completed"} · ${tools} · ${approvals} · ${summary.durationSeconds || 0}s`;
+}
+
 export function formatApiError(error) {
   const message = typeof error?.message === "string" ? error.message : "Request failed";
   const cause = typeof error?.likelyCause === "string" ? error.likelyCause : "";

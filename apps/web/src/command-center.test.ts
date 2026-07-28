@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   activityDetail,
   activityLabel,
+  activitySummaryLabel,
   formatApiError,
   jobActions,
   jobStatusLabel,
@@ -32,6 +33,12 @@ describe("command center presentation helpers", () => {
     expect(activityDetail({ type: "tool.output", toolCallId: "tool-1", chunk: "ready\n" })).toBe(
       "ready",
     );
+  });
+
+  it("summarizes completed activity for the response chip", () => {
+    expect(
+      activitySummaryLabel({ status: "Worked", toolCalls: 2, approvals: 1, durationSeconds: 4 }),
+    ).toBe("Worked · 2 tool calls · 1 approval · 4s");
   });
 
   it("labels job states and orders newest records first", () => {

@@ -1236,6 +1236,7 @@ h1 {
   padding: 0 clamp(20px, 7vw, 96px) 22px;
 }
 .run-strip {
+  display: flex;
   align-items: center;
   gap: 9px;
   max-width: 720px;
@@ -2068,6 +2069,34 @@ kbd {
 }
 .mono {
   font-family: ui-monospace, monospace;
+}
+.live-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.live-activity[hidden] {
+  display: none;
+}
+.activity-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.activity-chip:hover {
+  border-color: var(--accent);
+  color: var(--ink);
 }
 .activity-item pre {
   grid-column: 2;
