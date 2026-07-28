@@ -72,8 +72,8 @@ document.documentElement.dataset.theme = state.theme;
 $("composer-input").value = state.draft;
 function sideDrawerElements(kind) {
   return kind === "conversations"
-    ? { panel: $("sidebar"), trigger: $("mobile-sidebar"), close: $("close-conversations") }
-    : { panel: $("detail-panel"), trigger: $("details-trigger"), close: $("close-details") };
+    ? { panel: $("sidebar"), trigger: $("conversations-tab"), close: $("close-conversations") }
+    : { panel: $("detail-panel"), trigger: $("details-tab"), close: $("close-details") };
 }
 function closeSideDrawer({ restoreFocus = true } = {}) {
   const kind =
@@ -2156,10 +2156,10 @@ $("drawer-close").addEventListener("click", closeDrawer);
 $("drawer-backdrop").addEventListener("click", (event) => {
   if (event.target === $("drawer-backdrop")) closeDrawer();
 });
-$("mobile-sidebar").addEventListener("click", (event) =>
+$("conversations-tab").addEventListener("click", (event) =>
   openSideDrawer("conversations", event.currentTarget),
 );
-$("details-trigger").addEventListener("click", (event) =>
+$("details-tab").addEventListener("click", (event) =>
   openSideDrawer("details", event.currentTarget),
 );
 $("close-conversations").addEventListener("click", () => closeSideDrawer());

@@ -38,6 +38,7 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await page.locator("#activity-toggle").click();
   await expect(page.locator("#activity")).toHaveClass(/expanded/);
   await expect(page.locator("#activity")).toContainText("Using mock_tool");
+  await page.locator("#details-tab").click();
   await page.locator("#dev-toggle").click();
   await expect(page.locator("#developer-panel")).toHaveAttribute("open", "");
   await expect(page.locator("#raw-events")).toContainText("tool.started");
@@ -46,7 +47,7 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await page.locator("#model-select").selectOption("mock-model-fast");
   await expect(page.locator("#model-select")).toHaveValue("mock-model-fast");
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await page.locator("#job-dashboard").click();
   await expect(page.locator("#drawer-content")).toContainText("Give me a workspace pulse.");
   await expect(page.locator("[data-duplicate-job]")).toBeVisible();

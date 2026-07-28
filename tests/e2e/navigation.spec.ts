@@ -8,14 +8,17 @@ test("starts with the conversations drawer closed and closes it with the close b
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
 
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
-  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#conversations-tab")).toContainText("Conversations");
+  await expect(page.locator("#details-tab")).toContainText("Run details");
+  await expect(page.locator(".chat-actions #dev-toggle")).toHaveCount(0);
+  await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "false");
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await expect(page.locator("#sidebar")).toHaveClass(/open/);
   await expect(page.locator("#close-conversations")).toBeFocused();
   await page.locator("#close-conversations").click();
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
-  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "false");
 });
 
 test("loads without browser policy console warnings", async ({ page }) => {
@@ -111,7 +114,7 @@ test("keeps navigation usable on a phone-sized viewport", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await expect(page.locator("#sidebar")).toHaveClass(/open/);
   await page.locator("#brand").click();
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
@@ -122,7 +125,7 @@ test("keeps navigation usable on a phone-sized viewport", async ({ page }) => {
   await page.locator("#drawer-close").click();
   await expect(page.locator("#drawer-backdrop")).toBeHidden();
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await page.locator("#job-dashboard").click();
   await expect(page.locator("#drawer-title")).toHaveText("Background jobs");
   await page.locator("#drawer-close").click();
@@ -148,29 +151,29 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await expect(page.locator("#sidebar")).toHaveClass(/open/);
-  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "true");
 
-  await page.locator("#details-trigger").click();
+  await page.locator("#details-tab").click();
   await expect(page.locator("#detail-panel")).toHaveClass(/open/);
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
   await expect(page.locator("#close-details")).toBeFocused();
 
   await page.locator("#close-details").click();
   await expect(page.locator("#detail-panel")).not.toHaveClass(/open/);
-  await expect(page.locator("#details-trigger")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#details-tab")).toHaveAttribute("aria-expanded", "false");
 
-  await page.locator("#details-trigger").click();
+  await page.locator("#details-tab").click();
   await page.keyboard.press("Escape");
   await expect(page.locator("#detail-panel")).not.toHaveClass(/open/);
-  await expect(page.locator("#details-trigger")).toBeFocused();
+  await expect(page.locator("#details-tab")).toBeFocused();
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await page.locator("#side-drawer-backdrop").click({ position: { x: 400, y: 120 } });
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
 
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   const recent = page.locator("#recent-chats-section");
   await expect(recent).toHaveAttribute("open", "");
   await recent.locator("summary").click();
@@ -199,7 +202,11 @@ test("exposes every long side-panel section as a disclosure", async ({ page }) =
     await expect(page.locator(selector).locator("summary")).toBeVisible();
   }
 
-  await page.locator("#details-trigger").click();
+  await page.locator("#details-tab").click();
+  await page.locator("#developer-panel summary").click();
+  await expect(page.locator("#dev-toggle")).toBeVisible();
+  await page.locator("#dev-toggle").click();
+  await expect(page.locator("#developer-panel")).not.toHaveAttribute("open", "");
   for (const selector of [
     "#focus-section",
     "#activity-section",
@@ -219,7 +226,7 @@ test("keeps key mobile controls at a touch-safe size", async ({ page }) => {
     "#notification-bell",
     "#theme-toggle",
     "#settings-button",
-    "#mobile-sidebar",
+    "#conversations-tab",
     "#attach-file-composer",
     "#send-button",
   ]) {
@@ -232,14 +239,14 @@ test("keeps key mobile controls at a touch-safe size", async ({ page }) => {
 test("keeps a renamed conversation after refresh", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   page.on("dialog", async (dialog) => {
     await dialog.accept("E2E kept conversation");
   });
 
   await page.locator("#new-session").click();
   await expect(page.locator("#session-title")).toHaveText("New conversation");
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
   await page.locator("#rename-session").click();
   await expect(page.locator("#session-title")).toHaveText("E2E kept conversation");
 
@@ -250,7 +257,7 @@ test("keeps a renamed conversation after refresh", async ({ page }) => {
 test("edits and archives a project from the browser", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
 
   await page.locator("#add-project").click();
   await expect(page.locator("#project-backdrop")).toBeVisible();
@@ -299,7 +306,7 @@ test("switches and persists the Command Blue theme", async ({ page }) => {
 test("associates a credential reference through the browser form", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
-  await page.locator("#mobile-sidebar").click();
+  await page.locator("#conversations-tab").click();
 
   await page.locator("#add-credential").click();
   await expect(page.locator("#credential-backdrop")).toBeVisible();

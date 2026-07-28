@@ -40,6 +40,16 @@
         </div>
       </header>
       <main class="workspace">
+        <button
+          class="drawer-tab drawer-tab-left"
+          id="conversations-tab"
+          type="button"
+          aria-label="Open conversations"
+          aria-controls="sidebar"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">☰</span><span>Conversations</span>
+        </button>
         <aside class="sidebar side-drawer" id="sidebar" aria-label="Conversations">
           <div class="sidebar-head">
             <div>
@@ -186,27 +196,7 @@
             <div class="chat-actions">
               <select class="chip model-select" id="model-select" aria-label="Choose model">
                 <option value="">Model · auto</option></select
-              ><button class="chip" id="context-chip">Context · —</button
-              ><button class="chip dev-toggle" id="dev-toggle">Developer</button
-              ><button
-                class="icon-button"
-                id="mobile-sidebar"
-                type="button"
-                aria-label="Open conversations"
-                aria-controls="sidebar"
-                aria-expanded="false"
-              >
-                ☰</button
-              ><button
-                class="icon-button"
-                id="details-trigger"
-                type="button"
-                aria-label="Open run details"
-                aria-controls="detail-panel"
-                aria-expanded="false"
-              >
-                ◫
-              </button>
+              ><button class="chip" id="context-chip">Context · —</button>
             </div>
           </div>
           <div class="message-scroll" id="message-scroll">
@@ -282,6 +272,16 @@
             <div class="composer-note">Hermes can make mistakes. Check important work.</div>
           </div>
         </section>
+        <button
+          class="drawer-tab drawer-tab-right"
+          id="details-tab"
+          type="button"
+          aria-label="Open run details"
+          aria-controls="detail-panel"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">◫</span><span>Run details</span>
+        </button>
         <aside class="detail-panel side-drawer" id="detail-panel" aria-label="Run details">
           <div class="detail-head">
             <span class="eyebrow">RUN STATUS</span>
@@ -328,6 +328,9 @@
           </details>
           <details class="detail-card developer-panel" id="developer-panel">
             <summary class="card-label">DEVELOPER MODE</summary>
+            <button class="developer-toggle" id="dev-toggle" type="button">
+              Show sanitized events
+            </button>
             <p class="developer-note">
               Sanitized events only. Secrets never cross the adapter boundary.
             </p>
