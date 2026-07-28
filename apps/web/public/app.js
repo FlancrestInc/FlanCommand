@@ -70,10 +70,6 @@ const themeOrder = ["dark", "light", "classic"];
 const $ = (id) => document.getElementById(id);
 document.documentElement.dataset.theme = state.theme;
 $("composer-input").value = state.draft;
-if (window.matchMedia("(min-width: 721px)").matches) {
-  $("sidebar").classList.add("open");
-  $("mobile-sidebar").setAttribute("aria-expanded", "true");
-}
 function sideDrawerElements(kind) {
   return kind === "conversations"
     ? { panel: $("sidebar"), trigger: $("mobile-sidebar"), close: $("close-conversations") }

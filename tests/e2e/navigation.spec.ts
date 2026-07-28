@@ -1,5 +1,23 @@
 import { expect, test } from "@playwright/test";
 
+test("starts with the conversations drawer closed and closes it with the close button", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
+  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "false");
+
+  await page.locator("#mobile-sidebar").click();
+  await expect(page.locator("#sidebar")).toHaveClass(/open/);
+  await expect(page.locator("#close-conversations")).toBeFocused();
+  await page.locator("#close-conversations").click();
+  await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
+  await expect(page.locator("#mobile-sidebar")).toHaveAttribute("aria-expanded", "false");
+});
+
 test("loads without browser policy console warnings", async ({ page }) => {
   const warnings: string[] = [];
   page.on("console", (message) => {
@@ -208,12 +226,15 @@ test("keeps key mobile controls at a touch-safe size", async ({ page }) => {
 
 test("keeps a renamed conversation after refresh", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#mobile-sidebar").click();
   page.on("dialog", async (dialog) => {
     await dialog.accept("E2E kept conversation");
   });
 
   await page.locator("#new-session").click();
   await expect(page.locator("#session-title")).toHaveText("New conversation");
+  await page.locator("#mobile-sidebar").click();
   await page.locator("#rename-session").click();
   await expect(page.locator("#session-title")).toHaveText("E2E kept conversation");
 
@@ -223,6 +244,8 @@ test("keeps a renamed conversation after refresh", async ({ page }) => {
 
 test("edits and archives a project from the browser", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#mobile-sidebar").click();
 
   await page.locator("#add-project").click();
   await expect(page.locator("#project-backdrop")).toBeVisible();
@@ -271,6 +294,7 @@ test("switches and persists the Command Blue theme", async ({ page }) => {
 test("associates a credential reference through the browser form", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#mobile-sidebar").click();
 
   await page.locator("#add-credential").click();
   await expect(page.locator("#credential-backdrop")).toBeVisible();
