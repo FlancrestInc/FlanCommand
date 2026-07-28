@@ -1839,6 +1839,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           return;
         }
         const decision = parts[3] === "approve" ? "approve" : "deny";
+        await adapter.connect();
         if (decision === "approve") await adapter.approveAction(approval.id, approval.sessionId);
         else
           await adapter.denyAction(
@@ -1888,6 +1889,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
           return;
         }
+        await adapter.connect();
         if (decision === "approve") await adapter.approveAction(approval.id, approval.sessionId);
         else
           await adapter.denyAction(
@@ -2425,6 +2427,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
           return;
         }
+        await adapter.connect();
         if (parts[3] === "approve") await adapter.approveAction(approval.id, approval.sessionId);
         else await adapter.denyAction(approval.id, "Denied in FlanCommand.", approval.sessionId);
         approval.decision = parts[3] === "approve" ? "approved" : "denied";
