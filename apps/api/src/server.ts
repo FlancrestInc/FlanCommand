@@ -601,7 +601,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
       // different live runtime ID for prompt.submit after reconnects/restarts.
       // Resume once per API process; the adapter then reuses its live-session
       // alias without replaying a potentially large history on every message.
-      if (!resumedSessions.has(state.session.id)) {
+      if (!state.skipResume && !resumedSessions.has(state.session.id)) {
         try {
           await adapter.resumeSession(state.session.id);
           resumedSessions.add(state.session.id);
@@ -858,7 +858,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         sessions.set(session.id, {
           session: { ...session },
           messages: stored?.messages ?? [],
-          ...(stored?.skipResume ? { skipResume: true } : {}),
+          ...(stored?.skipResume || isEphemeralSessionId(session.id) ? { skipResume: true } : {}),
           projectId: stored?.projectId ?? "project-local",
           ...(stored?.permissionModeOverride
             ? { permissionModeOverride: stored.permissionModeOverride }
@@ -2754,6 +2754,10 @@ class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+function isEphemeralSessionId(id: string): boolean {
+  return /^[a-f0-9]{8}$/i.test(id);
 }
 
 function safeError(error: unknown): SafeError {
