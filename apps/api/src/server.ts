@@ -66,6 +66,7 @@ interface ChatMessage {
 interface SessionState {
   session: HermesSession;
   messages: ChatMessage[];
+  skipResume?: boolean;
   activeRunId?: string;
   projectId?: string;
   permissionModeOverride?: PermissionMode;
@@ -173,6 +174,7 @@ interface PersistedMetadata {
     string,
     {
       messages: ChatMessage[];
+      skipResume?: boolean;
       projectId?: string;
       permissionModeOverride?: PermissionMode;
       conversationPolicy?: Partial<Policy>;
@@ -481,6 +483,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           id,
           {
             messages: state.messages,
+            ...(state.skipResume ? { skipResume: true } : {}),
             ...(state.projectId ? { projectId: state.projectId } : {}),
             ...(state.permissionModeOverride
               ? { permissionModeOverride: state.permissionModeOverride }
@@ -855,6 +858,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         sessions.set(session.id, {
           session: { ...session },
           messages: stored?.messages ?? [],
+          ...(stored?.skipResume ? { skipResume: true } : {}),
           projectId: stored?.projectId ?? "project-local",
           ...(stored?.permissionModeOverride
             ? { permissionModeOverride: stored.permissionModeOverride }
@@ -2453,7 +2457,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
               ? input.modelId
               : settings.defaultModel || undefined,
         });
-        const state = { session: { ...session }, messages: [] } satisfies SessionState;
+        const state = {
+          session: { ...session },
+          messages: [],
+          skipResume: true,
+        } satisfies SessionState;
         sessions.set(session.id, state);
         await persistMetadata();
         json(response, 201, sessionPayload(state));
@@ -2484,7 +2492,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         return;
       }
       if (request.method === "GET" && parts.length === 3) {
-        if (state.messages.length === 0) {
+        if (state.messages.length === 0 && !state.skipResume) {
           const resumed = await adapter.resumeSession(state.session.id);
           if (resumed.history) {
             state.messages = resumed.history.map((message, index) => ({
