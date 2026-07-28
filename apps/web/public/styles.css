@@ -1508,7 +1508,62 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 6px;
+  gap: 12px;
+  margin-top: 8px;
+}
+.composer-monitors {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+.model-picker {
+  min-width: 150px;
+  max-width: 210px;
+  padding: 6px 24px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+.context-monitor,
+.runtime-monitor {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 4px 7px;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.context-monitor b {
+  color: var(--accent);
+  font-weight: 700;
+}
+.context-bar {
+  display: inline-block;
+  width: 54px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--line);
+}
+.context-bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.runtime-monitor {
+  cursor: help;
 }
 .tool-button {
   border: 1px solid var(--line);
@@ -2449,5 +2504,26 @@ kbd {
   .drawer-tab {
     min-height: 112px;
     padding: 12px 8px;
+  }
+  .composer-monitors {
+    gap: 4px;
+  }
+  .model-picker {
+    min-width: 118px;
+    max-width: 128px;
+  }
+  .context-monitor {
+    gap: 3px;
+    padding-inline: 4px;
+  }
+  .context-bar {
+    width: 38px;
+  }
+  .runtime-monitor {
+    padding-inline: 4px;
+  }
+  .composer-hint,
+  .composer-monitors .hint {
+    display: none;
   }
 }

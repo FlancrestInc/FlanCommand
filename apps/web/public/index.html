@@ -193,11 +193,6 @@
                 <span id="session-meta">Preparing your workspace</span>
               </div>
             </div>
-            <div class="chat-actions">
-              <select class="chip model-select" id="model-select" aria-label="Choose model">
-                <option value="">Model · auto</option></select
-              ><button class="chip" id="context-chip">Context · —</button>
-            </div>
           </div>
           <div class="message-scroll" id="message-scroll">
             <div class="welcome" id="welcome">
@@ -247,15 +242,43 @@
                 aria-label="Message Hermes"
               ></textarea>
               <div class="composer-tools">
-                <div>
+                <div class="composer-monitors" aria-label="Model and run monitors">
+                  <select class="model-picker" id="model-select" aria-label="Choose model">
+                    <option value="">Loading model…</option>
+                  </select>
+                  <span
+                    class="context-monitor"
+                    id="context-monitor"
+                    title="Context tokens used out of the model context window"
+                  >
+                    <span id="context-token-value">— / —</span>
+                    <span class="context-bar" aria-hidden="true"
+                      ><i id="composer-context-meter"></i
+                    ></span>
+                    <b id="composer-context-percent">—</b>
+                  </span>
+                  <span
+                    class="runtime-monitor"
+                    id="elapsed-monitor"
+                    title="Elapsed time since this run started"
+                    >◷ —</span
+                  >
+                  <span
+                    class="runtime-monitor"
+                    id="tool-monitor"
+                    title="Time spent in the currently running tool"
+                    >⚒ —</span
+                  >
                   <button
                     type="button"
                     class="tool-button"
                     id="attach-file-composer"
                     aria-label="Attach files"
+                    title="Attach files"
                   >
-                    ＋</button
-                  ><span class="hint" id="composer-hint"
+                    ＋
+                  </button>
+                  <span class="hint" id="composer-hint"
                     >Enter to send · Shift+Enter for new line.</span
                   >
                 </div>
@@ -264,6 +287,7 @@
                   id="send-button"
                   type="submit"
                   aria-label="Send message"
+                  title="Send message"
                 >
                   ↑
                 </button>

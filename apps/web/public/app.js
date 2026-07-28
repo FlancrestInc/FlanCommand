@@ -34,6 +34,11 @@ const state = {
   commands: [],
   projects: [],
   approvals: [],
+  modelOptions: [],
+  defaultModelId: "",
+  contextUsage: { totalTokens: 0, contextWindow: 0 },
+  toolStartedAt: null,
+  toolElapsedTimer: null,
   files: [],
   artifacts: [],
   credentials: [],
@@ -273,7 +278,7 @@ function renderSession(session) {
     `${session.status === "running" ? "Working now" : "Ready"} · ${session.source || "Hermes"}`;
   $("source-value").textContent = session.source || "Hermes";
   $("session-id").textContent = session.id;
-  $("model-select").value = session.modelId || "";
+  $("model-select").value = session.modelId || state.defaultModelId || "";
   $("project-select").value = session.projectId || "";
   renderConversationPermission(session);
   $("folder-select").value = session.folderId || "";
@@ -1593,7 +1598,10 @@ async function uploadFiles(files, options = {}) {
 async function loadModels() {
   try {
     const data = await api("/models");
-    const options = (data.models || [])
+    const models = data.models || [];
+    state.modelOptions = models;
+    state.defaultModelId = models[0]?.id || "";
+    const options = models
       .map(
         (model) =>
           `<option value="${escapeHtml(model.id)}">${escapeHtml(model.name || model.id)}</option>`,
@@ -1685,6 +1693,44 @@ function renderCommandMenu() {
     }),
   );
 }
+function formatTokenCount(value) {
+  if (!Number.isFinite(value)) return "—";
+  if (value >= 1000) return `${Math.round(value / 1000)}K`;
+  return String(value);
+}
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return "—";
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.floor(seconds % 60);
+  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
+}
+function renderRunMonitors() {
+  const elapsed = state.startedAt ? (Date.now() - state.startedAt) / 1000 : null;
+  const toolElapsed = state.toolStartedAt ? (Date.now() - state.toolStartedAt) / 1000 : null;
+  $("elapsed-monitor").textContent = `◷ ${formatDuration(elapsed)}`;
+  $("tool-monitor").textContent = `⚒ ${formatDuration(toolElapsed)}`;
+  const used = state.contextUsage.totalTokens || 0;
+  const max = state.contextUsage.contextWindow || 0;
+  const percentage = max ? Math.min(100, Math.round((used / max) * 100)) : 0;
+  $("context-token-value").textContent = max
+    ? `${formatTokenCount(used)} / ${formatTokenCount(max)}`
+    : "— / —";
+  $("composer-context-meter").style.width = `${percentage}%`;
+  $("composer-context-percent").textContent = max ? `${percentage}%` : "—";
+  $("context-meter").style.width = `${percentage}%`;
+  $("context-value").textContent = max ? `${percentage}%` : "—";
+}
+function startMonitorTimer() {
+  clearInterval(state.elapsedTimer);
+  state.elapsedTimer = setInterval(renderRunMonitors, 1000);
+  renderRunMonitors();
+}
+function stopMonitorTimer() {
+  clearInterval(state.elapsedTimer);
+  state.elapsedTimer = null;
+  renderRunMonitors();
+}
 function addActivity(event) {
   const label = activityLabel(event);
   state.events.push(event);
@@ -1706,9 +1752,15 @@ function addActivity(event) {
   }
   if (event.type === "run.started") {
     state.startedAt = Date.now();
-    state.elapsedTimer = setInterval(() => {
-      $("elapsed-value").textContent = `${Math.floor((Date.now() - state.startedAt) / 1000)}s`;
-    }, 1000);
+    startMonitorTimer();
+  }
+  if (event.type === "tool.started") {
+    state.toolStartedAt = Date.now();
+    renderRunMonitors();
+  }
+  if (["tool.completed", "tool.failed"].includes(event.type)) {
+    state.toolStartedAt = null;
+    renderRunMonitors();
   }
   if (["run.completed", "run.failed", "run.stopped"].includes(event.type)) {
     const durationSeconds = state.startedAt ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
@@ -1718,22 +1770,26 @@ function addActivity(event) {
       approvals: state.events.filter((item) => item.type === "approval.requested").length,
       status: event.type === "run.completed" ? "Worked" : event.type.replace("run.", ""),
     };
-    clearInterval(state.elapsedTimer);
-    state.elapsedTimer = null;
+    stopMonitorTimer();
+    state.toolStartedAt = null;
     $("elapsed-value").textContent = state.startedAt
       ? `${Math.floor((Date.now() - state.startedAt) / 1000)}s`
       : "—";
     state.startedAt = null;
   }
   if (event.type === "context.updated") {
-    const used = event.usage?.totalTokens || 0;
-    const windowSize = event.usage?.contextWindow || 0;
-    const percentage = windowSize ? Math.min(100, Math.round((used / windowSize) * 100)) : 0;
-    $("context-meter").style.width = `${percentage}%`;
-    $("context-value").textContent = windowSize ? `${percentage}%` : "—";
-    $("context-chip").textContent = windowSize ? `Context · ${percentage}%` : "Context · —";
+    state.contextUsage = {
+      totalTokens: event.usage?.totalTokens || 0,
+      contextWindow: event.usage?.contextWindow || 0,
+    };
+    renderRunMonitors();
   }
   if (event.type === "run.completed" && event.summary?.usage) {
+    state.contextUsage = {
+      ...state.contextUsage,
+      totalTokens: event.summary.usage.totalTokens || 0,
+    };
+    renderRunMonitors();
     $("token-value").textContent = String(event.summary.usage.totalTokens || "—");
   }
   if (event.type === "artifact.created") void loadArtifacts();
@@ -2293,6 +2349,7 @@ document.querySelectorAll("[data-palette]").forEach((button) =>
     togglePalette(false);
   }),
 );
+renderRunMonitors();
 void load();
 setInterval(() => {
   void loadJobs();

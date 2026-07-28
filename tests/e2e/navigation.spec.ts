@@ -10,7 +10,12 @@ test("starts with the conversations drawer closed and closes it with the close b
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
   await expect(page.locator("#conversations-tab")).toContainText("Conversations");
   await expect(page.locator("#details-tab")).toContainText("Run details");
-  await expect(page.locator(".chat-actions #dev-toggle")).toHaveCount(0);
+  await expect(page.locator(".chat-actions #model-select")).toHaveCount(0);
+  await expect(page.locator("#context-chip")).toHaveCount(0);
+  await expect(page.locator(".composer #model-select")).toBeVisible();
+  await expect(page.locator("#context-monitor")).toBeVisible();
+  await expect(page.locator("#elapsed-monitor")).toHaveAttribute("title", /Elapsed time/);
+  await expect(page.locator("#tool-monitor")).toHaveAttribute("title", /currently running tool/);
   await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "false");
 
   await page.locator("#conversations-tab").click();
@@ -191,7 +196,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v2");
+    const cache = await browser.caches.open("flancommand-shell-v4");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
