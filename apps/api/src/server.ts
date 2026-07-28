@@ -615,6 +615,10 @@ export function createApiServer(options: ApiServerOptions = {}) {
     requiresResume = state.messages.length > 0,
   ): Promise<void> => {
     try {
+      // The run is queued after the request-level readiness check. Re-check
+      // the transport here because the WebSocket may have closed while the
+      // job was waiting for a worker slot or before this callback started.
+      await adapter.connect();
       // Hermes may expose a durable stored ID from session.list but require a
       // different live runtime ID for prompt.submit after reconnects/restarts.
       // Resume once per API process; the adapter then reuses its live-session

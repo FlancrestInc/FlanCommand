@@ -19,6 +19,7 @@ const sessions: HermesSession[] = [
 
 function makeAdapter(events: AgentEvent[] = []): HermesAdapter & {
   resumed: string[];
+  connects: number;
   retried: string[];
   stopped: string[];
   sent: string[];
@@ -27,6 +28,7 @@ function makeAdapter(events: AgentEvent[] = []): HermesAdapter & {
 } {
   const stopped: string[] = [];
   const resumed: string[] = [];
+  let connects = 0;
   const retried: string[] = [];
   const sent: string[] = [];
   const provided: Array<{ sessionId: string; requestId: string; value: string }> = [];
@@ -35,11 +37,16 @@ function makeAdapter(events: AgentEvent[] = []): HermesAdapter & {
   return {
     stopped,
     resumed,
+    get connects() {
+      return connects;
+    },
     retried,
     sent,
     provided,
     attached,
-    connect: async () => {},
+    connect: async () => {
+      connects += 1;
+    },
     disconnect: async () => {},
     getCapabilities: async () => ({
       sessions: { status: "observed" },
@@ -648,6 +655,7 @@ describe("API BFF", () => {
       status: "completed",
     });
 
+    const connectsBeforeDuplicate = adapter.connects;
     const duplicated = await fetch(`${base}/api/jobs/${jobs.jobs[0]!.id}/duplicate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -662,6 +670,7 @@ describe("API BFF", () => {
     for (let attempt = 0; attempt < 20 && adapter.sent.length < 2; attempt += 1)
       await new Promise((resolve) => setTimeout(resolve, 10));
     expect(adapter.sent).toEqual(["Build a useful thing", "Build a useful thing"]);
+    expect(adapter.connects).toBe(connectsBeforeDuplicate + 2);
     for (let attempt = 0; attempt < 20; attempt += 1) {
       const current = (await fetch(`${base}/api/jobs`).then((result) => result.json())) as {
         jobs: Array<{ id: string; status: string }>;
