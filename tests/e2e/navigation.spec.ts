@@ -62,6 +62,15 @@ test("shows conversation actions in the recent conversations menu", async ({ pag
   await page.locator("#conversations-tab").click();
   const menuToggle = page.locator("[data-session-menu-toggle]").first();
   await expect(menuToggle).toBeVisible();
+  const menuToggleIsTopmost = await menuToggle.evaluate((element) => {
+    const box = (element as any).getBoundingClientRect();
+    const topmost = (element as any).ownerDocument.elementFromPoint(
+      box.left + box.width / 2,
+      box.top + box.height / 2,
+    );
+    return topmost === element || element.contains(topmost);
+  });
+  expect(menuToggleIsTopmost).toBe(true);
   await menuToggle.click();
   const menu = page.locator("[data-session-menu]").first();
   await expect(menu).toBeVisible();

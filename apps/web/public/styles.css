@@ -871,14 +871,17 @@ h1 {
 }
 .session-menu-toggle {
   position: absolute;
+  z-index: 1;
   top: 8px;
   right: 6px;
+  display: grid;
+  place-items: center;
   width: 28px;
   height: 28px;
-  border: 0;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: transparent;
-  color: var(--faint);
+  background: color-mix(in oklab, var(--panel-2) 72%, transparent);
+  color: var(--muted);
   font-size: 18px;
   line-height: 1;
 }
