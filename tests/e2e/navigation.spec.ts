@@ -157,6 +157,11 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
   await expect(page.locator("#sidebar")).not.toHaveClass(/open/);
   await expect(page.locator("#close-details")).toBeFocused();
 
+  await page.locator("#close-details").click();
+  await expect(page.locator("#detail-panel")).not.toHaveClass(/open/);
+  await expect(page.locator("#details-trigger")).toHaveAttribute("aria-expanded", "false");
+
+  await page.locator("#details-trigger").click();
   await page.keyboard.press("Escape");
   await expect(page.locator("#detail-panel")).not.toHaveClass(/open/);
   await expect(page.locator("#details-trigger")).toBeFocused();

@@ -76,8 +76,15 @@ function sideDrawerElements(kind) {
     : { panel: $("detail-panel"), trigger: $("details-trigger"), close: $("close-details") };
 }
 function closeSideDrawer({ restoreFocus = true } = {}) {
-  if (!state.sideDrawerKind) return;
-  const elements = sideDrawerElements(state.sideDrawerKind);
+  const kind =
+    state.sideDrawerKind ||
+    ($("sidebar").classList.contains("open")
+      ? "conversations"
+      : $("detail-panel").classList.contains("open")
+        ? "details"
+        : null);
+  if (!kind) return;
+  const elements = sideDrawerElements(kind);
   elements.panel.classList.remove("open");
   elements.trigger.setAttribute("aria-expanded", "false");
   $("side-drawer-backdrop").hidden = true;
