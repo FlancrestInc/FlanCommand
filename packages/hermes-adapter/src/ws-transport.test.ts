@@ -132,7 +132,9 @@ describe("WebSocket Hermes transport", () => {
     openReady(secondSocket);
     await second;
     expect(secondSocket.endpoint).toBe("ws://gospel.test:9119/api/ws?ticket=ticket-2");
-    expect(requests.filter((request) => request.url.endsWith("/api/auth/ws-ticket"))).toHaveLength(2);
+    expect(requests.filter((request) => request.url.endsWith("/api/auth/ws-ticket"))).toHaveLength(
+      2,
+    );
     expect(requests[1]?.init).toEqual(
       expect.objectContaining({ headers: { Cookie: "session=one" } }),
     );
@@ -445,8 +447,26 @@ describe("WebSocket Hermes transport", () => {
     );
     await expect(resumed).resolves.toMatchObject({ session_id: "live-session" });
 
-    transport.stream("sendMessage", { sessionId: "stored-session", input: { text: "hello" } });
-    expect(request(socket).params).toMatchObject({ session_id: "live-session" });
+    const stream = transport
+      .stream("sendMessage", { sessionId: "stored-session", input: { text: "hello" } })
+      [Symbol.asyncIterator]();
+    const streamRequest = request(socket);
+    expect(streamRequest.params).toMatchObject({ session_id: "live-session" });
+    socket.receive(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        method: "event",
+        params: {
+          type: "message.delta",
+          session_id: "live-session",
+          payload: { text: "hello" },
+        },
+      }),
+    );
+    await expect(stream.next()).resolves.toMatchObject({
+      value: expect.objectContaining({ method: "event" }),
+      done: false,
+    });
   });
 
   it("maps retry requests to Hermes session.undo", async () => {

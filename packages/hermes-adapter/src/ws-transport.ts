@@ -310,12 +310,9 @@ export class WebSocketHermesTransport {
     const endpoint = this.options.dashboardAuth
       ? await this.dashboardAuthenticatedEndpoint()
       : this.authenticatedEndpoint();
-    const socket = (this.options.socketFactory ?? defaultSocketFactory)(
-      endpoint,
-      {
-        ...(this.options.origin ? { origin: this.options.origin } : {}),
-      },
-    );
+    const socket = (this.options.socketFactory ?? defaultSocketFactory)(endpoint, {
+      ...(this.options.origin ? { origin: this.options.origin } : {}),
+    });
     this.socket = socket;
     try {
       await new Promise<void>((resolve, reject) => {
@@ -577,8 +574,11 @@ export class WebSocketHermesTransport {
       if (!request.stream) return false;
       if (requestId !== undefined) return String(requestId) === request.id;
       if (sessionId === undefined) return false;
+      const liveSessionId = request.sessionId
+        ? this.sessionAliases.get(request.sessionId)
+        : undefined;
       return (
-        request.sessionId === sessionId &&
+        (request.sessionId === sessionId || liveSessionId === sessionId) &&
         (runId === undefined || request.runId === undefined || request.runId === runId)
       );
     });
@@ -688,15 +688,15 @@ export class WebSocketHermesTransport {
     const request = this.options.httpRequest ?? fetch;
     const base = `${endpoint.protocol === "wss:" ? "https:" : "http:"}//${endpoint.host}`;
     const login = await request(`${base}/auth/password-login`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          provider: "basic",
-          username: dashboardAuth.username,
-          password: dashboardAuth.password,
-          next: "/",
-        }),
-      });
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        provider: "basic",
+        username: dashboardAuth.username,
+        password: dashboardAuth.password,
+        next: "/",
+      }),
+    });
     if (!login.ok) throw this.error("TRANSPORT_AUTH_FAILED", "login");
     this.captureCookies(login.headers);
     const ticket = await request(`${base}/api/auth/ws-ticket`, {
@@ -714,7 +714,8 @@ export class WebSocketHermesTransport {
 
   private captureCookies(headers: Headers): void {
     const extended = headers as Headers & { getSetCookie?: () => string[] };
-    const values = extended.getSetCookie?.() ?? headers.get("set-cookie")?.split(/,(?=\s*[^;,=]+=)/) ?? [];
+    const values =
+      extended.getSetCookie?.() ?? headers.get("set-cookie")?.split(/,(?=\s*[^;,=]+=)/) ?? [];
     for (const value of values) {
       const pair = value.split(";", 1)[0] ?? "";
       const separator = pair.indexOf("=");
