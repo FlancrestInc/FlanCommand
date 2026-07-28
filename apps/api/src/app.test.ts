@@ -694,7 +694,7 @@ describe("API BFF", () => {
       body: JSON.stringify({ text: "A message before reconnect" }),
     });
     await message.text();
-    expect(adapter.resumed).toEqual([]);
+    expect(adapter.resumed).toEqual(["session-1"]);
 
     const reconnect = await fetch(`${base}/api/sessions/session-1/reconnect`, {
       method: "POST",
@@ -708,7 +708,7 @@ describe("API BFF", () => {
         { role: "assistant", text: "Restored answer" },
       ],
     });
-    expect(adapter.resumed).toEqual(["session-1"]);
+    expect(adapter.resumed).toEqual(["session-1", "session-1"]);
   });
 
   it("returns buffered run events after a reconnect cursor", async () => {

@@ -592,6 +592,16 @@ export function createApiServer(options: ApiServerOptions = {}) {
     response?: ServerResponse,
   ): Promise<void> => {
     try {
+      // Hermes may expose a durable stored ID from session.list but require a
+      // different live runtime ID for prompt.submit after reconnects/restarts.
+      // resumeSession() lets the adapter record that alias before sending.
+      try {
+        await adapter.resumeSession(state.session.id);
+      } catch (error) {
+        // Newly created sessions may not have a resumable durable record yet;
+        // those can still accept a prompt on the live connection.
+        if (state.messages.length > 0) throw error;
+      }
       const attachmentRefs: string[] = [];
       for (const fileId of job.attachments ?? []) {
         const record = fileStore.get(fileId);
