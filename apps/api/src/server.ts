@@ -591,6 +591,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
     state: SessionState,
     text: string,
     response?: ServerResponse,
+    requiresResume = state.messages.length > 0,
   ): Promise<void> => {
     try {
       // Hermes may expose a durable stored ID from session.list but require a
@@ -604,7 +605,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         } catch (error) {
           // Newly created sessions may not have a resumable durable record yet;
           // those can still accept a prompt on the live connection.
-          if (state.messages.length > 0) throw error;
+          if (requiresResume) throw error;
         }
       }
       const attachmentRefs: string[] = [];
@@ -2708,6 +2709,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
             return;
           }
         }
+        const hadPersistedMessages = state.messages.length > 0;
         const job = createJob(state, sessionId, text, fileIds);
         await persistMetadata();
         response.writeHead(200, {
@@ -2718,7 +2720,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         sse(response, "message", state.messages[state.messages.length - 1]);
         await jobQueue.enqueue(job.id, async () => {
           await updateJob(job, { status: "running" });
-          await runJob(job, state, text, response);
+          await runJob(job, state, text, response, hadPersistedMessages);
         });
         if (!response.destroyed && job.status === "canceled") response.end();
         return;
