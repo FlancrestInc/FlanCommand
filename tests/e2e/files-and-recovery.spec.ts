@@ -36,6 +36,54 @@ test("attaches an uploaded file to the next Hermes turn", async ({ page }) => {
   await expect(page.locator("#composer-attachments")).toBeHidden();
 });
 
+test("pastes a file into the composer and attaches it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.evaluate(`(() => {
+    const input = document.querySelector("#composer-input");
+    if (!input) throw new Error("Composer input is unavailable.");
+    const file = new File(["Pasted into Hermes\\n"], "e2e-pasted.txt", { type: "text/plain" });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.dispatchEvent(new ClipboardEvent("paste", {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: transfer,
+    }));
+  })()`);
+
+  await expect(page.locator("#composer-attachments")).toContainText("e2e-pasted.txt");
+  await page.locator("#composer-input").fill("Read the pasted note.");
+  await page.locator("#send-button").click();
+  await expect(page.locator("#messages .user").last()).toContainText("Attached: e2e-pasted.txt");
+  await expect(page.locator("#composer-attachments")).toBeHidden();
+});
+
+test("pastes an image into the composer and renders a thumbnail", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.evaluate(`(() => {
+    const input = document.querySelector("#composer-input");
+    if (!input) throw new Error("Composer input is unavailable.");
+    const image = new File(["fake image bytes"], "e2e-pasted.png", { type: "image/png" });
+    const transfer = new DataTransfer();
+    transfer.items.add(image);
+    input.dispatchEvent(new ClipboardEvent("paste", {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: transfer,
+    }));
+  })()`);
+
+  await expect(page.locator("#composer-attachments")).toContainText("e2e-pasted.png");
+  await expect(page.locator("#composer-attachments img")).toHaveAttribute(
+    "src",
+    /\/api\/files\/[^/]+\/preview$/,
+  );
+});
+
 test("shows registered artifacts in the browser panel", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");

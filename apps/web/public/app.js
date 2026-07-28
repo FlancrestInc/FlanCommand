@@ -2051,6 +2051,19 @@ $("composer").addEventListener("drop", (event) => {
   $("composer").classList.remove("drop-ready");
   void uploadFiles([...event.dataTransfer.files], { autoAttach: true });
 });
+$("composer").addEventListener("paste", (event) => {
+  const files = [...(event.clipboardData?.files || [])];
+  if (!files.length && event.clipboardData?.items) {
+    for (const item of event.clipboardData.items) {
+      if (item.kind !== "file") continue;
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  if (!files.length) return;
+  event.preventDefault();
+  void uploadFiles(files, { autoAttach: true });
+});
 $("approval-inbox").addEventListener("click", async () => {
   await loadApprovals();
   openDrawer("approvals");
