@@ -387,6 +387,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
       ...hermesConfig,
     });
   const sessions = new Map<string, SessionState>();
+  const resumedSessions = new Set<string>();
   const folders = new Map<string, FolderRecord>();
   const editProposals = new Map<string, EditProposal>();
   const projects = new Map<string, Project>([
@@ -594,13 +595,17 @@ export function createApiServer(options: ApiServerOptions = {}) {
     try {
       // Hermes may expose a durable stored ID from session.list but require a
       // different live runtime ID for prompt.submit after reconnects/restarts.
-      // resumeSession() lets the adapter record that alias before sending.
-      try {
-        await adapter.resumeSession(state.session.id);
-      } catch (error) {
-        // Newly created sessions may not have a resumable durable record yet;
-        // those can still accept a prompt on the live connection.
-        if (state.messages.length > 0) throw error;
+      // Resume once per API process; the adapter then reuses its live-session
+      // alias without replaying a potentially large history on every message.
+      if (!resumedSessions.has(state.session.id)) {
+        try {
+          await adapter.resumeSession(state.session.id);
+          resumedSessions.add(state.session.id);
+        } catch (error) {
+          // Newly created sessions may not have a resumable durable record yet;
+          // those can still accept a prompt on the live connection.
+          if (state.messages.length > 0) throw error;
+        }
       }
       const attachmentRefs: string[] = [];
       for (const fileId of job.attachments ?? []) {
