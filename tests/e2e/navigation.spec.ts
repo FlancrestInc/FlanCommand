@@ -166,8 +166,12 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
     .toBeLessThanOrEqual(2);
   await expect(page.locator("#conversations-tab")).toHaveAttribute("aria-expanded", "true");
 
+  const chatBeforeRightDrawer = await page.locator(".chat-column").boundingBox();
   await page.locator("#details-tab").click();
   await expect(page.locator("#detail-panel")).toHaveClass(/open/);
+  await expect
+    .poll(async () => (await page.locator(".chat-column").boundingBox())?.x)
+    .toBe(chatBeforeRightDrawer?.x);
   const rightDrawer = await page.locator("#detail-panel").boundingBox();
   const rightTab = await page.locator("#details-tab").boundingBox();
   expect(rightDrawer).not.toBeNull();

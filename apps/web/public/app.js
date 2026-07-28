@@ -91,7 +91,7 @@ function closeSideDrawer({ restoreFocus = true } = {}) {
   const trigger = state.sideDrawerTrigger || elements.trigger;
   state.sideDrawerKind = null;
   state.sideDrawerTrigger = null;
-  if (restoreFocus && trigger?.isConnected) trigger.focus();
+  if (restoreFocus && trigger?.isConnected) trigger.focus({ preventScroll: true });
 }
 function openSideDrawer(kind, trigger = sideDrawerElements(kind).trigger) {
   if (state.sideDrawerKind === kind) {
@@ -108,7 +108,7 @@ function openSideDrawer(kind, trigger = sideDrawerElements(kind).trigger) {
   $("side-drawer-backdrop").hidden = false;
   state.sideDrawerKind = kind;
   state.sideDrawerTrigger = trigger;
-  elements.close.focus();
+  elements.close.focus({ preventScroll: true });
 }
 const escapeHtml = (value) =>
   String(value).replace(
