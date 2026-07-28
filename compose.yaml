@@ -16,6 +16,7 @@ services:
       FLANC_COMMAND_START: "1"
       FLANC_COMMAND_HOST: "0.0.0.0"
       FLANC_STORAGE_ROOT: /workspace/storage
+      FLANC_ALLOWED_ORIGINS: "https://hermes.flan.party,http://192.168.22.245:3456"
       HERMES_MAX_FRAME_BYTES: "33554432"
       PORT: "3000"
     volumes:
