@@ -1650,6 +1650,49 @@ async function updateSessionOrganization(sessionId, patch) {
 async function updateOrganization(patch) {
   return updateSessionOrganization(state.activeId, patch);
 }
+async function reconnectActiveSessionIfNeeded(session) {
+  const hasWorkingMessage = (session.messages || []).some(
+    (message) => message.status === "working",
+  );
+  if (session.status !== "running" && !hasWorkingMessage) return false;
+  const refreshed = await api(`/sessions/${encodeURIComponent(session.id)}/reconnect`, {
+    method: "POST",
+    body: JSON.stringify({ after: state.events.length }),
+  });
+  renderSession(refreshed);
+  for (const event of refreshed.replay || []) addActivity(event);
+  await loadJobs();
+  const stillRunning = refreshed.reconnect?.status === "running";
+  state.running = stillRunning;
+  $("run-strip").hidden = !stillRunning;
+  $("run-status").textContent = stillRunning ? "ACTIVE" : "IDLE";
+  $("run-label").textContent = stillRunning
+    ? "Hermes is still working after FlanCommand restarted."
+    : "Hermes completed while FlanCommand was restarting.";
+  $("stop-run").hidden = !stillRunning;
+  $("reconnect-run").hidden = !stillRunning;
+  $("send-button").disabled = stillRunning;
+  if (!stillRunning) toast("Recovered the completed Hermes run after FlanCommand restarted.");
+  return true;
+}
+async function retryInterruptedSession(id) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 10000)));
+    try {
+      const session = await api(`/sessions/${encodeURIComponent(id)}`);
+      await reconnectActiveSessionIfNeeded(session);
+      if (!state.running) {
+        state.recovering = false;
+        $("run-strip").hidden = true;
+        $("run-status").textContent = "IDLE";
+        $("send-button").disabled = false;
+        return;
+      }
+    } catch {
+      // The container may still be rebuilding. Continue with bounded backoff.
+    }
+  }
+}
 async function openSession(id) {
   try {
     const session = await api(`/sessions/${encodeURIComponent(id)}`);
@@ -1657,6 +1700,7 @@ async function openSession(id) {
     renderSession(session);
     renderFiles();
     await loadCommands(id);
+    await reconnectActiveSessionIfNeeded(session);
     closeSideDrawer({ restoreFocus: false });
   } catch (error) {
     toast(error.message);
@@ -1966,6 +2010,7 @@ async function send(text) {
       $("stop-run").hidden = true;
       $("reconnect-run").hidden = false;
       toast(error.message);
+      void retryInterruptedSession(state.activeId);
     } else {
       const liveBubble = document.querySelector("#live-message .bubble");
       if (liveBubble) liveBubble.textContent = error.message;

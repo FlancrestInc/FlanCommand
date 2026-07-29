@@ -74,6 +74,10 @@ The first endpoint is a public monitor endpoint. The API health response is
 `200` with `ok: true` when the runtime is ready, and `503` with `ok: false`
 when the runtime is unavailable.
 
+If FlanCommand itself is rebuilt or restarted while Hermes is working, the WebSocket necessarily drops with the old API process. The Hermes gateway on Gospel can continue the run, so the new API startup path reconciles persisted `paused` jobs against `session.resume` history. A terminal Hermes session with an assistant response is marked completed without resending the prompt. Ambiguous or still-running jobs remain paused for manual recovery. The browser retries `/api/sessions/<id>/reconnect` with bounded backoff after an interrupted stream and also performs this reconciliation when opening a running session.
+
+For a self-update task, edit/test the repository first, then run the deployment command as the final operation. Expect a brief API restart; do not send the prompt again afterward. The GUI should reconnect and either show the recovered response or clearly leave the job paused if Hermes is still running.
+
 ## Cloudflare Access
 
 Protect the Barnabas origin with Cloudflare Access. Configure the exact HTTPS

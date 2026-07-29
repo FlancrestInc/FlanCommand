@@ -874,6 +874,76 @@ export function createApiServer(options: ApiServerOptions = {}) {
     }
   };
 
+  const recoverPausedJobs = async (): Promise<number> => {
+    let recovered = 0;
+    for (const job of jobs.values()) {
+      if (job.status !== "paused" || !job.sessionId) continue;
+      const state = sessions.get(job.sessionId);
+      if (!state) continue;
+      try {
+        await adapter.connect();
+        const resumed = await adapter.resumeSession(job.sessionId);
+        state.session = { ...state.session, ...resumed };
+        if (resumed.status === "running" || !resumed.history?.length) continue;
+        state.messages = resumed.history.map((message, index) => ({
+          id: `hermes-recovered-${job.id}-${index}`,
+          role: message.role,
+          text: message.text,
+          at: new Date().toISOString(),
+          status: "complete",
+        }));
+        state.activeRunId = undefined;
+        state.session.status = resumed.status === "failed" ? "failed" : "idle";
+        const assistant = [...state.messages]
+          .reverse()
+          .find((message) => message.role === "assistant");
+        const latestUser = [...state.messages].reverse().find((message) => message.role === "user");
+        if (!assistant || latestUser?.text !== job.prompt) continue;
+        const terminalStatus = resumed.status === "failed" ? "failed" : "completed";
+        const patch: Partial<JobRecord> = {
+          status: terminalStatus,
+          ...(terminalStatus === "completed" ? { progress: 100 } : {}),
+          ...(terminalStatus === "failed"
+            ? {
+                error: {
+                  code: "RECOVERED_HERMES_FAILURE",
+                  message: "Hermes reported a failed run while FlanCommand was restarting.",
+                  component: "flancommand-recovery",
+                  operation: "session.resume",
+                  retryable: true,
+                },
+              }
+            : {}),
+        };
+        Object.assign(job, patch, { updatedAt: new Date().toISOString() });
+        if (job.runId) {
+          const events = runEventLog.get(job.id) ?? [];
+          events.push(
+            terminalStatus === "completed"
+              ? {
+                  type: "run.completed",
+                  runId: job.runId,
+                  sessionId: job.sessionId,
+                  summary: { text: assistant.text },
+                }
+              : {
+                  type: "run.failed",
+                  runId: job.runId,
+                  sessionId: job.sessionId,
+                  error: patch.error!,
+                },
+          );
+          runEventLog.set(job.id, events.slice(-256));
+        }
+        recovered += 1;
+      } catch {
+        // Leave ambiguous jobs paused. The existing manual reconnect/retry path remains available.
+      }
+    }
+    if (recovered) await persistMetadata();
+    return recovered;
+  };
+
   const ensureReady = async () => {
     if (!metadataReady) {
       metadataReady = (async () => {
@@ -937,6 +1007,14 @@ export function createApiServer(options: ApiServerOptions = {}) {
           ...(stored?.archived ? { archived: true } : {}),
         });
       }
+    }
+    const recoveredJobs = await recoverPausedJobs();
+    if (recoveredJobs > 0) {
+      await notify({
+        kind: "system",
+        title: "Background work recovered",
+        body: `${recoveredJobs} job${recoveredJobs === 1 ? " was" : "s were"} reconciled after the API restarted.`,
+      });
     }
     if (jobsWerePausedOnStartup) {
       jobsWerePausedOnStartup = false;

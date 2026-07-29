@@ -857,6 +857,87 @@ describe("API BFF", () => {
     });
   });
 
+  it("reconciles a paused job from Hermes history after an API restart", async () => {
+    const metadataRoot = await mkdtemp(join(tmpdir(), "flancommand-recovery-restart-"));
+    tempRoots.push(metadataRoot);
+    const metadataPath = join(metadataRoot, "state.json");
+    await writeFile(
+      metadataPath,
+      JSON.stringify({
+        version: 1,
+        projects: [],
+        approvals: [],
+        artifacts: [],
+        audit: [],
+        jobs: [
+          {
+            id: "job-recovered",
+            title: "Restored question",
+            prompt: "Restored question",
+            status: "running",
+            sessionId: "session-1",
+            runId: "run-recovered",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+        runEvents: {
+          "job-recovered": [
+            {
+              type: "run.started",
+              runId: "run-recovered",
+              sessionId: "session-1",
+              at: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+        notifications: [],
+        credentialReferences: [],
+        folders: [],
+        editProposals: [],
+        settings: {},
+        sessions: {
+          "session-1": {
+            messages: [
+              {
+                id: "message-user",
+                role: "user",
+                text: "Recover this job",
+                at: "2026-01-01T00:00:00.000Z",
+                status: "complete",
+              },
+              {
+                id: "message-working",
+                role: "assistant",
+                text: "",
+                at: "2026-01-01T00:00:00.000Z",
+                runId: "run-recovered",
+                status: "working",
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    const base = await start(makeAdapter(), undefined, undefined, metadataPath);
+    const jobs = (await fetch(`${base}/api/jobs`).then((response) => response.json())) as {
+      jobs: Array<{ id: string; status: string }>;
+    };
+    expect(jobs.jobs).toEqual([
+      expect.objectContaining({ id: "job-recovered", status: "completed" }),
+    ]);
+    await expect(
+      fetch(`${base}/api/sessions/session-1`).then((response) => response.json()),
+    ).resolves.toMatchObject({
+      status: "idle",
+      messages: [
+        { role: "user", text: "Restored question" },
+        { role: "assistant", text: "Restored answer", status: "complete" },
+      ],
+    });
+  });
+
   it("retries a failed background job from its saved prompt", async () => {
     const adapter = makeAdapter([
       {
