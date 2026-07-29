@@ -26,9 +26,14 @@ const state = {
   activeId: null,
   running: false,
   abort: null,
-  theme: ["dark", "light", "classic"].includes(localStorage.getItem("flan-theme"))
+  theme: ["xp", "win98"].includes(localStorage.getItem("flan-theme"))
     ? localStorage.getItem("flan-theme")
-    : "dark",
+    : "xp",
+  chatBackground: ["bliss", "clouds", "autumn", "3d-pipes", "azul", "none"].includes(
+    localStorage.getItem("flan-chat-background"),
+  )
+    ? localStorage.getItem("flan-chat-background")
+    : "bliss",
   events: [],
   activityExpanded: false,
   activitySummary: null,
@@ -78,10 +83,11 @@ const state = {
   recovering: false,
   memory: null,
 };
-const themeNames = { dark: "Night Ops", light: "Paper", classic: "Command Blue" };
-const themeOrder = ["dark", "light", "classic"];
+const themeNames = { xp: "Windows XP", win98: "Windows 98" };
+const themeOrder = ["xp", "win98"];
 const $ = (id) => document.getElementById(id);
 document.documentElement.dataset.theme = state.theme;
+document.documentElement.dataset.chatBackground = state.chatBackground;
 $("composer-input").value = state.draft;
 function sideDrawerElements(kind) {
   return kind === "conversations"
@@ -391,8 +397,11 @@ async function load() {
 function applySettings(settings) {
   state.settings = settings;
   state.theme = settings.theme;
+  state.chatBackground = settings.chatBackground || "bliss";
   document.documentElement.dataset.theme = state.theme;
+  document.documentElement.dataset.chatBackground = state.chatBackground;
   localStorage.setItem("flan-theme", state.theme);
+  localStorage.setItem("flan-chat-background", state.chatBackground);
   $("theme-toggle").setAttribute("aria-label", `Switch theme. Current: ${themeNames[state.theme]}`);
   document.body.classList.toggle("compact-activity", settings.compactActivity);
 }
@@ -412,6 +421,7 @@ function renderSettings() {
   $("settings-notifications").checked = state.settings.notifications;
   $("settings-compact").checked = state.settings.compactActivity;
   $("settings-theme").value = state.settings.theme;
+  $("settings-chat-background").value = state.settings.chatBackground || "bliss";
 }
 async function saveSettings() {
   const saved = await api("/settings", {
@@ -424,6 +434,7 @@ async function saveSettings() {
       notifications: $("settings-notifications").checked,
       compactActivity: $("settings-compact").checked,
       theme: $("settings-theme").value,
+      chatBackground: $("settings-chat-background").value,
     }),
   });
   applySettings(saved);

@@ -2036,59 +2036,6 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
-[data-theme="light"] {
-  color-scheme: light;
-  --ink: #1d2730;
-  --muted: #64717b;
-  --faint: #89949b;
-  --bg: #f4f5f1;
-  --panel: #fbfbf8;
-  --panel-2: #eef0ea;
-  --line: #dce1d9;
-  --accent-ink: #25300d;
-}
-[data-theme="classic"] {
-  color-scheme: light;
-  --ink: #101820;
-  --muted: #35495c;
-  --faint: #566d82;
-  --bg: #102a63;
-  --panel: #c7c9c8;
-  --panel-2: #dfe1de;
-  --line: #6d7880;
-  --accent: #f0d15a;
-  --accent-ink: #17213a;
-  --warm: #a63f2d;
-}
-[data-theme="classic"] .topbar,
-[data-theme="classic"] .chat-column {
-  --bg: #102a63;
-  --panel: #31486d;
-  --panel-2: #3b537c;
-  --ink: #eef2f3;
-  --muted: #c5d3de;
-  --faint: #aebfd0;
-  --line: #7188a5;
-  color: var(--ink);
-}
-[data-theme="classic"] .sidebar,
-[data-theme="classic"] .detail-panel {
-  --ink: #102a63;
-  --muted: #35495c;
-  --faint: #566d82;
-  --panel: #c7c9c8;
-  --panel-2: #dfe1de;
-  --line: #6d7880;
-}
-[data-theme="classic"] .composer {
-  --ink: #102a63;
-  --muted: #35495c;
-  --faint: #566d82;
-  --panel: #dfe1de;
-  --panel-2: #eef0ea;
-  --line: #6d7880;
-}
-
 .drawer-backdrop {
   position: fixed;
   z-index: 20;
@@ -2552,5 +2499,384 @@ kbd {
   .composer-hint,
   .composer-monitors .hint {
     display: none;
+  }
+}
+
+/* FlanCommand Retro Desktop skin — deliberately close to XP.css' tactile chrome. */
+:root {
+  color-scheme: light;
+  --retro-blue: #0055e5;
+  --retro-blue-dark: #003399;
+  --retro-surface: #ece9d8;
+  --retro-surface-hi: #ffffff;
+  --retro-surface-shadow: #aca899;
+  --retro-text: #111;
+  --retro-muted: #4b4b4b;
+  --retro-accent: #316ac5;
+  --retro-font: Tahoma, "MS Sans Serif", "Segoe UI", sans-serif;
+  --retro-shadow: 2px 2px 0 #404040;
+  --wallpaper: linear-gradient(180deg, #7bc8ff 0 43%, #8ad04f 43% 67%, #4c9b37 67%);
+}
+html[data-theme="xp"] {
+  --retro-title: linear-gradient(180deg, #3b8df3 0%, #125bd8 45%, #0a3b9d 100%);
+  --retro-title-dark: #083c9e;
+  --retro-surface: #ece9d8;
+  --retro-panel: #f7f5e9;
+  --retro-input: #ffffff;
+  --retro-text: #111;
+  --retro-muted: #4d4d4d;
+  --retro-accent: #316ac5;
+  --retro-radius: 7px;
+}
+html[data-theme="win98"] {
+  --retro-title: linear-gradient(180deg, #000080 0%, #000080 100%);
+  --retro-title-dark: #000080;
+  --retro-surface: #c0c0c0;
+  --retro-panel: #dfdfdf;
+  --retro-input: #ffffff;
+  --retro-text: #000;
+  --retro-muted: #333;
+  --retro-accent: #000080;
+  --retro-radius: 0;
+  --retro-shadow: 2px 2px 0 #000;
+}
+html[data-chat-background="clouds"] {
+  --wallpaper:
+    radial-gradient(ellipse at 20% 28%, #fff 0 6%, transparent 7%),
+    radial-gradient(ellipse at 74% 18%, #fff 0 8%, transparent 9%),
+    linear-gradient(#39a9e8 0 55%, #68b84a 55%);
+}
+html[data-chat-background="autumn"] {
+  --wallpaper: linear-gradient(180deg, #a7d8ee 0 48%, #c98442 48% 70%, #70412f 70%);
+}
+html[data-chat-background="3d-pipes"] {
+  --wallpaper: repeating-linear-gradient(
+    135deg,
+    #8e8e8e 0 14px,
+    #d8d8d8 15px 20px,
+    #686868 21px 32px
+  );
+}
+html[data-chat-background="azul"] {
+  --wallpaper: linear-gradient(
+    135deg,
+    #0871bf 0 28%,
+    #21b5df 28% 45%,
+    #0750a3 45% 68%,
+    #9fe2ef 68%
+  );
+}
+html[data-chat-background="none"] {
+  --wallpaper: #d5d5d5;
+}
+
+body {
+  font-family: var(--retro-font);
+  color: var(--retro-text);
+  background: var(--retro-surface);
+}
+button,
+input,
+textarea,
+select {
+  font-family: var(--retro-font);
+}
+.app-shell {
+  background: var(--retro-surface);
+}
+.topbar {
+  height: 58px;
+  padding: 4px 8px;
+  border: 0;
+  background: var(--retro-title);
+  color: #fff;
+  box-shadow:
+    inset 0 1px #7db5ff,
+    inset 0 -1px #001d74;
+}
+.brand {
+  color: #fff;
+  font-size: 16px;
+  text-shadow: 1px 1px #003077;
+}
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #fefefe, #70b6ff);
+  color: #0752aa;
+  box-shadow:
+    inset 1px 1px #fff,
+    inset -1px -1px #2860aa;
+}
+.topbar-center .session-summary h2 {
+  font-size: 13px;
+  text-shadow: 1px 1px #003077;
+}
+.topbar-center .session-summary span:not(.live-dot),
+.connection,
+.eyebrow,
+.topbar .eyebrow {
+  color: #dcecff;
+}
+.live-dot,
+.connection i,
+.pulse {
+  background: #77ed4f;
+  box-shadow: 0 0 0 3px #277bd4;
+}
+.icon-button,
+.avatar,
+.new-button,
+.drawer-close,
+.tool-button,
+.send-button {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-surface);
+  color: var(--retro-text);
+  box-shadow: none;
+}
+.icon-button:hover,
+.avatar:hover,
+.new-button:hover,
+.drawer-close:hover,
+.tool-button:hover {
+  color: var(--retro-accent);
+  border-color: var(--retro-surface-hi);
+}
+.avatar {
+  background: #f2c239;
+  color: #111;
+  border-radius: 50%;
+}
+.workspace {
+  background: var(--retro-surface);
+}
+.sidebar,
+.detail-panel {
+  background: var(--retro-surface);
+  color: var(--retro-text);
+  border-color: var(--retro-surface-shadow);
+}
+.side-drawer {
+  box-shadow: 4px 4px 0 #0005 !important;
+}
+.chat-column {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+.chat-column::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background: var(--wallpaper);
+  background-size: cover;
+  background-position: center;
+}
+.chat-column::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: rgb(255 255 255 / 12%);
+  pointer-events: none;
+}
+.message-scroll {
+  position: relative;
+  z-index: 0;
+}
+.welcome,
+.message,
+.composer-wrap {
+  position: relative;
+  z-index: 1;
+}
+.welcome {
+  padding: 18px;
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: rgb(247 245 233 / 90%);
+  box-shadow: var(--retro-shadow);
+}
+.welcome-kicker,
+.section-label,
+.card-label,
+.eyebrow {
+  color: var(--retro-accent);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.welcome h3 {
+  font-family: var(--retro-font);
+  color: var(--retro-text);
+  font-size: clamp(28px, 4vw, 48px);
+  letter-spacing: -0.04em;
+}
+.welcome h3 em {
+  color: #125bd8;
+}
+.welcome p,
+.starter small,
+.message-meta {
+  color: var(--retro-muted);
+}
+.starter,
+.activity-summary-card,
+.file-item,
+.session-skeleton,
+.drawer-card {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-panel);
+  color: var(--retro-text);
+  box-shadow: none;
+}
+.starter:hover {
+  transform: translateY(-2px);
+  border-color: var(--retro-surface-hi);
+  background: #fff;
+}
+.message .bubble {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: rgb(247 245 233 / 94%);
+  color: var(--retro-text);
+  box-shadow: var(--retro-shadow);
+}
+.message.user .bubble {
+  background: #d7e8ff;
+  color: #111;
+  border-bottom-right-radius: var(--retro-radius);
+}
+.message.assistant .bubble {
+  border-bottom-left-radius: var(--retro-radius);
+}
+.composer {
+  border: 2px inset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: rgb(236 233 216 / 96%);
+  box-shadow: 3px 3px 0 #0006;
+}
+.composer textarea {
+  color: var(--retro-text);
+}
+.composer textarea::placeholder {
+  color: #666;
+}
+.composer-note {
+  color: #fff;
+  text-shadow: 1px 1px #333;
+}
+.model-picker,
+.context-monitor,
+.runtime-monitor,
+.library-search,
+.search,
+.folder-picker select,
+.project-picker select,
+.settings-field select,
+.settings-field input,
+.settings-field textarea,
+.workspace-path-row input,
+.workspace-search-row input,
+.terminal-input-row input {
+  border: 2px inset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-input);
+  color: var(--retro-text);
+}
+.send-button {
+  background: var(--retro-accent);
+  color: #fff;
+  border: 2px outset #b9d7ff;
+  text-shadow: 1px 1px #003077;
+}
+.detail-card,
+.project-picker,
+.credential-library,
+.file-library,
+.sidebar-footer {
+  border-color: var(--retro-surface-shadow);
+}
+.detail-card > summary::after,
+.sidebar-section > summary::after,
+.project-picker > summary::after,
+.credential-library > summary::after,
+.file-library > summary::after {
+  color: var(--retro-accent);
+}
+.drawer-tab {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-surface);
+  color: var(--retro-text);
+  box-shadow: 2px 2px 0 #0005;
+}
+.drawer-tab:hover,
+.drawer-tab[aria-expanded="true"] {
+  color: var(--retro-accent);
+  border-color: var(--retro-surface-hi);
+}
+.settings-panel,
+.palette,
+.command-drawer {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-surface);
+  color: var(--retro-text);
+  box-shadow: 8px 8px 0 #0007;
+}
+.palette-head {
+  background: var(--retro-title);
+  color: #fff;
+}
+.settings-field > span,
+.settings-check,
+.palette button,
+.drawer-card h3 {
+  color: var(--retro-text);
+}
+.settings-actions button,
+.drawer-actions button,
+.notification-card > button,
+.palette button {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-surface);
+  color: var(--retro-text);
+}
+.settings-actions .primary-button,
+.drawer-actions .primary-button {
+  background: var(--retro-accent);
+  color: #fff;
+  border-color: #b9d7ff;
+}
+.toast {
+  border: 2px outset var(--retro-surface-hi);
+  border-radius: var(--retro-radius);
+  background: var(--retro-surface);
+  color: var(--retro-text);
+  box-shadow: 4px 4px 0 #0005;
+}
+html[data-theme="win98"] .topbar {
+  height: 48px;
+}
+html[data-theme="win98"] .brand-mark {
+  border-radius: 0;
+}
+html[data-theme="win98"] .welcome,
+html[data-theme="win98"] .composer,
+html[data-theme="win98"] .message .bubble {
+  box-shadow: 2px 2px 0 #000;
+}
+@media (max-width: 720px) {
+  .welcome {
+    padding: 12px;
+  }
+  .topbar {
+    height: 58px;
   }
 }

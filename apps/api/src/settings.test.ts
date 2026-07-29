@@ -10,7 +10,8 @@ describe("settings", () => {
       responseLimit: 4096,
       notifications: true,
       retentionDays: 30,
-      theme: "dark",
+      theme: "xp",
+      chatBackground: "bliss",
       compactActivity: false,
     });
   });
@@ -23,7 +24,8 @@ describe("settings", () => {
         responseLimit: 999999,
         notifications: false,
         retentionDays: -4,
-        theme: "light",
+        theme: "win98",
+        chatBackground: "clouds",
         compactActivity: true,
       }),
     ).toEqual({
@@ -32,12 +34,18 @@ describe("settings", () => {
       responseLimit: 32768,
       notifications: false,
       retentionDays: 1,
-      theme: "light",
+      theme: "win98",
+      chatBackground: "clouds",
       compactActivity: true,
     });
   });
 
-  it("accepts the classic command-center theme", () => {
-    expect(normalizeSettings({ theme: "classic" }).theme).toBe("classic");
+  it("accepts the XP and Windows 98 themes", () => {
+    expect(normalizeSettings({ theme: "xp" }).theme).toBe("xp");
+    expect(normalizeSettings({ theme: "win98" }).theme).toBe("win98");
+  });
+
+  it("accepts classic chat backgrounds", () => {
+    expect(normalizeSettings({ chatBackground: "3d-pipes" }).chatBackground).toBe("3d-pipes");
   });
 });

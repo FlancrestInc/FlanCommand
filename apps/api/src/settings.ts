@@ -1,5 +1,6 @@
 export type ReasoningEffort = "low" | "medium" | "high";
-export type SettingsTheme = "dark" | "light" | "classic";
+export type SettingsTheme = "xp" | "win98";
+export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
 
 export interface UserSettings {
   defaultModel: string;
@@ -8,6 +9,7 @@ export interface UserSettings {
   notifications: boolean;
   retentionDays: number;
   theme: SettingsTheme;
+  chatBackground: ChatBackground;
   compactActivity: boolean;
 }
 
@@ -17,7 +19,8 @@ export const defaultSettings: UserSettings = {
   responseLimit: 4096,
   notifications: true,
   retentionDays: 30,
-  theme: "dark",
+  theme: "xp",
+  chatBackground: "bliss",
   compactActivity: false,
 };
 
@@ -50,10 +53,16 @@ export function normalizeSettings(
     notifications:
       typeof input.notifications === "boolean" ? input.notifications : base.notifications,
     retentionDays: boundedInteger(input.retentionDays, base.retentionDays, 1, 365),
-    theme:
-      input.theme === "light" || input.theme === "dark" || input.theme === "classic"
-        ? input.theme
-        : base.theme,
+    theme: input.theme === "xp" || input.theme === "win98" ? input.theme : base.theme,
+    chatBackground:
+      input.chatBackground === "bliss" ||
+      input.chatBackground === "clouds" ||
+      input.chatBackground === "autumn" ||
+      input.chatBackground === "3d-pipes" ||
+      input.chatBackground === "azul" ||
+      input.chatBackground === "none"
+        ? input.chatBackground
+        : base.chatBackground,
     compactActivity:
       typeof input.compactActivity === "boolean" ? input.compactActivity : base.compactActivity,
   };
