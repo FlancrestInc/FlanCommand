@@ -4,8 +4,10 @@ import {
   activityLabel,
   activitySummaryLabel,
   formatApiError,
+  formatDuration,
   jobActions,
   jobStatusLabel,
+  runtimeMonitorLabel,
   sortNewest,
 } from "./command-center.js";
 import { recoveryForSendFailure } from "./chat-recovery.js";
@@ -29,6 +31,8 @@ const state = {
   activityExpanded: false,
   activitySummary: null,
   startedAt: null,
+  elapsedSeconds: null,
+  elapsedCompleted: false,
   elapsedTimer: null,
   draft: localStorage.getItem("flan-draft") || "",
   commands: [],
@@ -38,6 +42,8 @@ const state = {
   defaultModelId: "",
   contextUsage: { totalTokens: 0, contextWindow: 0 },
   toolStartedAt: null,
+  toolElapsedSeconds: null,
+  toolElapsedCompleted: false,
   toolElapsedTimer: null,
   files: [],
   artifacts: [],
@@ -271,7 +277,17 @@ function renderSessionLoading() {
   ).join("");
 }
 function renderSession(session) {
+  const changingSession = state.activeId !== session.id;
   state.activeId = session.id;
+  if (changingSession) {
+    state.startedAt = null;
+    state.elapsedSeconds = null;
+    state.elapsedCompleted = false;
+    state.toolStartedAt = null;
+    state.toolElapsedSeconds = null;
+    state.toolElapsedCompleted = false;
+    renderRunMonitors();
+  }
   localStorage.setItem("flan-active-session", session.id);
   $("session-title").textContent = session.title || "Untitled conversation";
   $("session-meta").textContent =
@@ -1748,18 +1764,21 @@ function formatTokenCount(value) {
   if (value >= 1000) return `${Math.round(value / 1000)}K`;
   return String(value);
 }
-function formatDuration(seconds) {
-  if (!Number.isFinite(seconds)) return "—";
-  if (seconds < 60) return `${Math.floor(seconds)}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainder = Math.floor(seconds % 60);
-  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
-}
 function renderRunMonitors() {
-  const elapsed = state.startedAt ? (Date.now() - state.startedAt) / 1000 : null;
-  const toolElapsed = state.toolStartedAt ? (Date.now() - state.toolStartedAt) / 1000 : null;
-  $("elapsed-monitor").textContent = `◷ ${formatDuration(elapsed)}`;
-  $("tool-monitor").textContent = `⚒ ${formatDuration(toolElapsed)}`;
+  const elapsed = state.startedAt ? (Date.now() - state.startedAt) / 1000 : state.elapsedSeconds;
+  const toolElapsed = state.toolStartedAt
+    ? (Date.now() - state.toolStartedAt) / 1000
+    : state.toolElapsedSeconds;
+  $("elapsed-monitor").textContent = runtimeMonitorLabel(
+    "◷",
+    elapsed,
+    state.elapsedCompleted && !state.startedAt,
+  );
+  $("tool-monitor").textContent = runtimeMonitorLabel(
+    "⚒",
+    toolElapsed,
+    state.toolElapsedCompleted && !state.toolStartedAt,
+  );
   const used = state.contextUsage.totalTokens || 0;
   const max = state.contextUsage.contextWindow || 0;
   const percentage = max ? Math.min(100, Math.round((used / max) * 100)) : 0;
@@ -1802,18 +1821,37 @@ function addActivity(event) {
   }
   if (event.type === "run.started") {
     state.startedAt = Date.now();
+    state.elapsedSeconds = null;
+    state.elapsedCompleted = false;
+    state.toolElapsedSeconds = null;
+    state.toolElapsedCompleted = false;
     startMonitorTimer();
   }
   if (event.type === "tool.started") {
     state.toolStartedAt = Date.now();
+    state.toolElapsedSeconds = null;
+    state.toolElapsedCompleted = false;
     renderRunMonitors();
   }
   if (["tool.completed", "tool.failed"].includes(event.type)) {
+    state.toolElapsedSeconds = state.toolStartedAt
+      ? Math.floor((Date.now() - state.toolStartedAt) / 1000)
+      : state.toolElapsedSeconds;
+    state.toolElapsedCompleted = true;
     state.toolStartedAt = null;
     renderRunMonitors();
   }
   if (["run.completed", "run.failed", "run.stopped"].includes(event.type)) {
     const durationSeconds = state.startedAt ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
+    state.elapsedSeconds = state.startedAt
+      ? Math.floor((Date.now() - state.startedAt) / 1000)
+      : state.elapsedSeconds;
+    state.elapsedCompleted = true;
+    if (state.toolStartedAt) {
+      state.toolElapsedSeconds = Math.floor((Date.now() - state.toolStartedAt) / 1000);
+      state.toolElapsedCompleted = true;
+      state.toolStartedAt = null;
+    }
     state.activitySummary = {
       durationSeconds,
       toolCalls: state.events.filter((item) => item.type === "tool.started").length,
@@ -1821,11 +1859,9 @@ function addActivity(event) {
       status: event.type === "run.completed" ? "Worked" : event.type.replace("run.", ""),
     };
     stopMonitorTimer();
-    state.toolStartedAt = null;
-    $("elapsed-value").textContent = state.startedAt
-      ? `${Math.floor((Date.now() - state.startedAt) / 1000)}s`
-      : "—";
+    $("elapsed-value").textContent = state.startedAt ? `${state.elapsedSeconds}s` : "—";
     state.startedAt = null;
+    renderRunMonitors();
   }
   if (event.type === "context.updated") {
     state.contextUsage = {
@@ -1908,6 +1944,13 @@ async function send(text) {
     .filter(Boolean);
   state.events = [];
   state.activitySummary = null;
+  state.startedAt = null;
+  state.elapsedSeconds = null;
+  state.elapsedCompleted = false;
+  state.toolStartedAt = null;
+  state.toolElapsedSeconds = null;
+  state.toolElapsedCompleted = false;
+  renderRunMonitors();
   $("raw-events").textContent = "No events yet.";
   $("activity").innerHTML =
     '<div class="activity-empty"><span>✦</span><p>Listening for Hermes activity…</p></div>';

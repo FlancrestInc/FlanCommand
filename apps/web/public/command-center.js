@@ -52,6 +52,18 @@ export function activitySummaryLabel(summary) {
   return `${summary.status || "Completed"} · ${tools} · ${approvals} · ${summary.durationSeconds || 0}s`;
 }
 
+export function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return "—";
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.floor(seconds % 60);
+  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
+}
+
+export function runtimeMonitorLabel(icon, seconds, completed = false) {
+  return `${icon} ${formatDuration(seconds)}${completed ? " ✓" : ""}`;
+}
+
 export function formatApiError(error) {
   const message = typeof error?.message === "string" ? error.message : "Request failed";
   const cause = typeof error?.likelyCause === "string" ? error.likelyCause : "";

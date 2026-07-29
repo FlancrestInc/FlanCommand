@@ -5,8 +5,10 @@ import {
   activityLabel,
   activitySummaryLabel,
   formatApiError,
+  formatDuration,
   jobActions,
   jobStatusLabel,
+  runtimeMonitorLabel,
   sortNewest,
 } from "../public/command-center.js";
 
@@ -39,6 +41,14 @@ describe("command center presentation helpers", () => {
     expect(
       activitySummaryLabel({ status: "Worked", toolCalls: 2, approvals: 1, durationSeconds: 4 }),
     ).toBe("Worked · 2 tool calls · 1 approval · 4s");
+  });
+
+  it("keeps completed timer values and marks them complete", () => {
+    expect(formatDuration(35)).toBe("35s");
+    expect(formatDuration(95)).toBe("1m 35s");
+    expect(runtimeMonitorLabel("⚒", 35)).toBe("⚒ 35s");
+    expect(runtimeMonitorLabel("⚒", 35, true)).toBe("⚒ 35s ✓");
+    expect(runtimeMonitorLabel("◷", null, false)).toBe("◷ —");
   });
 
   it("labels job states and orders newest records first", () => {
