@@ -73,6 +73,7 @@ curl -fsS https://hermes.example.com/api/health
 The first endpoint is a public monitor endpoint. The API health response is
 `200` with `ok: true` when the runtime is ready, and `503` with `ok: false`
 when the runtime is unavailable.
+Run the deployment command from the repository root so Compose uses the intended build context.
 
 If FlanCommand itself is rebuilt or restarted while Hermes is working, the WebSocket necessarily drops with the old API process. The Hermes gateway on Gospel can continue the run, so the new API startup path reconciles persisted `paused` jobs against `session.resume` history. A terminal Hermes session with an assistant response is marked completed without resending the prompt. Ambiguous or still-running jobs remain paused for manual recovery. The browser retries `/api/sessions/<id>/reconnect` with bounded backoff after an interrupted stream and also performs this reconciliation when opening a running session.
 
