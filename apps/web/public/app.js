@@ -5,6 +5,7 @@ import {
   activitySummaryLabel,
   formatApiError,
   formatDuration,
+  formatMessageTimestamp,
   jobActions,
   jobStatusLabel,
   runtimeMonitorLabel,
@@ -204,17 +205,27 @@ function renderConversationApprovals(sessionId) {
   const messages = $("messages");
   if (!messages || !sessionId) return;
   messages.querySelectorAll(".inline-approval").forEach((item) => item.remove());
-  const approvals = sortNewest(state.approvals).filter((item) => item.sessionId === sessionId);
+  const approvals = state.approvals.filter((item) => item.sessionId === sessionId);
   if (!approvals.length) return;
-  messages.insertAdjacentHTML(
-    "beforeend",
-    approvals
-      .map((approval) => {
-        const pending = approval.decision === "pending";
-        return `<article class="inline-approval ${pending ? "pending" : "decided"}" data-inline-approval="${escapeHtml(approval.id)}" tabindex="-1" aria-label="Approval request: ${escapeHtml(approval.description)}"><div class="inline-approval-head"><strong>${pending ? "Approval required" : `Approval ${escapeHtml(approval.decision)}`}</strong><span>${escapeHtml(approval.evaluation?.risk || "Review")}</span></div><p>${escapeHtml(approval.description)}</p>${pending ? `<div class="inline-approval-actions"><button class="primary-button" type="button" data-inline-approve="${escapeHtml(approval.id)}" accesskey="a" title="Approve this action (keyboard: A)">Approve <kbd>A</kbd></button><button type="button" data-inline-deny="${escapeHtml(approval.id)}" accesskey="d" title="Deny this action (keyboard: D)">Deny <kbd>D</kbd></button></div><small>Tab to an option, then press Enter · or press A/D</small>` : ""}</article>`;
-      })
-      .join(""),
-  );
+  const renderApproval = (approval) => {
+    const pending = approval.decision === "pending";
+    return `<article class="inline-approval ${pending ? "pending" : "decided"}" data-inline-approval="${escapeHtml(approval.id)}" tabindex="-1" aria-label="Approval request: ${escapeHtml(approval.description)}"><div class="inline-approval-head"><strong>${pending ? "Approval required" : `Approval ${escapeHtml(approval.decision)}`}</strong><span>${escapeHtml(approval.evaluation?.risk || "Review")}</span></div><p>${escapeHtml(approval.description)}</p><time datetime="${escapeHtml(approval.createdAt)}">${escapeHtml(formatMessageTimestamp(approval.createdAt))}</time>${pending ? `<div class="inline-approval-actions"><button class="primary-button" type="button" data-inline-approve="${escapeHtml(approval.id)}" accesskey="a" title="Approve this action (keyboard: A)">Approve <kbd>A</kbd></button><button type="button" data-inline-deny="${escapeHtml(approval.id)}" accesskey="d" title="Deny this action (keyboard: D)">Deny <kbd>D</kbd></button></div><small>Tab to an option, then press Enter · or press A/D</small>` : ""}</article>`;
+  };
+  const decided = approvals
+    .filter((approval) => approval.decision !== "pending")
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  for (const approval of decided) {
+    const anchor = approval.anchorMessageId
+      ? messages.querySelector(`[data-message-id="${CSS.escape(approval.anchorMessageId)}"]`)
+      : null;
+    const target = anchor || messages.lastElementChild;
+    if (target) target.insertAdjacentHTML("afterend", renderApproval(approval));
+    else messages.insertAdjacentHTML("beforeend", renderApproval(approval));
+  }
+  approvals
+    .filter((approval) => approval.decision === "pending")
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .forEach((approval) => messages.insertAdjacentHTML("beforeend", renderApproval(approval)));
   messages
     .querySelectorAll("[data-inline-approve]")
     .forEach((button) =>
@@ -276,6 +287,16 @@ function renderSessionLoading() {
     () => '<div class="session-skeleton" aria-hidden="true"><span></span><i></i></div>',
   ).join("");
 }
+function renderChatMessage(message) {
+  const canRetry =
+    message.role === "assistant" &&
+    message.status === "failed" &&
+    message.turnId &&
+    ["observed", "source-inferred"].includes(state.capabilities.retry?.status);
+  const at = message.at || new Date().toISOString();
+  const label = message.role === "user" ? "You" : `Hermes · ${message.status || "complete"}`;
+  return `<article class="message ${message.role}" data-message-id="${escapeHtml(message.id || "")}"><div class="bubble">${renderText(message.text)}${message.attachments?.length ? `<div class="message-attachments">Attached: ${message.attachments.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">${label}<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>${canRetry ? `<button class="retry-button" type="button" data-retry-turn="${escapeHtml(message.turnId)}">Retry turn</button>` : ""}</span></article>`;
+}
 function renderSession(session) {
   const changingSession = state.activeId !== session.id;
   state.activeId = session.id;
@@ -304,16 +325,7 @@ function renderSession(session) {
   $("project-select").value = session.projectId || "";
   renderConversationPermission(session);
   $("folder-select").value = session.folderId || "";
-  $("messages").innerHTML = (session.messages || [])
-    .map((message) => {
-      const canRetry =
-        message.role === "assistant" &&
-        message.status === "failed" &&
-        message.turnId &&
-        ["observed", "source-inferred"].includes(state.capabilities.retry?.status);
-      return `<article class="message ${message.role}"><div class="bubble">${renderText(message.text)}${message.attachments?.length ? `<div class="message-attachments">Attached: ${message.attachments.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">${message.role === "user" ? "You" : `Hermes · ${message.status || "complete"}`}${canRetry ? `<button class="retry-button" type="button" data-retry-turn="${escapeHtml(message.turnId)}">Retry turn</button>` : ""}</span></article>`;
-    })
-    .join("");
+  $("messages").innerHTML = (session.messages || []).map(renderChatMessage).join("");
   bindMarkdownActions($("messages"));
   bindRetryActions($("messages"));
   renderConversationApprovals(session.id);
@@ -1932,6 +1944,21 @@ function activityRow(event, label = activityLabel(event)) {
   }
   return item;
 }
+function appendLiveAssistantMessage(at = new Date().toISOString()) {
+  $("messages").insertAdjacentHTML(
+    "beforeend",
+    `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
+  );
+}
+function completeLiveAssistantMessage(at = new Date().toISOString()) {
+  const liveMessage = $("live-message");
+  if (!liveMessage) return;
+  liveMessage.removeAttribute("id");
+  liveMessage.querySelector(".live-activity")?.remove();
+  const meta = liveMessage.querySelector(".message-meta");
+  if (meta)
+    meta.innerHTML = `Hermes · complete<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>`;
+}
 async function send(text) {
   if (state.running || !state.activeId) return;
   state.running = true;
@@ -1964,9 +1991,18 @@ async function send(text) {
   state.abort = controller;
   const messages = $("messages");
   $("welcome").style.display = "none";
+  const userMessageAt = new Date().toISOString();
   messages.insertAdjacentHTML(
     "beforeend",
-    `<article class="message user"><div class="bubble">${renderText(text)}${attachmentNames.length ? `<div class="message-attachments">Attached: ${attachmentNames.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">You</span></article><article class="message assistant" id="live-message"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working</span></article>`,
+    renderChatMessage({
+      id: `live-user-${Date.now()}`,
+      role: "user",
+      text,
+      at: userMessageAt,
+      status: "complete",
+      ...(attachmentNames.length ? { attachments: attachmentNames } : {}),
+    }) +
+      `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(userMessageAt)}">${escapeHtml(formatMessageTimestamp(userMessageAt))}</time></span></article>`,
   );
   $("composer-input").value = "";
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
@@ -1983,6 +2019,10 @@ async function send(text) {
     let buffer = "";
     let liveText = "";
     const live = () => document.querySelector("#live-message .bubble");
+    const ensureLiveMessage = () => {
+      if (!live()) appendLiveAssistantMessage();
+      return live();
+    };
     while (true) {
       const part = await reader.read();
       if (part.done) break;
@@ -2023,9 +2063,14 @@ async function send(text) {
             ];
             renderConversationApprovals(state.activeId);
           }
+          if (event.type === "message.completed") {
+            completeLiveAssistantMessage();
+            liveText = "";
+          }
           if (event.type === "message.delta") {
             liveText += event.text;
-            live().innerHTML = renderText(liveText);
+            const liveBubble = ensureLiveMessage();
+            if (liveBubble) liveBubble.innerHTML = renderText(liveText);
           }
         }
       }

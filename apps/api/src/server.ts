@@ -91,6 +91,7 @@ interface ApprovalRecord {
   sessionId?: string;
   projectId?: string;
   runId?: string;
+  anchorMessageId?: string;
   details?: { path?: string; host?: string; projectId?: string };
   evaluation: PolicyEvaluation;
   decision: "pending" | "approved" | "denied";
@@ -353,7 +354,10 @@ function applyEvent(state: SessionState, event: AgentEvent): void {
       });
   } else if (event.type === "message.completed") {
     const current = activeAssistantForRun(state, event.runId);
-    if (current) current.turnId = event.messageId;
+    if (current) {
+      current.turnId = event.messageId;
+      current.status = "complete";
+    }
   } else if (event.type === "run.completed") {
     const current = activeAssistantForRun(state, event.runId);
     if (current) current.status = "complete";
@@ -780,6 +784,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
             sessionId: state.session.id,
             projectId: state.projectId,
             runId: event.runId,
+            anchorMessageId: state.messages.at(-1)?.id,
             evaluation: {
               decision: "approval",
               action: "command",
@@ -2503,6 +2508,9 @@ export function createApiServer(options: ApiServerOptions = {}) {
               ...(typeof input.projectId === "string" ? { projectId: input.projectId } : {}),
             },
             ...(typeof input.sessionId === "string" ? { sessionId: input.sessionId } : {}),
+            ...(typeof input.sessionId === "string"
+              ? { anchorMessageId: sessions.get(input.sessionId)?.messages.at(-1)?.id }
+              : {}),
             ...(typeof input.projectId === "string" ? { projectId: input.projectId } : {}),
             evaluation,
             decision: "pending",

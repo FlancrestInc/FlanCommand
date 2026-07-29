@@ -64,6 +64,12 @@ export function runtimeMonitorLabel(icon, seconds, completed = false) {
   return `${icon} ${formatDuration(seconds)}${completed ? " ✓" : ""}`;
 }
 
+export function formatMessageTimestamp(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
+}
+
 export function formatApiError(error) {
   const message = typeof error?.message === "string" ? error.message : "Request failed";
   const cause = typeof error?.likelyCause === "string" ? error.likelyCause : "";

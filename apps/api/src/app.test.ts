@@ -201,7 +201,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v8"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v9"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {
@@ -784,6 +784,120 @@ describe("API BFF", () => {
       ],
     });
     expect(adapter.resumed).toEqual(["session-1", "session-1"]);
+  });
+
+  it("keeps separate assistant messages when a run emits multiple message completions", async () => {
+    const adapter = makeAdapter([
+      {
+        type: "run.started",
+        runId: "run-messages",
+        sessionId: "session-1",
+        at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        type: "message.delta",
+        runId: "run-messages",
+        sessionId: "session-1",
+        text: "First response",
+      },
+      {
+        type: "message.completed",
+        runId: "run-messages",
+        sessionId: "session-1",
+        messageId: "message-1",
+      },
+      {
+        type: "tool.started",
+        runId: "run-messages",
+        sessionId: "session-1",
+        toolCall: { id: "tool-1", name: "shell" },
+      },
+      {
+        type: "tool.completed",
+        runId: "run-messages",
+        sessionId: "session-1",
+        toolCallId: "tool-1",
+        result: "done",
+      },
+      {
+        type: "message.delta",
+        runId: "run-messages",
+        sessionId: "session-1",
+        text: "Second response",
+      },
+      {
+        type: "message.completed",
+        runId: "run-messages",
+        sessionId: "session-1",
+        messageId: "message-2",
+      },
+      { type: "run.completed", runId: "run-messages", sessionId: "session-1" },
+    ]);
+    const base = await start(adapter);
+    const response = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Run with multiple responses" }),
+    });
+    await response.text();
+    const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
+      result.json(),
+    )) as {
+      messages: Array<{ role: string; text: string; status: string }>;
+    };
+    expect(session.messages).toEqual([
+      expect.objectContaining({ role: "user", text: "Run with multiple responses" }),
+      expect.objectContaining({ role: "assistant", text: "First response", status: "complete" }),
+      expect.objectContaining({ role: "assistant", text: "Second response", status: "complete" }),
+    ]);
+  });
+
+  it("anchors streamed approvals to the message that introduced them", async () => {
+    const adapter = makeAdapter([
+      {
+        type: "run.started",
+        runId: "run-approval-anchor",
+        sessionId: "session-1",
+        at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        type: "approval.requested",
+        runId: "run-approval-anchor",
+        sessionId: "session-1",
+        approval: { id: "approval-anchor", action: "shell", description: "Run a command" },
+      },
+      {
+        type: "message.delta",
+        runId: "run-approval-anchor",
+        sessionId: "session-1",
+        text: "After approval",
+      },
+      {
+        type: "message.completed",
+        runId: "run-approval-anchor",
+        sessionId: "session-1",
+        messageId: "message-after-approval",
+      },
+      { type: "run.completed", runId: "run-approval-anchor", sessionId: "session-1" },
+    ]);
+    const base = await start(adapter);
+    const response = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Request approval" }),
+    });
+    await response.text();
+    const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
+      result.json(),
+    )) as {
+      messages: Array<{ id: string }>;
+    };
+    const approvals = (await fetch(`${base}/api/approvals`).then((result) => result.json())) as {
+      approvals: Array<{ id: string; anchorMessageId?: string }>;
+    };
+    expect(approvals.approvals).toEqual([
+      expect.objectContaining({ id: "approval-anchor", anchorMessageId: session.messages[0]!.id }),
+    ]);
   });
 
   it("returns buffered run events after a reconnect cursor", async () => {

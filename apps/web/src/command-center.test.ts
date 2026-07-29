@@ -6,6 +6,7 @@ import {
   activitySummaryLabel,
   formatApiError,
   formatDuration,
+  formatMessageTimestamp,
   jobActions,
   jobStatusLabel,
   runtimeMonitorLabel,
@@ -49,6 +50,8 @@ describe("command center presentation helpers", () => {
     expect(runtimeMonitorLabel("⚒", 35)).toBe("⚒ 35s");
     expect(runtimeMonitorLabel("⚒", 35, true)).toBe("⚒ 35s ✓");
     expect(runtimeMonitorLabel("◷", null, false)).toBe("◷ —");
+    expect(formatMessageTimestamp("2026-01-02T03:04:00.000Z")).toMatch(/\d/);
+    expect(formatMessageTimestamp("not-a-date")).toBe("—");
   });
 
   it("labels job states and orders newest records first", () => {

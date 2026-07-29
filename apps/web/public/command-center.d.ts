@@ -17,6 +17,7 @@ export function runtimeMonitorLabel(
   seconds: number | null,
   completed?: boolean,
 ): string;
+export function formatMessageTimestamp(value: string): string;
 export function formatApiError(error: unknown): string;
 export function jobStatusLabel(status: string): string;
 export function jobActions(job: {
