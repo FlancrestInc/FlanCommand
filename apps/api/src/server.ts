@@ -572,6 +572,24 @@ export function createApiServer(options: ApiServerOptions = {}) {
     Object.assign(job, patch, { updatedAt: new Date().toISOString() });
     await persistMetadata();
   };
+  const recreateLostSession = async (
+    job: JobRecord,
+    state: SessionState,
+  ): Promise<HermesSession> => {
+    const previousId = state.session.id;
+    const replacement = await adapter.createSession({
+      title: state.customTitle || state.session.title,
+      modelId: state.session.modelId,
+    });
+    sessions.delete(previousId);
+    state.session = { ...replacement };
+    state.skipResume = true;
+    job.sessionId = replacement.id;
+    resumedSessions.delete(previousId);
+    sessions.set(replacement.id, state);
+    await persistMetadata();
+    return replacement;
+  };
   const createJob = (
     state: SessionState,
     sessionId: string,
@@ -628,9 +646,14 @@ export function createApiServer(options: ApiServerOptions = {}) {
           await adapter.resumeSession(state.session.id);
           resumedSessions.add(state.session.id);
         } catch (error) {
-          // Newly created sessions may not have a resumable durable record yet;
-          // those can still accept a prompt on the live connection.
-          if (requiresResume) throw error;
+          if (isMissingHermesSessionError(error)) {
+            const replacement = await recreateLostSession(job, state);
+            if (!response?.destroyed) {
+              sse(response!, "session", { type: "replaced", session: replacement });
+            }
+          } else if (requiresResume) {
+            throw error;
+          }
         }
       }
       const attachmentRefs: string[] = [];
@@ -2868,6 +2891,10 @@ class ApiError extends Error {
 
 function isEphemeralSessionId(id: string): boolean {
   return /^[a-f0-9]{8}$/i.test(id);
+}
+
+function isMissingHermesSessionError(error: unknown): boolean {
+  return error instanceof HermesAdapterError && /4007\b.*session not found/i.test(error.message);
 }
 
 function safeError(error: unknown): SafeError {

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import type { AgentEvent, HermesSession } from "@flancommand/event-schema";
-import type { HermesAdapter } from "@flancommand/hermes-adapter";
+import { HermesAdapterError, type HermesAdapter } from "@flancommand/hermes-adapter";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createApiServer } from "./server.js";
@@ -17,7 +17,10 @@ const sessions: HermesSession[] = [
   { id: "session-1", title: "First session", source: "hermes", status: "idle" },
 ];
 
-function makeAdapter(events: AgentEvent[] = []): HermesAdapter & {
+function makeAdapter(
+  events: AgentEvent[] = [],
+  missingResume = false,
+): HermesAdapter & {
   resumed: string[];
   connects: number;
   retried: string[];
@@ -75,6 +78,13 @@ function makeAdapter(events: AgentEvent[] = []): HermesAdapter & {
     }),
     resumeSession: async (id) => {
       resumed.push(id);
+      if (missingResume)
+        throw new HermesAdapterError({
+          code: "TRANSPORT_REQUEST_FAILED",
+          message: "Hermes WebSocket transport failed: 4007: session not found",
+          operation: "resumeSession",
+          retryable: true,
+        });
       return {
         id,
         source: "hermes",
@@ -313,6 +323,40 @@ describe("API BFF", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
     await response.text();
+  });
+
+  it("recreates a Hermes session that expired before the next message", async () => {
+    const adapter = makeAdapter(
+      [
+        {
+          type: "run.started",
+          runId: "run-recreated",
+          sessionId: "session-new",
+          at: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          type: "message.delta",
+          runId: "run-recreated",
+          sessionId: "session-new",
+          text: "Recovered",
+        },
+        { type: "run.completed", runId: "run-recreated", sessionId: "session-new" },
+      ],
+      true,
+    );
+    const base = await start(adapter);
+    const response = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Continue after being away" }),
+    });
+
+    expect(response.status).toBe(200);
+    const stream = await response.text();
+    expect(stream).toContain('event: session\ndata: {"type":"replaced"');
+    expect(stream).toContain('"id":"session-new"');
+    expect(stream).not.toContain("session not found");
+    await expect(fetch(`${base}/api/sessions/session-new`)).resolves.toMatchObject({ status: 200 });
   });
 
   it("serves health and session routes through the adapter", async () => {

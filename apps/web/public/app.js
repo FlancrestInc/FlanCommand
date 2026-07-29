@@ -1913,6 +1913,10 @@ async function send(text) {
           ?.slice(7);
         if (!data) continue;
         const event = JSON.parse(data);
+        if (eventName === "session" && event.type === "replaced" && event.session?.id) {
+          state.activeId = event.session.id;
+          continue;
+        }
         if (eventName === "error") {
           throw new Error(event.error?.message || "Hermes rejected the message.");
         }
