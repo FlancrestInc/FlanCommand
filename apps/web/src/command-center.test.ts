@@ -10,6 +10,7 @@ import {
   jobActions,
   jobStatusLabel,
   runtimeMonitorLabel,
+  shouldSeparateAssistantMessage,
   sortNewest,
 } from "../public/command-center.js";
 
@@ -42,6 +43,13 @@ describe("command center presentation helpers", () => {
     expect(
       activitySummaryLabel({ status: "Worked", toolCalls: 2, approvals: 1, durationSeconds: 4 }),
     ).toBe("Worked · 2 tool calls · 1 approval · 4s");
+  });
+
+  it("separates Hermes responses at message and tool boundaries", () => {
+    expect(shouldSeparateAssistantMessage({ type: "message.completed" })).toBe(true);
+    expect(shouldSeparateAssistantMessage({ type: "tool.started" })).toBe(true);
+    expect(shouldSeparateAssistantMessage({ type: "tool.output" })).toBe(false);
+    expect(shouldSeparateAssistantMessage({ type: "run.completed" })).toBe(false);
   });
 
   it("keeps completed timer values and marks them complete", () => {

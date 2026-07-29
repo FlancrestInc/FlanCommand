@@ -9,6 +9,7 @@ import {
   jobActions,
   jobStatusLabel,
   runtimeMonitorLabel,
+  shouldSeparateAssistantMessage,
   sortNewest,
 } from "./command-center.js";
 import { recoveryForSendFailure } from "./chat-recovery.js";
@@ -2063,7 +2064,10 @@ async function send(text) {
             ];
             renderConversationApprovals(state.activeId);
           }
-          if (event.type === "message.completed") {
+          if (
+            shouldSeparateAssistantMessage(event) &&
+            (event.type === "message.completed" || liveText.trim().length > 0)
+          ) {
             completeLiveAssistantMessage();
             liveText = "";
           }

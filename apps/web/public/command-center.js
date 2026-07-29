@@ -52,6 +52,10 @@ export function activitySummaryLabel(summary) {
   return `${summary.status || "Completed"} · ${tools} · ${approvals} · ${summary.durationSeconds || 0}s`;
 }
 
+export function shouldSeparateAssistantMessage(event) {
+  return event?.type === "message.completed" || event?.type === "tool.started";
+}
+
 export function formatDuration(seconds) {
   if (!Number.isFinite(seconds)) return "—";
   if (seconds < 60) return `${Math.floor(seconds)}s`;

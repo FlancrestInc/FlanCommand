@@ -11,6 +11,7 @@ export function activitySummaryLabel(
     | null
     | undefined,
 ): string;
+export function shouldSeparateAssistantMessage(event: unknown): boolean;
 export function formatDuration(seconds: number): string;
 export function runtimeMonitorLabel(
   icon: string,
