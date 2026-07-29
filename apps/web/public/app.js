@@ -1793,7 +1793,7 @@ function addActivity(event) {
   if (event.type === "run.completed" && event.summary?.usage) {
     state.contextUsage = {
       ...state.contextUsage,
-      totalTokens: event.summary.usage.totalTokens || 0,
+      ...event.summary.usage,
     };
     renderRunMonitors();
     $("token-value").textContent = String(event.summary.usage.totalTokens || "—");
