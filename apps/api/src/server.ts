@@ -352,10 +352,12 @@ function applyEvent(state: SessionState, event: AgentEvent): void {
         runId: event.runId,
         status: "working",
       });
-  } else if (event.type === "message.completed") {
+  } else if (event.type === "message.completed" || event.type === "tool.started") {
     const current = activeAssistantForRun(state, event.runId);
-    if (current) {
+    if (current && event.type === "message.completed") {
       current.turnId = event.messageId;
+      current.status = "complete";
+    } else if (current) {
       current.status = "complete";
     }
   } else if (event.type === "run.completed") {

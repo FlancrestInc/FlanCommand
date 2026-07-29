@@ -786,6 +786,53 @@ describe("API BFF", () => {
     expect(adapter.resumed).toEqual(["session-1", "session-1"]);
   });
 
+  it("keeps assistant messages separate when a tool boundary has no completion event", async () => {
+    const adapter = makeAdapter([
+      {
+        type: "run.started",
+        runId: "run-tool-boundary",
+        sessionId: "session-1",
+        at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        type: "message.delta",
+        runId: "run-tool-boundary",
+        sessionId: "session-1",
+        text: "Before the tool",
+      },
+      {
+        type: "tool.started",
+        runId: "run-tool-boundary",
+        sessionId: "session-1",
+        toolCall: { id: "tool-boundary-1", name: "shell" },
+      },
+      {
+        type: "message.delta",
+        runId: "run-tool-boundary",
+        sessionId: "session-1",
+        text: "After the tool",
+      },
+      { type: "run.completed", runId: "run-tool-boundary", sessionId: "session-1" },
+    ]);
+    const base = await start(adapter);
+    const response = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Run with an implicit tool boundary" }),
+    });
+    await response.text();
+    const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
+      result.json(),
+    )) as {
+      messages: Array<{ role: string; text: string; status: string }>;
+    };
+    expect(session.messages).toEqual([
+      expect.objectContaining({ role: "user", text: "Run with an implicit tool boundary" }),
+      expect.objectContaining({ role: "assistant", text: "Before the tool", status: "complete" }),
+      expect.objectContaining({ role: "assistant", text: "After the tool", status: "complete" }),
+    ]);
+  });
+
   it("keeps separate assistant messages when a run emits multiple message completions", async () => {
     const adapter = makeAdapter([
       {
