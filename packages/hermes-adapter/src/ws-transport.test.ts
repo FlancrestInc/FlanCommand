@@ -36,6 +36,7 @@ import { WebSocketHermesTransport, type SocketFactory, type SocketLike } from ".
 class FakeSocket implements SocketLike {
   static readonly instances: FakeSocket[] = [];
   readonly sent: string[] = [];
+  readonly pings: number[] = [];
   onopen: (() => void) | undefined;
   onmessage: ((event: { data: unknown }) => void) | undefined;
   onerror: (() => void) | undefined;
@@ -51,6 +52,10 @@ class FakeSocket implements SocketLike {
 
   send(value: string): void {
     this.sent.push(value);
+  }
+
+  ping(): void {
+    this.pings.push(Date.now());
   }
 
   close(): void {
@@ -289,6 +294,54 @@ describe("WebSocket Hermes transport", () => {
     });
     socket.closeFromPeer({ code: 1011 });
     await rejection;
+  });
+
+  it("sends WebSocket keepalive pings while connected and stops them on disconnect", async () => {
+    FakeSocket.instances.length = 0;
+    vi.useFakeTimers();
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      heartbeatIntervalMs: 20,
+      socketFactory: factory,
+    });
+    const connecting = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connecting;
+
+    await vi.advanceTimersByTimeAsync(61);
+    expect(socket.pings).toHaveLength(3);
+    await transport.disconnect();
+    await vi.advanceTimersByTimeAsync(61);
+    expect(socket.pings).toHaveLength(3);
+    vi.useRealTimers();
+  });
+
+  it("does not apply an artificial idle cutoff when idleTimeoutMs is zero", async () => {
+    FakeSocket.instances.length = 0;
+    vi.useFakeTimers();
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      idleTimeoutMs: 0,
+      socketFactory: factory,
+    });
+    const connecting = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connecting;
+    const stream = transport.stream("sendMessage", { sessionId: "s-1" })[Symbol.asyncIterator]();
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+    let settled = false;
+    const pending = stream.next().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    await transport.disconnect();
+    await expect(pending).rejects.toMatchObject({ code: "TRANSPORT_CLOSED" });
+    vi.useRealTimers();
   });
 
   it("fails an inactive stream after its configured idle timeout", async () => {

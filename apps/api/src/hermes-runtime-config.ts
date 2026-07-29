@@ -12,7 +12,7 @@ export interface HermesRuntimeConfig {
 const defaultEndpoint = "ws://127.0.0.1:9119/api/ws";
 const defaultOrigin = "http://127.0.0.1:3000";
 const defaultMaxFrameBytes = 8 * 1024 * 1024;
-const defaultIdleTimeoutMs = 5 * 60 * 1000;
+const defaultIdleTimeoutMs = 0;
 const defaultTotalTimeoutMs = 0;
 const maxAllowedFrameBytes = 32 * 1024 * 1024;
 const maxAllowedTimeoutMs = 24 * 60 * 60 * 1000;

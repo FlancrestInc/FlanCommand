@@ -26,6 +26,7 @@ export interface SocketLike {
   onerror: (() => void) | null | undefined;
   onclose: ((event?: SocketCloseEvent) => void) | null | undefined;
   send(value: string): void;
+  ping?(): void;
   close(): void;
 }
 
@@ -56,6 +57,7 @@ export interface WebSocketTransportOptions {
   requestTimeoutMs?: number;
   idleTimeoutMs?: number;
   totalTimeoutMs?: number;
+  heartbeatIntervalMs?: number;
   maxFrameBytes?: number;
   socketFactory?: SocketFactory;
 }
@@ -262,6 +264,10 @@ class WsSocketAdapter implements SocketLike {
     this.socket.send(value);
   }
 
+  ping(): void {
+    this.socket.ping();
+  }
+
   close(): void {
     this.socket.close();
   }
@@ -285,10 +291,16 @@ export class WebSocketHermesTransport {
   private readonly sessionAliases = new Map<string, string>();
   private sequence = 0;
   private readonly cookies = new Map<string, string>();
+  private heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   private readonly options: Required<
     Pick<
       WebSocketTransportOptions,
-      "connectTimeoutMs" | "requestTimeoutMs" | "idleTimeoutMs" | "totalTimeoutMs" | "maxFrameBytes"
+      | "connectTimeoutMs"
+      | "requestTimeoutMs"
+      | "idleTimeoutMs"
+      | "totalTimeoutMs"
+      | "heartbeatIntervalMs"
+      | "maxFrameBytes"
     >
   > &
     WebSocketTransportOptions;
@@ -298,8 +310,9 @@ export class WebSocketHermesTransport {
     this.options = {
       connectTimeoutMs: 5_000,
       requestTimeoutMs: 10_000,
-      idleTimeoutMs: 300_000,
+      idleTimeoutMs: 0,
       totalTimeoutMs: 0,
+      heartbeatIntervalMs: 20_000,
       maxFrameBytes: 1_048_576,
       ...options,
     };
@@ -340,6 +353,7 @@ export class WebSocketHermesTransport {
           clearTimeout(timer);
           this.connected = true;
           this.hasConnectedBefore = true;
+          this.startHeartbeat(socket, generation);
           this.reconnectStreams();
           resolve();
         };
@@ -380,6 +394,7 @@ export class WebSocketHermesTransport {
 
   async disconnect(): Promise<void> {
     this.socketGeneration += 1;
+    this.stopHeartbeat();
     this.closeState(this.error("TRANSPORT_CLOSED", "disconnect"), false);
     if (this.socket) this.detachSocket(this.socket);
     this.socket?.close();
@@ -439,10 +454,12 @@ export class WebSocketHermesTransport {
       resolve: () => undefined,
       reject: () => undefined,
     });
-    this.pending.get(id)!.idleTimer = setTimeout(
-      () => this.fail(id, this.error("TRANSPORT_IDLE_TIMEOUT", operation)),
-      this.options.idleTimeoutMs,
-    );
+    if (this.options.idleTimeoutMs > 0) {
+      this.pending.get(id)!.idleTimer = setTimeout(
+        () => this.fail(id, this.error("TRANSPORT_IDLE_TIMEOUT", operation)),
+        this.options.idleTimeoutMs,
+      );
+    }
     try {
       this.send(
         wireMethodForOperation(operation),
@@ -559,10 +576,12 @@ export class WebSocketHermesTransport {
       const streamingAcknowledged =
         request.awaitTerminal && isRecord(frame.result) && frame.result.status === "streaming";
       if (streamingAcknowledged) {
-        request.idleTimer = setTimeout(
-          () => this.fail(id, this.error("TRANSPORT_IDLE_TIMEOUT", request.operation)),
-          this.options.idleTimeoutMs,
-        );
+        if (this.options.idleTimeoutMs > 0) {
+          request.idleTimer = setTimeout(
+            () => this.fail(id, this.error("TRANSPORT_IDLE_TIMEOUT", request.operation)),
+            this.options.idleTimeoutMs,
+          );
+        }
         return;
       }
       clearTimeout(request.timer);
@@ -618,10 +637,12 @@ export class WebSocketHermesTransport {
     }
     for (const target of targets) {
       if (target.idleTimer) clearTimeout(target.idleTimer);
-      target.idleTimer = setTimeout(
-        () => this.fail(target.id, this.error("TRANSPORT_IDLE_TIMEOUT", target.operation)),
-        this.options.idleTimeoutMs,
-      );
+      if (this.options.idleTimeoutMs > 0) {
+        target.idleTimer = setTimeout(
+          () => this.fail(target.id, this.error("TRANSPORT_IDLE_TIMEOUT", target.operation)),
+          this.options.idleTimeoutMs,
+        );
+      }
       target.stream?.push(frame);
       if (target.awaitTerminal && terminal.has(eventType ?? "")) {
         clearTimeout(target.timer);
@@ -641,6 +662,7 @@ export class WebSocketHermesTransport {
   }
 
   private handleClose(event?: SocketCloseEvent): void {
+    this.stopHeartbeat();
     if (this.socket) this.detachSocket(this.socket);
     const error = isAuthCloseCode(event?.code)
       ? this.error("TRANSPORT_AUTH_FAILED", "close", closeDetail(event?.code))
@@ -657,6 +679,27 @@ export class WebSocketHermesTransport {
     socket.onmessage = null;
     socket.onerror = null;
     socket.onclose = null;
+  }
+
+  private startHeartbeat(socket: SocketLike, generation: number): void {
+    this.stopHeartbeat();
+    const interval = this.options.heartbeatIntervalMs;
+    if (interval <= 0 || !socket.ping) return;
+    const timer = setInterval(() => {
+      if (!this.isCurrentSocket(socket, generation) || !this.connected) return;
+      try {
+        socket.ping?.();
+      } catch {
+        this.handleClose({ code: 1006 });
+      }
+    }, interval);
+    timer.unref?.();
+    this.heartbeatTimer = timer;
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = undefined;
   }
 
   private isReadyEvent(frame: unknown): boolean {

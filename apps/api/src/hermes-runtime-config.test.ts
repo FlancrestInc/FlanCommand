@@ -34,7 +34,7 @@ describe("Hermes runtime configuration", () => {
       endpoint: "ws://127.0.0.1:9119/api/ws",
       origin: "http://127.0.0.1:3000",
       maxFrameBytes: 8 * 1024 * 1024,
-      idleTimeoutMs: 5 * 60 * 1000,
+      idleTimeoutMs: 0,
       totalTimeoutMs: 0,
     });
   });
