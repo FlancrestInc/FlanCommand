@@ -1514,6 +1514,15 @@ function renderPendingAttachments() {
       button.addEventListener("click", () => toggleFileAttachment(button.dataset.removeAttachment)),
     );
 }
+function clearComposer() {
+  $("composer-input").value = "";
+  $("composer-input").style.height = "auto";
+  state.draft = "";
+  state.pendingText = "";
+  localStorage.removeItem("flan-draft");
+  state.pendingAttachments = [];
+  renderPendingAttachments();
+}
 function toggleFileAttachment(id) {
   if (!id) return;
   if (state.pendingAttachments.includes(id))
@@ -2005,7 +2014,7 @@ async function send(text) {
     }) +
       `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(userMessageAt)}">${escapeHtml(formatMessageTimestamp(userMessageAt))}</time></span></article>`,
   );
-  $("composer-input").value = "";
+  clearComposer();
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
   try {
     const response = await fetch(`/api/sessions/${encodeURIComponent(state.activeId)}/messages`, {
