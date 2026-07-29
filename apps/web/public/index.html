@@ -17,18 +17,25 @@
         <button class="brand" id="brand" aria-label="Open navigation">
           <span class="brand-mark">⌁</span><span>FlanCommand</span>
         </button>
-        <div class="topbar-center">
-          <span class="eyebrow">HERMES COMMAND CENTER</span
-          ><span
-            class="connection"
-            id="connection"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            ><i></i> connecting</span
-          >
+        <div class="topbar-center session-title">
+          <span class="live-dot"></span>
+          <div class="session-summary">
+            <h2 id="session-title">Loading conversation</h2>
+            <span id="session-meta">Preparing your workspace</span>
+          </div>
         </div>
         <div class="top-actions">
+          <span class="connection-shell">
+            <span class="eyebrow">HERMES COMMAND CENTER</span
+            ><span
+              class="connection"
+              id="connection"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              ><i></i> connecting</span
+            >
+          </span>
           <button
             class="icon-button notification-button"
             id="notification-bell"
@@ -185,15 +192,6 @@
           </details>
         </aside>
         <section class="chat-column">
-          <div class="chat-header">
-            <div class="session-title">
-              <span class="live-dot"></span>
-              <div>
-                <h2 id="session-title">Loading conversation</h2>
-                <span id="session-meta">Preparing your workspace</span>
-              </div>
-            </div>
-          </div>
           <div class="message-scroll" id="message-scroll">
             <div class="welcome" id="welcome">
               <div class="welcome-kicker">GOOD EVENING, RYAN</div>

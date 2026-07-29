@@ -3,6 +3,8 @@ import { expect, test } from "@playwright/test";
 test("closes the slash command picker when canceled or selected", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await expect(page.locator(".topbar #session-title")).toBeVisible();
+  await expect(page.locator(".chat-header")).toHaveCount(0);
   const input = page.locator("#composer-input");
   const menu = page.locator("#command-menu");
 
