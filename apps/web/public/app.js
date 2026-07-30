@@ -2217,6 +2217,11 @@ $("command-picker-composer").addEventListener("mousedown", (event) => {
 
 $("command-picker-composer").addEventListener("click", () => {
   const input = $("composer-input");
+  const menu = $("command-menu");
+  if (!menu.hidden) {
+    hideCommandMenu();
+    return;
+  }
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
   commandPickerSelection = { start, end };

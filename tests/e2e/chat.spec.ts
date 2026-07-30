@@ -61,6 +61,18 @@ test("shows the full slash command catalog in a scrollable picker", async ({ pag
   await expect(menu.locator("[data-command='/workspace']")).toBeVisible();
 });
 
+test("toggles the slash command picker from its button", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const button = page.locator("#command-picker-composer");
+  const menu = page.locator("#command-menu");
+
+  await button.click();
+  await expect(menu).toBeVisible();
+  await button.click();
+  await expect(menu).toBeHidden();
+});
+
 test("completes slash commands with Tab and keeps Tab inside the textarea", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
