@@ -127,6 +127,7 @@ function wireMethodForOperation(operation: string): string {
 }
 
 function wireParamsForOperation(operation: string, input: unknown): unknown {
+  if (operation === "listModels") return { include_unconfigured: false };
   if (!isRecord(input)) return input;
   if (operation === "getSession" || operation === "resumeSession") {
     return { session_id: input.sessionId };
@@ -137,7 +138,6 @@ function wireParamsForOperation(operation: string, input: unknown): unknown {
       ...(typeof input.modelId === "string" ? { model: input.modelId } : {}),
     };
   }
-  if (operation === "listModels") return { include_unconfigured: true };
   if (operation === "setSessionModel") {
     return {
       session_id: input.sessionId,

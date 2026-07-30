@@ -614,6 +614,28 @@ describe("WebSocket Hermes transport", () => {
     await expect(change).resolves.toEqual({ value: "openai/gpt-5" });
   });
 
+  it("requests only configured Hermes models", async () => {
+    FakeSocket.instances.length = 0;
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      socketFactory: factory,
+    });
+    const connected = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connected;
+
+    const models = transport.call("listModels", undefined);
+    const modelRequest = request(socket);
+    expect(modelRequest).toMatchObject({
+      method: "model.options",
+      params: { include_unconfigured: false },
+    });
+    socket.receive(JSON.stringify({ jsonrpc: "2.0", id: modelRequest.id, result: [] }));
+    await expect(models).resolves.toEqual([]);
+  });
+
   it("maps approval decisions to Hermes approval.respond", async () => {
     FakeSocket.instances.length = 0;
     const transport = new WebSocketHermesTransport({
