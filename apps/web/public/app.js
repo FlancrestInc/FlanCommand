@@ -2200,6 +2200,8 @@ function appendLiveAssistantMessage(at = new Date().toISOString()) {
     "beforeend",
     `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
   );
+  const liveActivity = $("live-activity");
+  if (liveActivity) $("messages").append(liveActivity);
 }
 function removeLiveActivity() {
   $("live-activity")?.remove();
