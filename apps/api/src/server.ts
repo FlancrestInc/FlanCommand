@@ -42,6 +42,12 @@ import {
   type CredentialReference,
 } from "./credential-broker.js";
 import { listWorkspace, readWorkspaceFile, searchWorkspace } from "./workspace.js";
+import {
+  listRemoteFilesystem,
+  RemoteFilesystemError,
+  sshFilesystemRunner,
+  type RemoteFilesystemRunner,
+} from "./remote-filesystem.js";
 import { applyEditProposal, createEditProposal, type EditProposal } from "./edit-proposal.js";
 import { applyProjectInstructions } from "./project-context.js";
 import { TerminalManager } from "./terminal.js";
@@ -197,6 +203,7 @@ export interface ApiServerOptions {
   allowedOrigins?: Set<string>;
   auth?: RequestAuthConfig;
   maxConcurrentJobs?: number;
+  remoteFilesystemRunner?: RemoteFilesystemRunner;
 }
 
 function json(response: ServerResponse, status: number, body: unknown): void {
@@ -450,6 +457,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
     new Map(credentialProviders.map((provider) => [provider.name, provider])),
   );
   const terminalManager = options.terminalManager ?? new TerminalManager();
+  const remoteFilesystemRunner = options.remoteFilesystemRunner ?? sshFilesystemRunner;
   const requestMetrics = {
     total: 0,
     byMethod: {} as Record<string, number>,
@@ -1289,6 +1297,50 @@ export function createApiServer(options: ApiServerOptions = {}) {
               code: "WORKSPACE_ACCESS_DENIED",
               message:
                 error instanceof Error ? error.message : "Workspace path could not be opened.",
+            },
+          });
+        }
+        return;
+      }
+      if (request.method === "GET" && url.pathname === "/api/filesystem/list") {
+        const projectId = url.searchParams.get("projectId") ?? "";
+        const project = projects.get(projectId);
+        if (!project) {
+          json(response, 404, {
+            error: { code: "PROJECT_NOT_FOUND", message: "Choose a known project." },
+          });
+          return;
+        }
+        const requestedHost = url.searchParams.get("host")?.trim();
+        const host = requestedHost || (project.hosts.includes("gospel") ? "gospel" : project.hosts.find((item) => item !== "local"));
+        if (!host) {
+          json(response, 409, {
+            error: { code: "FILESYSTEM_HOST_MISSING", message: "This project has no remote filesystem host." },
+          });
+          return;
+        }
+        if (!project.hosts.includes(host)) {
+          json(response, 403, {
+            error: { code: "FILESYSTEM_HOST_DENIED", message: "That filesystem host is not declared by the project." },
+          });
+          return;
+        }
+        try {
+          json(
+            response,
+            200,
+            await listRemoteFilesystem(
+              remoteFilesystemRunner,
+              host,
+              url.searchParams.get("path") ?? "/",
+            ),
+          );
+        } catch (error) {
+          const status = error instanceof RemoteFilesystemError && error.code === "INVALID_PATH" ? 400 : 502;
+          json(response, status, {
+            error: {
+              code: error instanceof RemoteFilesystemError ? `FILESYSTEM_${error.code}` : "FILESYSTEM_ACCESS_FAILED",
+              message: error instanceof Error ? error.message : "Remote filesystem could not be opened.",
             },
           });
         }

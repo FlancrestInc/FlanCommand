@@ -12,6 +12,7 @@ import { createApiServer } from "./server.js";
 import { FileStore } from "./file-store.js";
 import { TerminalManager } from "./terminal.js";
 import type { CredentialProvider } from "./credential-broker.js";
+import type { RemoteFilesystemRunner } from "./remote-filesystem.js";
 
 const sessions: HermesSession[] = [
   { id: "session-1", title: "First session", source: "hermes", status: "idle" },
@@ -150,6 +151,7 @@ async function start(
   terminalManager?: TerminalManager,
   metadataPath?: string,
   credentialProviders?: CredentialProvider[],
+  remoteFilesystemRunner?: RemoteFilesystemRunner,
 ): Promise<string> {
   const metadataRoot = metadataPath
     ? undefined
@@ -160,6 +162,7 @@ async function start(
     ...(fileStore ? { fileStore } : {}),
     ...(terminalManager ? { terminalManager } : {}),
     ...(credentialProviders ? { credentialProviders } : {}),
+    ...(remoteFilesystemRunner ? { remoteFilesystemRunner } : {}),
     metadataPath: metadataPath ?? join(metadataRoot!, "state.json"),
   });
   await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));
@@ -1776,6 +1779,39 @@ describe("API BFF", () => {
       `${base}/api/workspace/file?projectId=${project.id}&path=${encodeURIComponent(join(root, "..", "outside.txt"))}`,
     );
     expect(outside.status).toBe(403);
+  });
+
+  it("browses the active project's declared Gospel filesystem host", async () => {
+    const calls: Array<{ host: string; path: string }> = [];
+    const base = await start(makeAdapter(), undefined, undefined, undefined, undefined, {
+      run: async (host, path) => {
+        calls.push({ host, path });
+        return Buffer.from(`d:${path}/projects\0f:${path}/README.md\0`);
+      },
+    });
+    const projectResponse = await fetch(`${base}/api/projects`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Gospel", paths: [], hosts: ["gospel"] }),
+    });
+    const project = (await projectResponse.json()) as { id: string };
+    const listing = await fetch(
+      `${base}/api/filesystem/list?projectId=${project.id}&path=${encodeURIComponent("/home/ryan")}`,
+    );
+    expect(listing.status).toBe(200);
+    await expect(listing.json()).resolves.toMatchObject({
+      host: "gospel",
+      path: "/home/ryan",
+      entries: [
+        { name: "projects", type: "directory" },
+        { name: "README.md", type: "file" },
+      ],
+    });
+    expect(calls).toEqual([{ host: "gospel", path: "/home/ryan" }]);
+    const denied = await fetch(
+      `${base}/api/filesystem/list?projectId=${project.id}&host=other&path=%2F`,
+    );
+    expect(denied.status).toBe(403);
   });
 
   it("starts local and declared SSH terminals inside project boundaries", async () => {
