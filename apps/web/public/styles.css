@@ -4825,3 +4825,429 @@ html[data-theme="win98css"] .drawer-tab[aria-expanded="true"] {
     max-width: calc(100vw - 16px);
   }
 }
+
+/* XP.css-inspired Windows XP theme. Local CSS only; no runtime dependency. */
+html[data-theme="xpcss"] {
+  color-scheme: light;
+  --xp-desktop: #3a6ea5;
+  --xp-blue: #0054b8;
+  --xp-blue-dark: #003c8f;
+  --xp-blue-light: #3d95ff;
+  --xp-shell: #ece9d8;
+  --xp-panel: #f7f5ea;
+  --xp-white: #fff;
+  --xp-border: #aca899;
+  --xp-shadow: #716f64;
+  --xp-text: #111;
+  --xp-muted: #555;
+  --xp-green: #008000;
+  --xp-yellow: #fff3a6;
+  --xp-red: #b00000;
+  --xp-font: Tahoma, Arial, sans-serif;
+}
+
+html[data-theme="xpcss"] body {
+  min-height: 100vh;
+  background: var(--xp-desktop);
+  color: var(--xp-text);
+  font-family: var(--xp-font);
+}
+
+html[data-theme="xpcss"] .app-shell {
+  min-height: 100vh;
+  background: var(--xp-desktop);
+}
+
+html[data-theme="xpcss"] .topbar {
+  min-height: 48px;
+  border-bottom: 1px solid var(--xp-blue-dark);
+  background: linear-gradient(180deg, var(--xp-blue-light) 0%, #1171d2 48%, var(--xp-blue) 52%, #0b62c9 100%);
+  color: var(--xp-white);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+}
+
+html[data-theme="xpcss"] .topbar > *,
+html[data-theme="xpcss"] .brand,
+html[data-theme="xpcss"] .topbar-center,
+html[data-theme="xpcss"] .connection,
+html[data-theme="xpcss"] .avatar,
+html[data-theme="xpcss"] .icon-button {
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] .brand,
+html[data-theme="xpcss"] .brand:hover {
+  font-family: var(--xp-font);
+  font-weight: 700;
+  text-shadow: 1px 1px 0 var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .brand-mark {
+  border: 1px solid var(--xp-white);
+  border-radius: 3px;
+  background: linear-gradient(#fff, #d7e9ff);
+  color: var(--xp-blue-dark);
+  text-shadow: none;
+}
+
+html[data-theme="xpcss"] .topbar-center .session-summary h2,
+html[data-theme="xpcss"] .topbar-center .session-summary span,
+html[data-theme="xpcss"] .eyebrow,
+html[data-theme="xpcss"] .section-label,
+html[data-theme="xpcss"] .card-label {
+  color: var(--xp-white);
+  text-shadow: 1px 1px 0 var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .welcome .welcome-kicker {
+  color: var(--xp-blue-dark);
+  text-shadow: none;
+}
+
+html[data-theme="xpcss"] .connection {
+  border-color: rgb(255 255 255 / 70%);
+  background: rgb(0 60 143 / 40%);
+}
+
+html[data-theme="xpcss"] .connection i,
+html[data-theme="xpcss"] .live-dot,
+html[data-theme="xpcss"] .pulse {
+  background: #5cff5c;
+  box-shadow: 0 0 4px #fff;
+}
+
+html[data-theme="xpcss"] .workspace {
+  background: var(--xp-desktop);
+}
+
+html[data-theme="xpcss"] .sidebar,
+html[data-theme="xpcss"] .detail-panel,
+html[data-theme="xpcss"] .chat-column {
+  border-color: var(--xp-blue-dark);
+  background: var(--xp-shell);
+  color: var(--xp-text);
+}
+
+html[data-theme="xpcss"] .sidebar-head,
+html[data-theme="xpcss"] .detail-head,
+html[data-theme="xpcss"] .palette-head,
+html[data-theme="xpcss"] .drawer-head {
+  border-color: var(--xp-blue-dark);
+  background: linear-gradient(180deg, var(--xp-blue-light) 0%, #1171d2 48%, var(--xp-blue) 52%, #0b62c9 100%);
+  color: var(--xp-white);
+  text-shadow: 1px 1px 0 var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .sidebar-head > *,
+html[data-theme="xpcss"] .detail-head > *,
+html[data-theme="xpcss"] .palette-head > *,
+html[data-theme="xpcss"] .drawer-head > * {
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] button,
+html[data-theme="xpcss"] .drawer-tab,
+html[data-theme="xpcss"] .starter,
+html[data-theme="xpcss"] .footer-link {
+  border: 1px solid var(--xp-blue-dark);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--xp-white), #e5e5e5);
+  color: var(--xp-text);
+  box-shadow: inset 1px 1px rgb(255 255 255 / 90%), 1px 1px 0 var(--xp-shadow);
+  text-shadow: none;
+}
+
+html[data-theme="xpcss"] button:hover:not(:disabled),
+html[data-theme="xpcss"] .drawer-tab:hover,
+html[data-theme="xpcss"] .starter:hover,
+html[data-theme="xpcss"] .footer-link:hover {
+  background: linear-gradient(180deg, #fff, #cfe4ff);
+}
+
+html[data-theme="xpcss"] button:active:not(:disabled),
+html[data-theme="xpcss"] .drawer-tab:active,
+html[data-theme="xpcss"] .starter:active {
+  background: #d5e7fb;
+  box-shadow: inset 1px 1px var(--xp-shadow);
+  transform: translate(1px, 1px);
+}
+
+html[data-theme="xpcss"] button:disabled,
+html[data-theme="xpcss"] select:disabled,
+html[data-theme="xpcss"] input:disabled,
+html[data-theme="xpcss"] textarea:disabled {
+  color: #888;
+  text-shadow: 1px 1px var(--xp-white);
+}
+
+html[data-theme="xpcss"] :focus-visible {
+  outline: 1px dotted var(--xp-text);
+  outline-offset: 2px;
+}
+
+html[data-theme="xpcss"] input,
+html[data-theme="xpcss"] select,
+html[data-theme="xpcss"] textarea,
+html[data-theme="xpcss"] .search,
+html[data-theme="xpcss"] .model-picker,
+html[data-theme="xpcss"] .context-monitor,
+html[data-theme="xpcss"] .runtime-monitor {
+  border: 1px solid var(--xp-border);
+  border-radius: 2px;
+  background: var(--xp-white);
+  color: var(--xp-text);
+  box-shadow: inset 1px 1px #777, inset -1px -1px var(--xp-white);
+}
+
+html[data-theme="xpcss"] input::placeholder,
+html[data-theme="xpcss"] textarea::placeholder {
+  color: var(--xp-muted);
+  opacity: 1;
+}
+
+html[data-theme="xpcss"] .message-scroll {
+  background: linear-gradient(180deg, #6ca7df 0%, #75b4e7 60%, #7ab34d 61%, #5d963b 100%);
+}
+
+html[data-theme="xpcss"] .welcome,
+html[data-theme="xpcss"] .message .bubble,
+html[data-theme="xpcss"] .message.user .bubble,
+html[data-theme="xpcss"] .starter,
+html[data-theme="xpcss"] .activity-summary-card,
+html[data-theme="xpcss"] .file-item,
+html[data-theme="xpcss"] .session-skeleton,
+html[data-theme="xpcss"] .drawer-card,
+html[data-theme="xpcss"] .notification-card,
+html[data-theme="xpcss"] .attachment-chip,
+html[data-theme="xpcss"] .inline-approval,
+html[data-theme="xpcss"] .edit-review,
+html[data-theme="xpcss"] .memory-card {
+  border: 1px solid var(--xp-border);
+  border-radius: 3px;
+  background: var(--xp-panel);
+  color: var(--xp-text);
+  box-shadow: 1px 1px 0 var(--xp-shadow);
+}
+
+html[data-theme="xpcss"] .welcome h3 {
+  color: var(--xp-blue-dark);
+  font-family: var(--xp-font);
+  font-size: clamp(24px, 4vw, 42px);
+  letter-spacing: 0;
+  text-shadow: 1px 1px var(--xp-white);
+}
+
+html[data-theme="xpcss"] .welcome h3 em,
+html[data-theme="xpcss"] .welcome p,
+html[data-theme="xpcss"] .starter small,
+html[data-theme="xpcss"] .message-meta,
+html[data-theme="xpcss"] .hint,
+html[data-theme="xpcss"] .composer-note,
+html[data-theme="xpcss"] .developer-note,
+html[data-theme="xpcss"] .run-metrics span,
+html[data-theme="xpcss"] .run-metrics b,
+html[data-theme="xpcss"] .details-list span {
+  color: var(--xp-muted);
+  text-shadow: none;
+}
+
+html[data-theme="xpcss"] .starter span,
+html[data-theme="xpcss"] a {
+  color: var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .composer-wrap {
+  border-top: 1px solid var(--xp-blue-dark);
+  background: var(--xp-shell);
+}
+
+html[data-theme="xpcss"] .composer {
+  border: 1px solid var(--xp-border);
+  border-radius: 4px;
+  background: var(--xp-panel);
+  box-shadow: inset 1px 1px var(--xp-white), 1px 1px 0 var(--xp-shadow);
+}
+
+html[data-theme="xpcss"] .composer textarea {
+  background: var(--xp-white);
+  color: var(--xp-text);
+}
+
+html[data-theme="xpcss"] .send-button,
+html[data-theme="xpcss"] .settings-actions .primary-button,
+html[data-theme="xpcss"] .drawer-actions .primary-button {
+  border-color: var(--xp-blue-dark);
+  background: linear-gradient(180deg, #5ea6f5, #0b62c9);
+  color: var(--xp-white);
+  text-shadow: 1px 1px var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .detail-card,
+html[data-theme="xpcss"] .project-picker,
+html[data-theme="xpcss"] .credential-library,
+html[data-theme="xpcss"] .file-library,
+html[data-theme="xpcss"] .sidebar-footer {
+  margin: 5px;
+  border: 1px solid var(--xp-border);
+  border-radius: 3px;
+  background: var(--xp-shell);
+  box-shadow: 1px 1px 0 var(--xp-shadow);
+}
+
+html[data-theme="xpcss"] .detail-card > summary,
+html[data-theme="xpcss"] .project-picker > summary,
+html[data-theme="xpcss"] .credential-library > summary,
+html[data-theme="xpcss"] .file-library > summary,
+html[data-theme="xpcss"] .sidebar-footer > summary {
+  border-bottom: 1px solid var(--xp-border);
+  background: linear-gradient(180deg, #fff, #ddd9c9);
+  color: var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .session-item,
+html[data-theme="xpcss"] .session-entry,
+html[data-theme="xpcss"] .credential-item,
+html[data-theme="xpcss"] .workspace-entry {
+  border-radius: 3px;
+  background: transparent;
+  color: var(--xp-text);
+}
+
+html[data-theme="xpcss"] .session-item[aria-current="true"],
+html[data-theme="xpcss"] .session-entry.active,
+html[data-theme="xpcss"] .file-item.selected,
+html[data-theme="xpcss"] .workspace-entry.selected {
+  background: linear-gradient(180deg, #3d95ff, #0b62c9);
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] .session-item[aria-current="true"] *,
+html[data-theme="xpcss"] .session-entry.active * {
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] .status-badge,
+html[data-theme="xpcss"] .job-status,
+html[data-theme="xpcss"] .risk,
+html[data-theme="xpcss"] .activity-chip,
+html[data-theme="xpcss"] .chip,
+html[data-theme="xpcss"] .attachment-chip {
+  border: 1px solid var(--xp-border);
+  border-radius: 8px;
+  background: var(--xp-white);
+  color: var(--xp-text);
+}
+
+html[data-theme="xpcss"] .risk-high,
+html[data-theme="xpcss"] .job-waiting_for_approval {
+  background: var(--xp-yellow);
+  color: var(--xp-text);
+}
+
+html[data-theme="xpcss"] .job-running {
+  background: #b9f4b9;
+  color: #064d06;
+}
+
+html[data-theme="xpcss"] .meter,
+html[data-theme="xpcss"] .context-bar {
+  border: 1px solid var(--xp-border);
+  border-radius: 2px;
+  background: var(--xp-white);
+  box-shadow: inset 1px 1px #777;
+}
+
+html[data-theme="xpcss"] .meter span,
+html[data-theme="xpcss"] #composer-context-meter {
+  background: linear-gradient(180deg, #5ea6f5, #0b62c9);
+}
+
+html[data-theme="xpcss"] .settings-panel,
+html[data-theme="xpcss"] .palette,
+html[data-theme="xpcss"] .command-drawer,
+html[data-theme="xpcss"] .drawer-card {
+  border: 1px solid var(--xp-blue-dark);
+  border-radius: 7px 7px 0 0;
+  background: var(--xp-shell);
+  color: var(--xp-text);
+  box-shadow: 3px 3px 7px rgb(0 0 0 / 45%);
+}
+
+html[data-theme="xpcss"] .palette-head {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--xp-blue-dark);
+  border-radius: 6px 6px 0 0;
+  box-shadow: none;
+}
+
+html[data-theme="xpcss"] .palette-head > * {
+  background: transparent;
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] .toast,
+html[data-theme="xpcss"] .run-strip {
+  border: 1px solid var(--xp-border);
+  border-radius: 3px;
+  background: var(--xp-shell);
+  color: var(--xp-text);
+  box-shadow: 2px 2px 0 var(--xp-shadow);
+}
+
+html[data-theme="xpcss"] .code-block,
+html[data-theme="xpcss"] .memory-output,
+html[data-theme="xpcss"] .developer-panel pre,
+html[data-theme="xpcss"] .terminal-panel pre,
+html[data-theme="xpcss"] .edit-diff {
+  border: 1px solid #222;
+  border-radius: 2px;
+  background: #111827;
+  color: #eaf3ff;
+  font-family: "Courier New", monospace;
+}
+
+html[data-theme="xpcss"] .code-toolbar {
+  border-bottom: 1px solid var(--xp-blue-dark);
+  background: linear-gradient(180deg, #3d95ff, #0b62c9);
+  color: var(--xp-white);
+}
+
+html[data-theme="xpcss"] .markdown-table-wrap {
+  border: 1px solid var(--xp-border);
+  border-radius: 2px;
+  overflow-x: auto;
+}
+
+html[data-theme="xpcss"] table th {
+  background: linear-gradient(180deg, #dcecff, #b7d5f5);
+  color: var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] table td,
+html[data-theme="xpcss"] table th {
+  border-color: var(--xp-border);
+}
+
+html[data-theme="xpcss"] .drawer-tab {
+  color: var(--xp-blue-dark);
+}
+
+html[data-theme="xpcss"] .drawer-tab[aria-expanded="true"] {
+  background: linear-gradient(180deg, #3d95ff, #0b62c9);
+  color: var(--xp-white);
+  text-shadow: 1px 1px var(--xp-blue-dark);
+}
+
+@media (max-width: 720px) {
+  html[data-theme="xpcss"] .topbar {
+    min-height: 54px;
+  }
+
+  html[data-theme="xpcss"] .settings-panel,
+  html[data-theme="xpcss"] .palette,
+  html[data-theme="xpcss"] .command-drawer {
+    max-width: calc(100vw - 16px);
+    border-radius: 5px 5px 0 0;
+  }
+}
