@@ -6,6 +6,7 @@ coverage/
 .env
 .env.*
 !.env.example
+compose.yaml
 probe-output/
 probe-output*/
 storage/
