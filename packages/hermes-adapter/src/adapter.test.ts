@@ -113,6 +113,34 @@ describe("HermesAdapter", () => {
     ]);
   });
 
+  it("does not expose ambient providers when Hermes returns the full catalog", async () => {
+    const adapter = new HermesAdapterImplementation(
+      {
+        connect: async () => undefined,
+        disconnect: async () => undefined,
+        call: async () => ({
+          provider: "openai-codex",
+          providers: [
+            { slug: "openai-codex", models: ["gpt-5.6-luna"] },
+            { slug: "openrouter", models: ["anthropic/claude-opus-5"] },
+            { slug: "custom-local", is_user_defined: true, models: ["local-model"] },
+          ],
+        }),
+        stream: () => ({
+          async *[Symbol.asyncIterator]() {
+            yield { type: "run.completed", runId: "run-1" };
+          },
+        }),
+      },
+      { ...createDefaultCapabilities(), models: { status: "observed" } },
+    );
+    await adapter.connect();
+    await expect(adapter.listModels()).resolves.toEqual([
+      { id: "gpt-5.6-luna", name: "gpt-5.6-luna", provider: "openai-codex" },
+      { id: "local-model", name: "local-model", provider: "custom-local" },
+    ]);
+  });
+
   it("turns a live slash command response into a completed agent event sequence", async () => {
     const adapter = new HermesAdapterImplementation(
       {

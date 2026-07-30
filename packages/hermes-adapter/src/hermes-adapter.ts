@@ -141,9 +141,17 @@ function normalizeCommandCatalogResponse(response: unknown): unknown[] {
 function normalizeModelOptionsResponse(response: unknown): unknown[] {
   if (Array.isArray(response)) return response;
   if (!isRecord(response) || !Array.isArray(response.providers)) return [];
+  const currentProvider = typeof response.provider === "string" ? response.provider : undefined;
   return response.providers.flatMap((provider) => {
     if (!isRecord(provider) || typeof provider.slug !== "string" || !Array.isArray(provider.models))
       return [];
+    // Some Hermes versions ignore the explicit_only/include_unconfigured
+    // request flags and return the full ambient provider catalog. When the
+    // response identifies the active provider, keep it and configured custom
+    // providers only; never expose ambient rows as selectable models.
+    if (currentProvider && provider.slug !== currentProvider && provider.is_user_defined !== true) {
+      return [];
+    }
     const capabilities = isRecord(provider.capabilities) ? provider.capabilities : {};
     return provider.models.flatMap((model) => {
       if (typeof model !== "string") return [];
