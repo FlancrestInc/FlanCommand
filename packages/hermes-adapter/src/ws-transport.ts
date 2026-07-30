@@ -127,7 +127,7 @@ function wireMethodForOperation(operation: string): string {
 }
 
 function wireParamsForOperation(operation: string, input: unknown): unknown {
-  if (operation === "listModels") return { include_unconfigured: false };
+  if (operation === "listModels") return { explicit_only: true };
   if (!isRecord(input)) return input;
   if (operation === "getSession" || operation === "resumeSession") {
     return { session_id: input.sessionId };
