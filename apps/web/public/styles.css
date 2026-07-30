@@ -6419,11 +6419,14 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   }
 }
 
-/* Extend the chat wallpaper behind the floating composer card. */
-html[data-theme] .composer-wrap {
+/* Let the composer reveal the chat column's actual wallpaper instead of painting its own layer. */
+html[data-theme] .chat-column {
   background: var(--wallpaper);
-  background-position: center bottom;
+  background-position: center;
   background-size: cover;
+}
+html[data-theme] .composer-wrap {
+  background: transparent;
   border-top: 0;
   box-shadow: none;
 }
