@@ -6301,6 +6301,261 @@ html[data-theme="classiccss"] .job-running {
   border-style: double;
 }
 
+/* Contrast corrections for shared content rendered inside every theme. */
+html[data-theme="xp"] .inline-approval,
+html[data-theme="win98"] .inline-approval,
+html[data-theme="win7"] .inline-approval,
+html[data-theme="classic"] .inline-approval,
+html[data-theme="xp"] .notification-card,
+html[data-theme="win98"] .notification-card,
+html[data-theme="win7"] .notification-card,
+html[data-theme="classic"] .notification-card {
+  background: var(--retro-panel) !important;
+  color: var(--retro-text);
+}
+
+html[data-theme="xp"] .inline-approval p,
+html[data-theme="win98"] .inline-approval p,
+html[data-theme="win7"] .inline-approval p,
+html[data-theme="classic"] .inline-approval p,
+html[data-theme="xp"] .notification-card p,
+html[data-theme="win98"] .notification-card p,
+html[data-theme="win7"] .notification-card p,
+html[data-theme="classic"] .notification-card p,
+html[data-theme="xp"] .notification-card h3,
+html[data-theme="win98"] .notification-card h3,
+html[data-theme="win7"] .notification-card h3,
+html[data-theme="classic"] .notification-card h3 {
+  color: var(--retro-text);
+}
+
+html[data-theme="xp"] .inline-approval-head span,
+html[data-theme="xp"] .inline-approval small,
+html[data-theme="xp"] .inline-approval time,
+html[data-theme="xp"] .notification-card time,
+html[data-theme="win98"] .inline-approval-head span,
+html[data-theme="win98"] .inline-approval small,
+html[data-theme="win98"] .inline-approval time,
+html[data-theme="win98"] .notification-card time,
+html[data-theme="win7"] .inline-approval-head span,
+html[data-theme="win7"] .inline-approval small,
+html[data-theme="win7"] .inline-approval time,
+html[data-theme="win7"] .notification-card time,
+html[data-theme="classic"] .inline-approval-head span,
+html[data-theme="classic"] .inline-approval small,
+html[data-theme="classic"] .inline-approval time,
+html[data-theme="classic"] .notification-card time {
+  color: var(--retro-muted);
+}
+
+html[data-theme="xp"] .message code,
+html[data-theme="win98"] .message code,
+html[data-theme="win7"] .message code,
+html[data-theme="classic"] .message code {
+  border: 1px solid var(--retro-accent);
+  background: var(--retro-surface) !important;
+  color: var(--retro-text);
+}
+
+html[data-theme="xp"] ::selection,
+html[data-theme="win98"] ::selection,
+html[data-theme="win7"] ::selection,
+html[data-theme="classic"] ::selection {
+  background: var(--retro-accent);
+  color: var(--retro-surface-hi);
+}
+
+html[data-theme="cga"] .inline-approval,
+html[data-theme="amber"] .inline-approval,
+html[data-theme="green"] .inline-approval,
+html[data-theme="cga"] .notification-card,
+html[data-theme="amber"] .notification-card,
+html[data-theme="green"] .notification-card {
+  background: var(--dos-panel);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .inline-approval p,
+html[data-theme="amber"] .inline-approval p,
+html[data-theme="green"] .inline-approval p,
+html[data-theme="cga"] .notification-card p,
+html[data-theme="amber"] .notification-card p,
+html[data-theme="green"] .notification-card p,
+html[data-theme="cga"] .notification-card h3,
+html[data-theme="amber"] .notification-card h3,
+html[data-theme="green"] .notification-card h3 {
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .inline-approval-head span,
+html[data-theme="amber"] .inline-approval-head span,
+html[data-theme="green"] .inline-approval-head span,
+html[data-theme="cga"] .inline-approval small,
+html[data-theme="amber"] .inline-approval small,
+html[data-theme="green"] .inline-approval small,
+html[data-theme="cga"] .inline-approval time,
+html[data-theme="amber"] .inline-approval time,
+html[data-theme="green"] .inline-approval time,
+html[data-theme="cga"] .notification-card time,
+html[data-theme="amber"] .notification-card time,
+html[data-theme="green"] .notification-card time {
+  color: var(--dos-muted);
+}
+
+html[data-theme="cga"] .message code,
+html[data-theme="amber"] .message code,
+html[data-theme="green"] .message code {
+  border: 1px solid var(--dos-accent);
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] ::selection,
+html[data-theme="amber"] ::selection,
+html[data-theme="green"] ::selection {
+  background: var(--dos-accent);
+  color: var(--dos-accent-ink);
+}
+
+html[data-theme="win98css"] .inline-approval,
+html[data-theme="win98css"] .notification-card {
+  background: var(--win98-panel) !important;
+}
+
+html[data-theme="xpcss"] .inline-approval,
+html[data-theme="xpcss"] .notification-card {
+  background: var(--xp-panel) !important;
+}
+
+html[data-theme="win7css"] .inline-approval,
+html[data-theme="win7css"] .notification-card {
+  background: var(--win7-panel) !important;
+}
+
+html[data-theme="classiccss"] .inline-approval,
+html[data-theme="classiccss"] .notification-card {
+  background: var(--classic-panel) !important;
+}
+
+html[data-theme="win98css"] .inline-approval,
+html[data-theme="xpcss"] .inline-approval,
+html[data-theme="win7css"] .inline-approval,
+html[data-theme="classiccss"] .inline-approval,
+html[data-theme="win98css"] .notification-card,
+html[data-theme="xpcss"] .notification-card,
+html[data-theme="win7css"] .notification-card,
+html[data-theme="classiccss"] .notification-card {
+  color: var(--win98-text, var(--xp-text, var(--win7-text, var(--classic-black))));
+}
+
+html[data-theme="win98css"] .inline-approval p,
+html[data-theme="xpcss"] .inline-approval p,
+html[data-theme="win7css"] .inline-approval p,
+html[data-theme="classiccss"] .inline-approval p,
+html[data-theme="win98css"] .notification-card p,
+html[data-theme="xpcss"] .notification-card p,
+html[data-theme="win7css"] .notification-card p,
+html[data-theme="classiccss"] .notification-card p,
+html[data-theme="win98css"] .notification-card h3,
+html[data-theme="xpcss"] .notification-card h3,
+html[data-theme="win7css"] .notification-card h3,
+html[data-theme="classiccss"] .notification-card h3 {
+  color: var(--win98-text, var(--xp-text, var(--win7-text, var(--classic-black))));
+}
+
+html[data-theme="win98css"] .inline-approval-head span,
+html[data-theme="win98css"] .inline-approval small,
+html[data-theme="win98css"] .inline-approval time,
+html[data-theme="win98css"] .notification-card time {
+  color: var(--win98-muted);
+}
+
+html[data-theme="xpcss"] .inline-approval-head span,
+html[data-theme="xpcss"] .inline-approval small,
+html[data-theme="xpcss"] .inline-approval time,
+html[data-theme="xpcss"] .notification-card time {
+  color: var(--xp-muted);
+}
+
+html[data-theme="win7css"] .inline-approval-head span,
+html[data-theme="win7css"] .inline-approval small,
+html[data-theme="win7css"] .inline-approval time,
+html[data-theme="win7css"] .notification-card time {
+  color: var(--win7-muted);
+}
+
+html[data-theme="classiccss"] .inline-approval-head span,
+html[data-theme="classiccss"] .inline-approval small,
+html[data-theme="classiccss"] .inline-approval time,
+html[data-theme="classiccss"] .notification-card time {
+  color: var(--classic-muted);
+}
+
+html[data-theme="win98css"] .message code {
+  border: 1px solid var(--win98-black);
+  background: var(--win98-surface) !important;
+  color: var(--win98-text);
+}
+
+html[data-theme="xpcss"] .message code {
+  border: 1px solid var(--xp-border);
+  background: var(--xp-shell) !important;
+  color: var(--xp-text);
+}
+
+html[data-theme="win7css"] .message code {
+  border: 1px solid var(--win7-border);
+  background: var(--win7-panel) !important;
+  color: var(--win7-text);
+}
+
+html[data-theme="classiccss"] .message code {
+  border: 1px solid var(--classic-black);
+  background: var(--classic-surface) !important;
+  color: var(--classic-black);
+}
+
+/* Final shared contrast guard for approval history and inline code. */
+html[data-theme="win98css"] .inline-approval,
+html[data-theme="xpcss"] .inline-approval,
+html[data-theme="win7css"] .inline-approval,
+html[data-theme="classiccss"] .inline-approval {
+  opacity: 1;
+}
+
+html[data-theme="win98css"] .inline-approval,
+html[data-theme="win98css"] .inline-approval p,
+html[data-theme="win98css"] .inline-approval strong,
+html[data-theme="win98css"] .inline-approval small,
+html[data-theme="win98css"] .inline-approval time {
+  color: #111 !important;
+}
+
+html[data-theme="win98css"] .inline-approval-head span {
+  color: #404040 !important;
+}
+
+html[data-theme="win98css"] .message code {
+  border: 1px solid #000 !important;
+  background: #fff !important;
+  color: #000 !important;
+  text-shadow: none;
+}
+
+html[data-theme="xpcss"] .message code,
+html[data-theme="win7css"] .message code,
+html[data-theme="classiccss"] .message code {
+  text-shadow: none;
+}
+
+html[data-theme="win98css"] ::selection,
+html[data-theme="xpcss"] ::selection,
+html[data-theme="win7css"] ::selection,
+html[data-theme="classiccss"] ::selection {
+  background: var(--win98-blue, var(--xp-blue, var(--win7-blue, var(--classic-black))));
+  color: var(--win98-white, var(--xp-white, var(--win7-white, var(--classic-white))));
+}
+
 html[data-theme="classiccss"] .meter,
 html[data-theme="classiccss"] .context-bar {
   border: 2px inset var(--classic-white);

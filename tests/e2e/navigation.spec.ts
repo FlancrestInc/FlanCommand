@@ -197,7 +197,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v19");
+    const cache = await browser.caches.open("flancommand-shell-v25");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -268,7 +268,9 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
     .poll(() =>
       page
         .locator("#side-drawer-backdrop")
-        .evaluate((element) => element.ownerDocument.defaultView!.getComputedStyle(element).backgroundColor),
+        .evaluate(
+          (element) => element.ownerDocument.defaultView!.getComputedStyle(element).backgroundColor,
+        ),
     )
     .toBe("rgba(5, 8, 12, 0.34)");
   const leftDrawer = await page.locator("#sidebar").boundingBox();
@@ -486,15 +488,19 @@ test("settings checkboxes use the active theme accent", async ({ page }) => {
   await page.locator("#settings-form").locator("button[type=submit]").click();
   await page.locator("#settings-button").click();
 
-  expect(await page.locator("#settings-form").evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(
-    true,
-  );
+  expect(
+    await page
+      .locator("#settings-form")
+      .evaluate((element) => element.scrollHeight <= element.clientHeight),
+  ).toBe(true);
 
   await expect
     .poll(() =>
       page
         .locator("#settings-notifications")
-        .evaluate((element) => element.ownerDocument.defaultView!.getComputedStyle(element).accentColor),
+        .evaluate(
+          (element) => element.ownerDocument.defaultView!.getComputedStyle(element).accentColor,
+        ),
     )
     .toBe("rgb(85, 255, 255)");
 });
@@ -508,13 +514,11 @@ test("Classic Mac title bars do not show Close or Zoom labels", async ({ page })
 
   await expect
     .poll(() =>
-      page
-        .locator("#settings-form .palette-head")
-        .evaluate((element) => ({
-          before: element.ownerDocument.defaultView!.getComputedStyle(element, "::before").content,
-          after: element.ownerDocument.defaultView!.getComputedStyle(element, "::after").content,
-          paddingLeft: element.ownerDocument.defaultView!.getComputedStyle(element).paddingLeft,
-        })),
+      page.locator("#settings-form .palette-head").evaluate((element) => ({
+        before: element.ownerDocument.defaultView!.getComputedStyle(element, "::before").content,
+        after: element.ownerDocument.defaultView!.getComputedStyle(element, "::after").content,
+        paddingLeft: element.ownerDocument.defaultView!.getComputedStyle(element).paddingLeft,
+      })),
     )
     .toEqual({ before: "none", after: "none", paddingLeft: "16px" });
 });
