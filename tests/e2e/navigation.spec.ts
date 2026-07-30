@@ -479,11 +479,16 @@ test("switches and persists the supported classic and BOOTSTRA.386 themes", asyn
 });
 
 test("settings checkboxes use the active theme accent", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   await page.locator("#settings-button").click();
   await page.locator("#settings-theme").selectOption("cga");
   await page.locator("#settings-form").locator("button[type=submit]").click();
   await page.locator("#settings-button").click();
+
+  expect(await page.locator("#settings-form").evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(
+    true,
+  );
 
   await expect
     .poll(() =>

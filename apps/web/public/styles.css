@@ -1892,7 +1892,7 @@ h1 {
   display: grid;
   gap: 14px;
   width: min(480px, calc(100vw - 28px));
-  max-height: min(720px, calc(100vh - 36px));
+  max-height: calc(100vh - 36px);
   overflow: auto;
   padding-bottom: 16px;
   border: 1px solid var(--line);
