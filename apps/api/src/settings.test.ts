@@ -49,6 +49,7 @@ describe("settings", () => {
     expect(normalizeSettings({ theme: "win98css" }).theme).toBe("win98css");
     expect(normalizeSettings({ theme: "xpcss" }).theme).toBe("xpcss");
     expect(normalizeSettings({ theme: "win7css" }).theme).toBe("win7css");
+    expect(normalizeSettings({ theme: "classiccss" }).theme).toBe("classiccss");
     expect(normalizeSettings({ theme: "unknown" }).theme).toBe("xp");
   });
 
