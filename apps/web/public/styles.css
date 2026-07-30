@@ -2213,6 +2213,29 @@ html[data-theme="classiccss"] .stop-button {
   color: var(--classic-black);
   border-color: var(--classic-black);
 }
+
+/* Settings checkboxes use each desktop skin's own control color. */
+html[data-theme="cga"] .settings-check input,
+html[data-theme="amber"] .settings-check input,
+html[data-theme="green"] .settings-check input {
+  accent-color: var(--dos-accent);
+}
+html[data-theme="xp"] .settings-check input,
+html[data-theme="win98"] .settings-check input {
+  accent-color: var(--retro-accent);
+}
+html[data-theme="win98css"] .settings-check input {
+  accent-color: var(--win98-blue);
+}
+html[data-theme="xpcss"] .settings-check input {
+  accent-color: var(--xp-blue);
+}
+html[data-theme="win7css"] .settings-check input {
+  accent-color: var(--win7-blue-dark);
+}
+html[data-theme="classiccss"] .settings-check input {
+  accent-color: var(--classic-black);
+}
 @media (max-width: 720px) {
   .notification-button,
   #theme-toggle,

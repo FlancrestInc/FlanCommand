@@ -478,6 +478,22 @@ test("switches and persists the supported classic and BOOTSTRA.386 themes", asyn
   await expect(page.locator("html")).toHaveAttribute("data-theme", "classiccss");
 });
 
+test("settings checkboxes use the active theme accent", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+  await page.locator("#settings-theme").selectOption("cga");
+  await page.locator("#settings-form").locator("button[type=submit]").click();
+  await page.locator("#settings-button").click();
+
+  await expect
+    .poll(() =>
+      page
+        .locator("#settings-notifications")
+        .evaluate((element) => element.ownerDocument.defaultView!.getComputedStyle(element).accentColor),
+    )
+    .toBe("rgb(85, 255, 255)");
+});
+
 test("associates a credential reference through the browser form", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
