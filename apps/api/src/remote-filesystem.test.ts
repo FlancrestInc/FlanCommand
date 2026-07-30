@@ -38,9 +38,7 @@ describe("remote filesystem browser", () => {
     await expect(listRemoteFilesystem(runner, "gospel", "/home/ryan/projects")).resolves.toEqual({
       host: "gospel",
       path: "/home/ryan/projects",
-      entries: [
-        { name: "apps", path: "/home/ryan/projects/apps", type: "directory" },
-      ],
+      entries: [{ name: "apps", path: "/home/ryan/projects/apps", type: "directory" }],
     });
     expect(calls).toEqual([{ host: "gospel", path: "/home/ryan/projects" }]);
   });

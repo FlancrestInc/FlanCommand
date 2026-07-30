@@ -26,24 +26,19 @@ const state = {
   activeId: null,
   running: false,
   abort: null,
-  theme: [
-    "xp",
-    "win98",
-    "cga",
-    "amber",
-    "green",
-    "win98css",
-    "xpcss",
-    "win7css",
-    "classiccss",
-  ].includes(localStorage.getItem("flan-theme"))
+  theme: ["xp", "cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"].includes(
+    localStorage.getItem("flan-theme"),
+  )
     ? localStorage.getItem("flan-theme")
     : "xp",
   chatBackground: ["bliss", "clouds", "autumn", "3d-pipes", "azul", "none"].includes(
     localStorage.getItem("flan-chat-background"),
   )
     ? localStorage.getItem("flan-chat-background")
-    : "bliss",
+    : localStorage.getItem("flan-chat-background") === "custom" &&
+        localStorage.getItem("flan-custom-wallpaper")
+      ? "custom"
+      : "bliss",
   events: [],
   activityExpanded: false,
   activitySummary: null,
@@ -92,11 +87,19 @@ const state = {
   pendingText: "",
   recovering: false,
   memory: null,
+  filesystemPicker: {
+    open: false,
+    path: "/",
+    entries: [],
+    selectedIndex: 0,
+    tokenStart: 0,
+    tokenEnd: 0,
+    requestId: 0,
+  },
 };
 let commandPickerSelection = null;
 const themeNames = {
   xp: "System 6",
-  win98: "System 6 Compact",
   cga: "BOOTSTRA.386 CGA",
   amber: "BOOTSTRA.386 Amber",
   green: "BOOTSTRA.386 Green",
@@ -105,20 +108,25 @@ const themeNames = {
   win7css: "Windows 7 (7.css)",
   classiccss: "Classic Mac (classic.css)",
 };
-const themeOrder = [
-  "xp",
-  "win98",
-  "cga",
-  "amber",
-  "green",
-  "win98css",
-  "xpcss",
-  "win7css",
-  "classiccss",
-];
+const themeSendIcons = {
+  xp: "↵",
+  cga: "↵",
+  amber: "↵",
+  green: "↵",
+  win98css: "➜",
+  xpcss: "➜",
+  win7css: "➜",
+  classiccss: "↵",
+};
+const themeOrder = ["xp", "cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"];
 const $ = (id) => document.getElementById(id);
 document.documentElement.dataset.theme = state.theme;
 document.documentElement.dataset.chatBackground = state.chatBackground;
+if (localStorage.getItem("flan-custom-wallpaper"))
+  document.documentElement.style.setProperty(
+    "--custom-wallpaper",
+    `url("${localStorage.getItem("flan-custom-wallpaper")}")`,
+  );
 $("composer-input").value = state.draft;
 function sideDrawerElements(kind) {
   return kind === "conversations"
@@ -428,12 +436,17 @@ async function load() {
 function applySettings(settings) {
   state.settings = settings;
   state.theme = settings.theme;
-  state.chatBackground = settings.chatBackground || "bliss";
+  state.chatBackground =
+    localStorage.getItem("flan-chat-background") === "custom" &&
+    localStorage.getItem("flan-custom-wallpaper")
+      ? "custom"
+      : settings.chatBackground || "bliss";
   document.documentElement.dataset.theme = state.theme;
   document.documentElement.dataset.chatBackground = state.chatBackground;
   localStorage.setItem("flan-theme", state.theme);
   localStorage.setItem("flan-chat-background", state.chatBackground);
   $("theme-toggle").setAttribute("aria-label", `Switch theme. Current: ${themeNames[state.theme]}`);
+  $("send-icon").textContent = themeSendIcons[state.theme] || "↑";
   document.body.classList.toggle("compact-activity", settings.compactActivity);
 }
 async function loadSettings() {
@@ -453,6 +466,11 @@ function renderSettings() {
   $("settings-compact").checked = state.settings.compactActivity;
   $("settings-theme").value = state.settings.theme;
   $("settings-chat-background").value = state.settings.chatBackground || "bliss";
+  if (state.chatBackground === "custom") $("settings-chat-background").value = "custom";
+  $("settings-chat-background-preview").textContent =
+    state.chatBackground === "custom"
+      ? "Using the custom wallpaper saved in this browser."
+      : "Custom wallpaper stays in this browser.";
 }
 async function saveSettings() {
   const saved = await api("/settings", {
@@ -465,7 +483,10 @@ async function saveSettings() {
       notifications: $("settings-notifications").checked,
       compactActivity: $("settings-compact").checked,
       theme: $("settings-theme").value,
-      chatBackground: $("settings-chat-background").value,
+      chatBackground:
+        $("settings-chat-background").value === "custom"
+          ? "bliss"
+          : $("settings-chat-background").value,
     }),
   });
   applySettings(saved);
@@ -1797,6 +1818,145 @@ async function loadCommands(id) {
 function hideCommandMenu() {
   $("command-menu").hidden = true;
 }
+function filesystemTokenContext() {
+  const input = $("composer-input");
+  const value = input.value;
+  const caret = input.selectionStart ?? value.length;
+  const before = value.slice(0, caret);
+  const tokenStart = Math.max(before.lastIndexOf(" "), before.lastIndexOf("\n")) + 1;
+  const token = before.slice(tokenStart);
+  if (!token.startsWith("/")) return null;
+  const slash = token.lastIndexOf("/");
+  const directory = slash <= 0 ? "/" : token.slice(0, slash) || "/";
+  return {
+    tokenStart,
+    tokenEnd: caret,
+    token,
+    directory,
+    prefix: token.slice(slash + 1).toLowerCase(),
+  };
+}
+function activeProjectHasRemoteFilesystem() {
+  const project = state.projects.find((item) => item.id === $("project-select").value);
+  return Boolean(
+    project?.hosts?.some(
+      (host) => host !== "local" && host !== "127.0.0.1" && host !== "localhost",
+    ) ||
+    (project && project.id !== "project-local"),
+  );
+}
+function hideFilesystemPicker() {
+  state.filesystemPicker.open = false;
+  $("filesystem-picker").hidden = true;
+  $("filesystem-picker-list").replaceChildren();
+  $("filesystem-picker-status").textContent = "";
+}
+function filesystemMatches() {
+  const context = filesystemTokenContext();
+  const prefix = context?.prefix ?? "";
+  return state.filesystemPicker.entries.filter((entry) =>
+    entry.name.toLowerCase().startsWith(prefix),
+  );
+}
+function renderFilesystemPicker() {
+  const picker = $("filesystem-picker");
+  const list = $("filesystem-picker-list");
+  const matches = filesystemMatches();
+  state.filesystemPicker.selectedIndex = Math.max(
+    0,
+    Math.min(state.filesystemPicker.selectedIndex, Math.max(0, matches.length - 1)),
+  );
+  $("filesystem-picker-path").textContent = state.filesystemPicker.path;
+  list.replaceChildren(
+    ...matches.map((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = index === state.filesystemPicker.selectedIndex ? "selected" : "";
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", String(index === state.filesystemPicker.selectedIndex));
+      button.dataset.filesystemPath = entry.path;
+      button.dataset.filesystemType = entry.type;
+      button.innerHTML =
+        '<span aria-hidden="true">' +
+        (entry.type === "directory" ? "▸" : entry.type === "symlink" ? "⌁" : "▤") +
+        "</span><b>" +
+        escapeHtml(entry.name) +
+        "</b><small>" +
+        entry.type +
+        "</small>";
+      button.addEventListener("mousedown", (event) => event.preventDefault());
+      button.addEventListener("click", () => activateFilesystemEntry(entry));
+      return button;
+    }),
+  );
+  if (!matches.length && !$("filesystem-picker-status").textContent)
+    $("filesystem-picker-status").textContent = "No matching files or folders.";
+}
+async function loadFilesystemPicker(path, context = filesystemTokenContext()) {
+  if (!context) return;
+  const projectId = $("project-select").value || "";
+  if (!projectId) {
+    $("filesystem-picker-status").textContent = "Choose a project with a declared Gospel host.";
+    return;
+  }
+  const requestId = ++state.filesystemPicker.requestId;
+  state.filesystemPicker.open = true;
+  state.filesystemPicker.path = path;
+  state.filesystemPicker.entries = [];
+  state.filesystemPicker.selectedIndex = 0;
+  state.filesystemPicker.tokenStart = context.tokenStart;
+  state.filesystemPicker.tokenEnd = context.tokenEnd;
+  $("filesystem-picker").hidden = false;
+  $("filesystem-picker-status").textContent = "Loading Gospel filesystem…";
+  renderFilesystemPicker();
+  try {
+    const params = new URLSearchParams({ projectId, path });
+    const data = await api("/filesystem/list?" + params);
+    if (requestId !== state.filesystemPicker.requestId) return;
+    state.filesystemPicker.path = data.path;
+    state.filesystemPicker.entries = data.entries || [];
+    $("filesystem-picker-status").textContent = "";
+    renderFilesystemPicker();
+  } catch (error) {
+    if (requestId !== state.filesystemPicker.requestId) return;
+    $("filesystem-picker-status").textContent = error.message;
+    renderFilesystemPicker();
+  }
+}
+function replaceFilesystemToken(path) {
+  const input = $("composer-input");
+  const context = filesystemTokenContext();
+  if (!context) return;
+  input.setRangeText(path, context.tokenStart, context.tokenEnd, "end");
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+}
+function activateFilesystemEntry(entry) {
+  if (entry.type === "directory") {
+    replaceFilesystemToken(entry.path + "/");
+    void loadFilesystemPicker(entry.path);
+    return;
+  }
+  replaceFilesystemToken(entry.path);
+  hideFilesystemPicker();
+}
+function completeFilesystemPicker() {
+  if (!state.filesystemPicker.open) return false;
+  const matches = filesystemMatches();
+  const entry = matches[state.filesystemPicker.selectedIndex];
+  if (!entry) return true;
+  activateFilesystemEntry(entry);
+  return true;
+}
+function moveFilesystemSelection(direction) {
+  if (!state.filesystemPicker.open) return false;
+  const matches = filesystemMatches();
+  if (!matches.length) return true;
+  state.filesystemPicker.selectedIndex =
+    (state.filesystemPicker.selectedIndex + direction + matches.length) % matches.length;
+  renderFilesystemPicker();
+  return true;
+}
 function commandContext() {
   const input = $("composer-input");
   const value = input.value;
@@ -2003,7 +2163,8 @@ function renderActivitySummary() {
     "</span></div>";
 }
 function renderCompletedActivityChip(summary) {
-  const assistant = $("messages").querySelector(".message.assistant:last-of-type");
+  const assistants = $("messages").querySelectorAll(".message.assistant");
+  const assistant = assistants[assistants.length - 1];
   if (!assistant || !summary) return;
   const meta = assistant.querySelector(".message-meta");
   if (!meta || meta.querySelector(".activity-chip")) return;
@@ -2087,8 +2248,7 @@ async function send(text) {
       at: userMessageAt,
       status: "complete",
       ...(attachmentNames.length ? { attachments: attachmentNames } : {}),
-    }) +
-      `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(userMessageAt)}">${escapeHtml(formatMessageTimestamp(userMessageAt))}</time></span></article>`,
+    }),
   );
   clearComposer();
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
@@ -2208,6 +2368,7 @@ async function send(text) {
 $("composer").addEventListener("submit", (event) => {
   event.preventDefault();
   hideCommandMenu();
+  hideFilesystemPicker();
   const text = $("composer-input").value.trim();
   if (text) void send(text);
 });
@@ -2216,6 +2377,7 @@ $("command-picker-composer").addEventListener("mousedown", (event) => {
 });
 
 $("command-picker-composer").addEventListener("click", () => {
+  hideFilesystemPicker();
   const input = $("composer-input");
   const menu = $("command-menu");
   if (!menu.hidden) {
@@ -2232,11 +2394,20 @@ $("command-picker-composer").addEventListener("click", () => {
 $("composer-input").addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     hideCommandMenu();
+    hideFilesystemPicker();
+    return;
+  }
+  if (event.key === "ArrowDown" && moveFilesystemSelection(1)) {
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "ArrowUp" && moveFilesystemSelection(-1)) {
+    event.preventDefault();
     return;
   }
   if (event.key === "Tab") {
     event.preventDefault();
-    if (!completeCommand()) {
+    if (!completeFilesystemPicker() && !completeCommand()) {
       const input = event.currentTarget;
       const start = input.selectionStart ?? input.value.length;
       const end = input.selectionEnd ?? start;
@@ -2247,6 +2418,10 @@ $("composer-input").addEventListener("keydown", (event) => {
   }
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
+    if (state.filesystemPicker.open) {
+      completeFilesystemPicker();
+      return;
+    }
     $("composer").requestSubmit();
   }
 });
@@ -2255,7 +2430,18 @@ $("composer-input").addEventListener("input", (event) => {
   event.target.style.height = `${Math.min(event.target.scrollHeight, 140)}px`;
   state.draft = event.target.value;
   localStorage.setItem("flan-draft", state.draft);
-  renderCommandMenu();
+  const filesystemContext = filesystemTokenContext();
+  if (filesystemContext && activeProjectHasRemoteFilesystem()) {
+    hideCommandMenu();
+    void loadFilesystemPicker(filesystemContext.directory, filesystemContext);
+  } else {
+    hideFilesystemPicker();
+    renderCommandMenu();
+  }
+});
+$("filesystem-use-folder").addEventListener("click", () => {
+  replaceFilesystemToken(state.filesystemPicker.path);
+  hideFilesystemPicker();
 });
 $("stop-run").addEventListener("click", async () => {
   if (state.abort) state.abort.abort();
@@ -2529,6 +2715,7 @@ $("theme-toggle").addEventListener("click", () => {
   document.documentElement.dataset.theme = state.theme;
   localStorage.setItem("flan-theme", state.theme);
   $("theme-toggle").setAttribute("aria-label", `Switch theme. Current: ${themeNames[state.theme]}`);
+  $("send-icon").textContent = themeSendIcons[state.theme] || "↑";
   if (state.settings)
     void api("/settings", { method: "POST", body: JSON.stringify({ theme: state.theme }) }).then(
       applySettings,
@@ -2545,6 +2732,46 @@ $("settings-form").addEventListener("submit", async (event) => {
 });
 $("settings-close").addEventListener("click", () => ($("settings-backdrop").hidden = true));
 $("settings-cancel").addEventListener("click", () => ($("settings-backdrop").hidden = true));
+$("settings-chat-background").addEventListener("change", (event) => {
+  const value = event.target.value;
+  if (value === "custom" && !localStorage.getItem("flan-custom-wallpaper")) {
+    event.target.value = state.settings?.chatBackground || "bliss";
+    toast("Upload a custom image first.");
+    return;
+  }
+  $("settings-chat-background-preview").textContent =
+    value === "custom"
+      ? "Using the custom wallpaper saved in this browser."
+      : "Custom wallpaper stays in this browser.";
+});
+$("settings-chat-background-upload").addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return toast("Choose an image file.");
+  if (file.size > 2 * 1024 * 1024) return toast("Custom wallpaper must be 2 MB or smaller.");
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    if (typeof reader.result !== "string") return;
+    localStorage.setItem("flan-custom-wallpaper", reader.result);
+    localStorage.setItem("flan-chat-background", "custom");
+    document.documentElement.style.setProperty("--custom-wallpaper", `url("${reader.result}")`);
+    document.documentElement.dataset.chatBackground = "custom";
+    $("settings-chat-background").value = "custom";
+    $("settings-chat-background-preview").textContent =
+      "Custom wallpaper ready. Save settings to keep the choice.";
+  });
+  reader.readAsDataURL(file);
+});
+$("settings-chat-background-remove").addEventListener("click", () => {
+  localStorage.removeItem("flan-custom-wallpaper");
+  if (state.settings) {
+    state.chatBackground = state.settings.chatBackground || "bliss";
+    localStorage.setItem("flan-chat-background", state.chatBackground);
+    document.documentElement.dataset.chatBackground = state.chatBackground;
+  }
+  $("settings-chat-background").value = state.chatBackground;
+  $("settings-chat-background-preview").textContent = "Custom wallpaper stays in this browser.";
+});
 $("settings-backdrop").addEventListener("click", (event) => {
   if (event.target === $("settings-backdrop")) $("settings-backdrop").hidden = true;
 });

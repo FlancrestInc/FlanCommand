@@ -1312,16 +1312,26 @@ export function createApiServer(options: ApiServerOptions = {}) {
           return;
         }
         const requestedHost = url.searchParams.get("host")?.trim();
-        const host = requestedHost || (project.hosts.includes("gospel") ? "gospel" : project.hosts.find((item) => item !== "local"));
+        const host =
+          requestedHost ||
+          (project.hosts.includes("gospel")
+            ? "gospel"
+            : project.hosts.find((item) => item !== "local"));
         if (!host) {
           json(response, 409, {
-            error: { code: "FILESYSTEM_HOST_MISSING", message: "This project has no remote filesystem host." },
+            error: {
+              code: "FILESYSTEM_HOST_MISSING",
+              message: "This project has no remote filesystem host.",
+            },
           });
           return;
         }
         if (!project.hosts.includes(host)) {
           json(response, 403, {
-            error: { code: "FILESYSTEM_HOST_DENIED", message: "That filesystem host is not declared by the project." },
+            error: {
+              code: "FILESYSTEM_HOST_DENIED",
+              message: "That filesystem host is not declared by the project.",
+            },
           });
           return;
         }
@@ -1336,11 +1346,16 @@ export function createApiServer(options: ApiServerOptions = {}) {
             ),
           );
         } catch (error) {
-          const status = error instanceof RemoteFilesystemError && error.code === "INVALID_PATH" ? 400 : 502;
+          const status =
+            error instanceof RemoteFilesystemError && error.code === "INVALID_PATH" ? 400 : 502;
           json(response, status, {
             error: {
-              code: error instanceof RemoteFilesystemError ? `FILESYSTEM_${error.code}` : "FILESYSTEM_ACCESS_FAILED",
-              message: error instanceof Error ? error.message : "Remote filesystem could not be opened.",
+              code:
+                error instanceof RemoteFilesystemError
+                  ? `FILESYSTEM_${error.code}`
+                  : "FILESYSTEM_ACCESS_FAILED",
+              message:
+                error instanceof Error ? error.message : "Remote filesystem could not be opened.",
             },
           });
         }

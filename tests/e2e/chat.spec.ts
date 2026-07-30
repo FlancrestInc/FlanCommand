@@ -89,6 +89,49 @@ test("completes slash commands with Tab and keeps Tab inside the textarea", asyn
   await expect(input).toBeFocused();
 });
 
+test("browses the active Gospel filesystem with mouse and keyboard", async ({ page }) => {
+  await page.route("**/api/filesystem/list**", async (route) => {
+    const path = new URL(route.request().url()).searchParams.get("path");
+    const entries =
+      path === "/"
+        ? [
+            { name: "projects", path: "/projects", type: "directory" },
+            { name: "tmp.txt", path: "/tmp.txt", type: "file" },
+          ]
+        : [{ name: "README.md", path: `${path}/README.md`, type: "file" }];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ host: "gospel", path, entries }),
+    });
+  });
+  await page.goto("/");
+  const project = await page.request.post("/api/projects", {
+    data: { name: `Gospel picker ${Date.now()}`, paths: [], hosts: ["gospel"] },
+  });
+  const projectBody = (await project.json()) as { id: string };
+  await page.reload();
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await expect(page.locator(`#project-select option[value="${projectBody.id}"]`)).toHaveCount(1);
+  await page.locator("#project-select").selectOption(projectBody.id);
+
+  const input = page.locator("#composer-input");
+  const picker = page.locator("#filesystem-picker");
+  await input.fill("/");
+  await expect(picker).toBeVisible();
+  await expect(picker.locator("button[data-filesystem-path='/projects']")).toBeVisible();
+  await picker.locator("button[data-filesystem-path='/projects']").click();
+  await expect(input).toHaveValue("/projects/");
+  await expect(picker.locator("button[data-filesystem-path='/projects/README.md']")).toBeVisible();
+  await input.press("Tab");
+  await expect(input).toHaveValue("/projects/README.md");
+  await expect(picker).toBeHidden();
+
+  await input.fill("/");
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue("/tmp.txt");
+});
+
 test("creates a conversation and renders one streamed Hermes reply", async ({ page }) => {
   await page.goto("/");
 
@@ -125,6 +168,24 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await expect(page.locator("[data-duplicate-job]")).toBeVisible();
   await page.locator("[data-duplicate-job]").first().click();
   await expect(page.locator("#toast")).toHaveText("Job duplicated.");
+});
+
+test("does not show an empty assistant bubble before the first response delta", async ({
+  page,
+}) => {
+  await page.route("**/api/sessions/*/messages", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.fulfill({
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+      body: 'event: agent\ndata: {"type":"message.delta","text":"Delayed reply"}\n\n',
+    });
+  });
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await page.locator("#composer-input").fill("Wait for the reply.");
+  await page.locator("#send-button").click();
+  await expect(page.locator("#messages .assistant")).toHaveCount(0);
 });
 
 test("renders tables and task lists in streamed Hermes Markdown", async ({ page }) => {

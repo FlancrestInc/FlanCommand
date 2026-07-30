@@ -34,7 +34,7 @@ describe("settings", () => {
       responseLimit: 32768,
       notifications: false,
       retentionDays: 1,
-      theme: "win98",
+      theme: "xp",
       chatBackground: "clouds",
       compactActivity: true,
     });
@@ -42,7 +42,7 @@ describe("settings", () => {
 
   it("accepts all supported themes", () => {
     expect(normalizeSettings({ theme: "xp" }).theme).toBe("xp");
-    expect(normalizeSettings({ theme: "win98" }).theme).toBe("win98");
+    expect(normalizeSettings({ theme: "win98" }).theme).toBe("xp");
     expect(normalizeSettings({ theme: "cga" }).theme).toBe("cga");
     expect(normalizeSettings({ theme: "amber" }).theme).toBe("amber");
     expect(normalizeSettings({ theme: "green" }).theme).toBe("green");

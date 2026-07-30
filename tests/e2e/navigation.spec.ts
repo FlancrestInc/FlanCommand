@@ -196,7 +196,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v18");
+    const cache = await browser.caches.open("flancommand-shell-v19");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -426,21 +426,21 @@ test("edits and archives a project from the browser", async ({ page }) => {
   await expect(page.locator("#archive-project")).toBeDisabled();
 });
 
-test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page }) => {
+test("switches and persists the supported classic and BOOTSTRA.386 themes", async ({ page }) => {
   await page.goto("/");
   await page.locator("#settings-button").click();
   await expect(page.locator("#settings-backdrop")).toBeVisible();
-  await page.locator("#settings-theme").selectOption("win98");
+  await page.locator("#settings-theme").selectOption("xp");
   await page.locator("#settings-chat-background").selectOption("3d-pipes");
   await page.locator("#settings-form").locator("button[type=submit]").click();
 
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
   await expect(page.locator("#settings-theme option[value=dark]")).toHaveCount(0);
   await expect(page.locator("#settings-theme option[value=light]")).toHaveCount(0);
   await expect(page.locator("#settings-button")).toBeVisible();
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
 
   for (const theme of ["cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"]) {
@@ -454,8 +454,6 @@ test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page 
 
   await page.locator("#theme-toggle").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
-  await page.locator("#theme-toggle").click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98");
   await page.locator("#theme-toggle").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "cga");
   await page.locator("#theme-toggle").click();

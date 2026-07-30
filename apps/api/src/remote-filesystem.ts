@@ -24,10 +24,7 @@ export class RemoteFilesystemError extends Error {
   constructor(
     message: string,
     readonly code:
-      | "INVALID_PATH"
-      | "REMOTE_ACCESS_FAILED"
-      | "REMOTE_OUTPUT_INVALID"
-      | "REMOTE_OUTPUT_LIMIT",
+      "INVALID_PATH" | "REMOTE_ACCESS_FAILED" | "REMOTE_OUTPUT_INVALID" | "REMOTE_OUTPUT_LIMIT",
   ) {
     super(message);
     this.name = "RemoteFilesystemError";
@@ -48,10 +45,16 @@ export async function listRemoteFilesystem(
   const path = validatePath(requestedPath);
   const output = await runner.run(host, path);
   if (output.byteLength > MAX_OUTPUT_BYTES)
-    throw new RemoteFilesystemError("Remote directory listing is too large.", "REMOTE_OUTPUT_LIMIT");
+    throw new RemoteFilesystemError(
+      "Remote directory listing is too large.",
+      "REMOTE_OUTPUT_LIMIT",
+    );
   const entries = parseRemoteFilesystemOutput(output, path);
   if (entries.length > MAX_ENTRIES)
-    throw new RemoteFilesystemError("Remote directory has too many entries.", "REMOTE_OUTPUT_LIMIT");
+    throw new RemoteFilesystemError(
+      "Remote directory has too many entries.",
+      "REMOTE_OUTPUT_LIMIT",
+    );
   return { host, path, entries };
 }
 
@@ -61,7 +64,10 @@ export function parseRemoteFilesystemOutput(
 ): RemoteFilesystemEntry[] {
   const text = output.toString("utf8");
   if (text.includes("\uFFFD"))
-    throw new RemoteFilesystemError("Remote directory listing was not valid UTF-8.", "REMOTE_OUTPUT_INVALID");
+    throw new RemoteFilesystemError(
+      "Remote directory listing was not valid UTF-8.",
+      "REMOTE_OUTPUT_INVALID",
+    );
   const entries = text
     .split("\0")
     .filter(Boolean)
@@ -69,13 +75,30 @@ export function parseRemoteFilesystemOutput(
       const separator = record.indexOf(":");
       const marker = separator >= 0 ? record.slice(0, separator) : "";
       const path = separator >= 0 ? record.slice(separator + 1) : "";
-      const type = marker === "d" ? "directory" : marker === "f" ? "file" : marker === "l" ? "symlink" : undefined;
+      const type =
+        marker === "d"
+          ? "directory"
+          : marker === "f"
+            ? "file"
+            : marker === "l"
+              ? "symlink"
+              : undefined;
       if (!type || !path || !path.startsWith("/"))
-        throw new RemoteFilesystemError("Remote directory listing was malformed.", "REMOTE_OUTPUT_INVALID");
+        throw new RemoteFilesystemError(
+          "Remote directory listing was malformed.",
+          "REMOTE_OUTPUT_INVALID",
+        );
       const normalizedPath = resolve(path);
       if (normalizedPath === directory)
-        throw new RemoteFilesystemError("Remote directory listing contained its parent path.", "REMOTE_OUTPUT_INVALID");
-      return { name: basename(normalizedPath), path: normalizedPath, type } satisfies RemoteFilesystemEntry;
+        throw new RemoteFilesystemError(
+          "Remote directory listing contained its parent path.",
+          "REMOTE_OUTPUT_INVALID",
+        );
+      return {
+        name: basename(normalizedPath),
+        path: normalizedPath,
+        type,
+      } satisfies RemoteFilesystemEntry;
     });
   return entries.sort(
     (left, right) =>
@@ -112,13 +135,28 @@ function runSshListing(host: string, path: string): Promise<Buffer> {
       errorText += chunk.toString("utf8").slice(0, 4000);
     });
     child.on("error", (error) =>
-      reject(new RemoteFilesystemError(`Remote filesystem connection failed: ${error.message}`, "REMOTE_ACCESS_FAILED")),
+      reject(
+        new RemoteFilesystemError(
+          `Remote filesystem connection failed: ${error.message}`,
+          "REMOTE_ACCESS_FAILED",
+        ),
+      ),
     );
     child.on("close", (code) => {
       if (size > MAX_OUTPUT_BYTES) {
-        reject(new RemoteFilesystemError("Remote directory listing is too large.", "REMOTE_OUTPUT_LIMIT"));
+        reject(
+          new RemoteFilesystemError(
+            "Remote directory listing is too large.",
+            "REMOTE_OUTPUT_LIMIT",
+          ),
+        );
       } else if (code !== 0) {
-        reject(new RemoteFilesystemError(errorText.trim() || "Remote directory could not be opened.", "REMOTE_ACCESS_FAILED"));
+        reject(
+          new RemoteFilesystemError(
+            errorText.trim() || "Remote directory could not be opened.",
+            "REMOTE_ACCESS_FAILED",
+          ),
+        );
       } else {
         resolveOutput(Buffer.concat(chunks));
       }

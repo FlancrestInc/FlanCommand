@@ -41,7 +41,7 @@
             id="notification-bell"
             aria-label="Open notifications"
           >
-            ♢<span id="notification-count">0</span></button
+            ✉<span id="notification-count">0</span></button
           ><button class="icon-button" id="theme-toggle" aria-label="Switch theme">◐</button
           ><button class="avatar" id="settings-button" aria-label="Open settings">R</button>
         </div>
@@ -224,10 +224,8 @@
             ></div>
           </div>
           <div class="composer-wrap">
-            <div class="run-strip" id="run-strip" hidden>
-              <span class="spinner" aria-hidden="true"></span
-              ><span id="run-label" role="status" aria-live="polite">Hermes is working</span
-              ><button id="stop-run">Stop</button
+            <div class="run-strip" id="run-strip" hidden aria-hidden="true">
+              <span id="run-label">Hermes is working</span
               ><button id="reconnect-run" hidden>Refresh session</button>
             </div>
             <form class="composer" id="composer">
@@ -239,6 +237,23 @@
                 placeholder="Ask Hermes anything…"
                 aria-label="Message Hermes"
               ></textarea>
+              <div class="filesystem-picker" id="filesystem-picker" hidden>
+                <div class="filesystem-picker-head">
+                  <span id="filesystem-picker-path">/</span>
+                  <button id="filesystem-use-folder" type="button">Use folder</button>
+                </div>
+                <div
+                  class="filesystem-picker-status"
+                  id="filesystem-picker-status"
+                  role="status"
+                ></div>
+                <div
+                  class="filesystem-picker-list"
+                  id="filesystem-picker-list"
+                  role="listbox"
+                  aria-label="Remote filesystem entries"
+                ></div>
+              </div>
               <div class="composer-tools">
                 <div class="composer-monitors" aria-label="Model and run monitors">
                   <select class="model-picker" id="model-select" aria-label="Choose model">
@@ -290,13 +305,23 @@
                   >
                 </div>
                 <button
+                  type="button"
+                  class="stop-button"
+                  id="stop-run"
+                  aria-label="Stop Hermes"
+                  title="Stop Hermes"
+                  hidden
+                >
+                  ■
+                </button>
+                <button
                   class="send-button"
                   id="send-button"
                   type="submit"
                   aria-label="Send message"
                   title="Send message"
                 >
-                  ↑
+                  <span id="send-icon" aria-hidden="true">↑</span>
                 </button>
               </div>
             </form>
@@ -556,7 +581,6 @@ No terminal session.</pre>
           <span>Theme</span>
           <select id="settings-theme">
             <option value="xp">System 6</option>
-            <option value="win98">System 6 Compact</option>
             <option value="cga">BOOTSTRA.386 — CGA</option>
             <option value="amber">BOOTSTRA.386 — Amber</option>
             <option value="green">BOOTSTRA.386 — Green</option>
@@ -576,8 +600,19 @@ No terminal session.</pre>
             <option value="3d-pipes">3D Pipes</option>
             <option value="azul">Azul</option>
             <option value="none">Plain desktop</option>
+            <option value="custom">Custom upload</option>
           </select>
           <small>Pick a classic backdrop. The chat cards keep a readable glassy window.</small>
+        </label>
+        <label class="settings-field">
+          <span>Custom wallpaper</span>
+          <input id="settings-chat-background-upload" type="file" accept="image/*" />
+          <button id="settings-chat-background-remove" type="button">
+            Remove custom wallpaper
+          </button>
+          <small id="settings-chat-background-preview"
+            >Custom wallpaper stays in this browser.</small
+          >
         </label>
         <div class="settings-actions">
           <button id="settings-cancel" type="button">Cancel</button>

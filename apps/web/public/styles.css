@@ -1523,6 +1523,77 @@ h1 {
 .composer textarea::placeholder {
   color: var(--faint);
 }
+.filesystem-picker {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.filesystem-picker[hidden] {
+  display: none;
+}
+.filesystem-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.filesystem-picker-head span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filesystem-picker-head button {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 10px;
+}
+.filesystem-picker-status {
+  min-height: 15px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.filesystem-picker-list {
+  display: grid;
+  max-height: min(34vh, 220px);
+  overflow-y: auto;
+  gap: 2px;
+}
+.filesystem-picker-list button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-size: 11px;
+}
+.filesystem-picker-list button:hover,
+.filesystem-picker-list button.selected,
+.filesystem-picker-list button:focus-visible {
+  background: color-mix(in oklab, var(--accent) 18%, var(--panel-2));
+}
+.filesystem-picker-list button b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filesystem-picker-list button small {
+  color: var(--muted);
+  font-size: 10px;
+}
 .composer-tools {
   display: flex;
   justify-content: space-between;
@@ -2031,6 +2102,126 @@ kbd {
     min-height: 44px;
   }
   .sidebar-controls button {
+    min-height: 44px;
+  }
+}
+
+/* Command-center interaction fixes. Keep these after platform layers. */
+.drawer-tab,
+.drawer-tab:hover,
+.drawer-tab:focus-visible,
+.drawer-tab:active,
+html[data-theme] .drawer-tab:active {
+  transform: translateY(-50%) translateX(var(--drawer-tab-shift, 0px)) !important;
+}
+
+.side-drawer-backdrop {
+  background: rgb(5 8 12 / 34%);
+}
+
+.composer-wrap {
+  position: relative;
+  z-index: 4;
+  padding-top: 14px;
+  background: transparent;
+  border-top: 0;
+}
+
+.run-strip {
+  display: none !important;
+}
+
+.composer-tools {
+  align-items: center;
+}
+
+.stop-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-right: 4px;
+  border: 1px solid var(--warm);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--warm);
+  font-size: 12px;
+}
+
+.stop-button[hidden] {
+  display: none;
+}
+
+.notification-button {
+  position: relative;
+  width: 44px;
+  min-width: 44px;
+  font-size: 17px;
+}
+
+.notification-button #notification-count {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  min-width: 15px;
+  padding: 1px 3px;
+  border-radius: 99px;
+  background: var(--warm);
+  color: var(--accent-ink);
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.settings-field select,
+.settings-field input,
+.settings-field textarea,
+.settings-check input,
+.detail-panel input,
+.detail-panel select,
+.detail-panel textarea,
+.sidebar input,
+.sidebar select,
+.sidebar textarea {
+  accent-color: var(--accent);
+  color: var(--ink);
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+
+.settings-field input::placeholder,
+.settings-field textarea::placeholder,
+.detail-panel input::placeholder,
+.detail-panel textarea::placeholder,
+.sidebar input::placeholder,
+.sidebar textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+html[data-theme="classiccss"] .sidebar-head::before,
+html[data-theme="classiccss"] .detail-head::before,
+html[data-theme="classiccss"] .palette-head::before,
+html[data-theme="classiccss"] .drawer-head::before,
+html[data-theme="classiccss"] .sidebar-head::after,
+html[data-theme="classiccss"] .detail-head::after,
+html[data-theme="classiccss"] .palette-head::after,
+html[data-theme="classiccss"] .drawer-head::after {
+  content: none;
+}
+
+html[data-theme="classiccss"] .stop-button {
+  color: var(--classic-black);
+  border-color: var(--classic-black);
+}
+@media (max-width: 720px) {
+  .notification-button,
+  #theme-toggle,
+  #settings-button,
+  #conversations-tab,
+  #attach-file-composer,
+  #send-button,
+  #stop-run {
+    min-width: 44px;
     min-height: 44px;
   }
 }
@@ -3161,17 +3352,18 @@ html[data-theme="green"] .drawer-tab[aria-expanded="true"] {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   writing-mode: vertical-rl;
-  transform: translateY(-50%) translateX(0);
+  --drawer-tab-shift: 0px;
+  transform: translateY(-50%) translateX(var(--drawer-tab-shift));
   transition:
     transform 0.22s ease,
     border-color 0.22s ease,
     color 0.22s ease;
 }
 .workspace:has(#sidebar.open) .drawer-tab-left {
-  transform: translateY(-50%) translateX(var(--drawer-width));
+  --drawer-tab-shift: var(--drawer-width);
 }
 .workspace:has(#detail-panel.open) .drawer-tab-right {
-  transform: translateY(-50%) translateX(calc(-1 * var(--drawer-width)));
+  --drawer-tab-shift: calc(-1 * var(--drawer-width));
 }
 .drawer-tab:hover,
 .drawer-tab[aria-expanded="true"] {
@@ -3308,6 +3500,9 @@ html[data-chat-background="azul"] {
 }
 html[data-chat-background="none"] {
   --wallpaper: #d5d5d5;
+}
+html[data-chat-background="custom"] {
+  --wallpaper: var(--custom-wallpaper, #d5d5d5);
 }
 
 body {
@@ -6239,5 +6434,27 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   html[data-theme="classiccss"] .palette-head,
   html[data-theme="classiccss"] .drawer-head {
     padding-inline: 44px;
+  }
+}
+
+/* Final interaction overrides after every platform theme layer. */
+html[data-theme] .drawer-tab:active,
+html[data-theme] .drawer-tab:focus-visible {
+  transform: translateY(-50%) translateX(var(--drawer-tab-shift, 0px)) !important;
+}
+html[data-theme] :focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  html[data-theme] #notification-bell,
+  html[data-theme] #theme-toggle,
+  html[data-theme] #settings-button,
+  html[data-theme] #conversations-tab,
+  html[data-theme] #attach-file-composer,
+  html[data-theme] #send-button,
+  html[data-theme] #stop-run {
+    min-width: 44px !important;
+    min-height: 44px !important;
   }
 }
