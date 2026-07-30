@@ -6,7 +6,8 @@ export type SettingsTheme =
   | "amber"
   | "green"
   | "win98css"
-  | "xpcss";
+  | "xpcss"
+  | "win7css";
 export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
 
 export interface UserSettings {
@@ -67,7 +68,8 @@ export function normalizeSettings(
       input.theme === "amber" ||
       input.theme === "green" ||
       input.theme === "win98css" ||
-      input.theme === "xpcss"
+      input.theme === "xpcss" ||
+      input.theme === "win7css"
         ? input.theme
         : base.theme,
     chatBackground:

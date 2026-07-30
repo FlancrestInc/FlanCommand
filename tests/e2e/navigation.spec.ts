@@ -443,7 +443,7 @@ test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "win98");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
 
-  for (const theme of ["cga", "amber", "green", "win98css", "xpcss"]) {
+  for (const theme of ["cga", "amber", "green", "win98css", "xpcss", "win7css"]) {
     await page.locator("#settings-button").click();
     await page.locator("#settings-theme").selectOption(theme);
     await page.locator("#settings-form").locator("button[type=submit]").click();
@@ -466,6 +466,8 @@ test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
   await page.locator("#theme-toggle").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "xpcss");
+  await page.locator("#theme-toggle").click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win7css");
 });
 
 test("associates a credential reference through the browser form", async ({ page }) => {
