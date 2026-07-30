@@ -3271,7 +3271,7 @@ html[data-theme="green"] .drawer-tab[aria-expanded="true"] {
   inset: 0;
   width: 100%;
   border: 0;
-  background: #0007;
+  background: rgb(5 8 12 / 34%) !important;
 }
 .side-drawer-backdrop[hidden] {
   display: none;

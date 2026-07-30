@@ -264,6 +264,13 @@ test("opens side drawers one at a time and collapses long sections", async ({ pa
 
   await page.locator("#conversations-tab").click();
   await expect(page.locator("#sidebar")).toHaveClass(/open/);
+  await expect
+    .poll(() =>
+      page
+        .locator("#side-drawer-backdrop")
+        .evaluate((element) => element.ownerDocument.defaultView!.getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgba(5, 8, 12, 0.34)");
   const leftDrawer = await page.locator("#sidebar").boundingBox();
   const leftTab = await page.locator("#conversations-tab").boundingBox();
   expect(leftDrawer).not.toBeNull();
