@@ -1437,6 +1437,11 @@ h1 {
 .command-menu small {
   color: var(--faint);
 }
+.command-empty {
+  padding: 8px;
+  color: var(--faint);
+  font-size: 11px;
+}
 .composer textarea {
   width: 100%;
   resize: none;

@@ -93,6 +93,7 @@ const state = {
   recovering: false,
   memory: null,
 };
+let commandPickerSelection = null;
 const themeNames = {
   xp: "System 6",
   win98: "System 6 Compact",
@@ -1796,31 +1797,65 @@ async function loadCommands(id) {
 function hideCommandMenu() {
   $("command-menu").hidden = true;
 }
-function renderCommandMenu() {
+function commandContext() {
+  const input = $("composer-input");
+  const value = input.value;
+  const caret = input.selectionStart ?? value.length;
+  const before = value.slice(0, caret);
+  const tokenStart = Math.max(before.lastIndexOf(" "), before.lastIndexOf("\n")) + 1;
+  const token = before.slice(tokenStart);
+  if (!token.startsWith("/")) {
+    return { start: caret, end: caret, query: "", active: false };
+  }
+  let tokenEnd = caret;
+  while (tokenEnd < value.length && !/[\s]/.test(value[tokenEnd])) tokenEnd += 1;
+  return { start: tokenStart, end: tokenEnd, query: token.slice(1).toLowerCase(), active: true };
+}
+function commandMatches(query = commandContext().query) {
+  return state.commands.filter((command) => command.name.toLowerCase().includes(query)).slice(0, 6);
+}
+function insertCommand(command) {
+  const input = $("composer-input");
+  const context = commandPickerSelection || commandContext();
+  commandPickerSelection = null;
+  const value = input.value;
+  const following = value.slice(context.end);
+  const separator = following && /^[\s]/.test(following) ? "" : " ";
+  input.setRangeText(`${command}${separator}`, context.start, context.end, "end");
+  hideCommandMenu();
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+}
+function renderCommandMenu({ forceOpen = false } = {}) {
   const menu = $("command-menu");
-  const value = $("composer-input").value;
-  if (!value.startsWith("/") || !state.commands.length) {
+  const context = commandContext();
+  if (!forceOpen && !context.active) {
     hideCommandMenu();
     return;
   }
-  const query = value.slice(1).toLowerCase();
-  const commands = state.commands
-    .filter((command) => command.name.toLowerCase().includes(query))
-    .slice(0, 6);
-  menu.innerHTML = commands
-    .map(
-      (command) =>
-        `<button type="button" data-command="${escapeHtml(command.name)}"><b>${escapeHtml(command.name)}</b><small>${escapeHtml(command.description || "Run Hermes command")}</small></button>`,
-    )
-    .join("");
-  menu.hidden = !commands.length;
-  menu.querySelectorAll("[data-command]").forEach((button) =>
+  const commands = commandMatches(context.query);
+  menu.innerHTML = commands.length
+    ? commands
+        .map(
+          (command) =>
+            `<button type="button" data-command="${escapeHtml(command.name)}"><b>${escapeHtml(command.name)}</b><small>${escapeHtml(command.description || "Run Hermes command")}</small></button>`,
+        )
+        .join("")
+    : '<div class="command-empty">No slash commands available.</div>';
+  menu.hidden = false;
+  menu.querySelectorAll("[data-command]").forEach((button) => {
+    button.addEventListener("mousedown", (event) => event.preventDefault());
     button.addEventListener("click", () => {
-      $("composer-input").value = `${button.dataset.command} `;
-      hideCommandMenu();
-      $("composer-input").focus();
-    }),
-  );
+      insertCommand(button.dataset.command);
+    });
+  });
+}
+function completeCommand() {
+  const context = commandContext();
+  const commands = commandMatches(context.query);
+  if (!context.active || !commands.length) return false;
+  insertCommand(commands[0].name);
+  return true;
 }
 function formatTokenCount(value) {
   if (!Number.isFinite(value)) return "—";
@@ -2176,7 +2211,35 @@ $("composer").addEventListener("submit", (event) => {
   const text = $("composer-input").value.trim();
   if (text) void send(text);
 });
+$("command-picker-composer").addEventListener("mousedown", (event) => {
+  event.preventDefault();
+});
+
+$("command-picker-composer").addEventListener("click", () => {
+  const input = $("composer-input");
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? start;
+  commandPickerSelection = { start, end };
+  input.focus();
+  input.setSelectionRange(start, end);
+  renderCommandMenu({ forceOpen: true });
+});
 $("composer-input").addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    hideCommandMenu();
+    return;
+  }
+  if (event.key === "Tab") {
+    event.preventDefault();
+    if (!completeCommand()) {
+      const input = event.currentTarget;
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? start;
+      input.setRangeText("\t", start, end, "end");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    return;
+  }
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
     $("composer").requestSubmit();

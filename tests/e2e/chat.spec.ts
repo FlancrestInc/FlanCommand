@@ -19,6 +19,45 @@ test("closes the slash command picker when canceled or selected", async ({ page 
   await expect(menu).toBeHidden();
 });
 
+test("opens commands from the composer button and inserts only the active token", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const input = page.locator("#composer-input");
+  const menu = page.locator("#command-menu");
+
+  await input.fill("Run ");
+  await page.locator("#command-picker-composer").click();
+  await expect(menu).toBeVisible();
+  await expect(menu.locator("[data-command='/status']")).toBeVisible();
+  await menu.locator("[data-command='/status']").click();
+  await expect(input).toHaveValue("Run /status ");
+  await expect(input).toBeFocused();
+
+  await input.fill("Run /sta now");
+  await input.evaluate((element) => element.setSelectionRange(4, 8));
+  await page.locator("#command-picker-composer").click();
+  await menu.locator("[data-command='/status']").click();
+  await expect(input).toHaveValue("Run /status now");
+});
+
+test("completes slash commands with Tab and keeps Tab inside the textarea", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const input = page.locator("#composer-input");
+
+  await input.fill("/sta");
+  await input.press("Tab");
+  await expect(input).toHaveValue("/status ");
+  await expect(input).toBeFocused();
+
+  await input.fill("literal");
+  await input.press("Tab");
+  await expect(input).toHaveValue("literal\t");
+  await expect(input).toBeFocused();
+});
+
 test("creates a conversation and renders one streamed Hermes reply", async ({ page }) => {
   await page.goto("/");
 
