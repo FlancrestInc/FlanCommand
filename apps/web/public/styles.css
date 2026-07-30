@@ -5725,3 +5725,512 @@ html[data-theme="win7css"] .drawer-tab[aria-expanded="true"] {
     box-shadow: 0 5px 12px var(--win7-shadow);
   }
 }
+
+/* classic.css-inspired Mac OS 8 Platinum theme. Local CSS only. */
+html[data-theme="classiccss"] {
+  color-scheme: light;
+  --classic-desktop: #dce4e8;
+  --classic-surface: #d0d0d0;
+  --classic-panel: #fff;
+  --classic-white: #fff;
+  --classic-light: #e9e9e9;
+  --classic-mid: #a8a8a8;
+  --classic-dark: #6f6f6f;
+  --classic-black: #000;
+  --classic-muted: #444;
+  --classic-font: Geneva, Chicago, Charcoal, Arial, sans-serif;
+}
+
+html[data-theme="classiccss"] body {
+  min-height: 100vh;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--classic-desktop) 0,
+    var(--classic-desktop) 3px,
+    #d5dde1 3px,
+    #d5dde1 6px
+  );
+  color: var(--classic-black);
+  font-family: var(--classic-font);
+}
+
+html[data-theme="classiccss"] .app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+html[data-theme="classiccss"] .topbar {
+  min-height: 35px;
+  border-bottom: 2px solid var(--classic-black);
+  background: var(--classic-white);
+  color: var(--classic-black);
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] .topbar > *,
+html[data-theme="classiccss"] .brand,
+html[data-theme="classiccss"] .topbar-center,
+html[data-theme="classiccss"] .connection,
+html[data-theme="classiccss"] .avatar,
+html[data-theme="classiccss"] .icon-button {
+  color: var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .brand,
+html[data-theme="classiccss"] .brand:hover {
+  font-family: var(--classic-font);
+  font-weight: 700;
+}
+
+html[data-theme="classiccss"] .brand-mark {
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  background: var(--classic-white);
+  color: var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .topbar-center .session-summary h2,
+html[data-theme="classiccss"] .topbar-center .session-summary span,
+html[data-theme="classiccss"] .eyebrow,
+html[data-theme="classiccss"] .section-label,
+html[data-theme="classiccss"] .card-label,
+html[data-theme="classiccss"] .welcome-kicker {
+  color: var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .connection {
+  border-color: var(--classic-black);
+  border-radius: 0;
+  background: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .connection i,
+html[data-theme="classiccss"] .live-dot,
+html[data-theme="classiccss"] .pulse {
+  background: var(--classic-black);
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] .workspace {
+  background: transparent;
+}
+
+html[data-theme="classiccss"] .sidebar,
+html[data-theme="classiccss"] .detail-panel,
+html[data-theme="classiccss"] .chat-column {
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  box-shadow: 2px 2px 0 var(--classic-dark);
+}
+
+html[data-theme="classiccss"] .sidebar-head,
+html[data-theme="classiccss"] .detail-head,
+html[data-theme="classiccss"] .palette-head,
+html[data-theme="classiccss"] .drawer-head {
+  position: relative;
+  padding-inline: 56px;
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--classic-surface) 0,
+    var(--classic-surface) 1px,
+    var(--classic-mid) 1px,
+    var(--classic-mid) 2px,
+    var(--classic-dark) 2px,
+    var(--classic-dark) 3px,
+    var(--classic-light) 3px,
+    var(--classic-light) 4px
+  );
+  color: var(--classic-black);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] .sidebar-head > *,
+html[data-theme="classiccss"] .detail-head > *,
+html[data-theme="classiccss"] .palette-head > *,
+html[data-theme="classiccss"] .drawer-head > * {
+  color: var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .sidebar-head::before,
+html[data-theme="classiccss"] .detail-head::before,
+html[data-theme="classiccss"] .palette-head::before,
+html[data-theme="classiccss"] .drawer-head::before {
+  content: "Close";
+  position: absolute;
+  left: 6px;
+  padding: 0 4px;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+html[data-theme="classiccss"] .sidebar-head::after,
+html[data-theme="classiccss"] .detail-head::after,
+html[data-theme="classiccss"] .palette-head::after,
+html[data-theme="classiccss"] .drawer-head::after {
+  content: "Zoom";
+  position: absolute;
+  right: 6px;
+  padding: 0 4px;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+html[data-theme="classiccss"] .settings-panel .palette-head::after,
+html[data-theme="classiccss"] .drawer-head::after {
+  right: 58px;
+}
+
+html[data-theme="classiccss"] .palette-head > .eyebrow {
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme="classiccss"] button,
+html[data-theme="classiccss"] .drawer-tab,
+html[data-theme="classiccss"] .starter,
+html[data-theme="classiccss"] .footer-link {
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  box-shadow: 1px 1px 0 var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] button:hover:not(:disabled),
+html[data-theme="classiccss"] .drawer-tab:hover,
+html[data-theme="classiccss"] .starter:hover,
+html[data-theme="classiccss"] .footer-link:hover {
+  background: var(--classic-light);
+}
+
+html[data-theme="classiccss"] button:active:not(:disabled),
+html[data-theme="classiccss"] .drawer-tab:active,
+html[data-theme="classiccss"] .starter:active {
+  border-style: inset;
+  background: var(--classic-mid);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme="classiccss"] button:disabled,
+html[data-theme="classiccss"] select:disabled,
+html[data-theme="classiccss"] input:disabled,
+html[data-theme="classiccss"] textarea:disabled {
+  color: var(--classic-mid);
+  text-shadow: 1px 1px var(--classic-white);
+}
+
+html[data-theme="classiccss"] :focus-visible {
+  outline: 1px dotted var(--classic-black);
+  outline-offset: 2px;
+}
+
+html[data-theme="classiccss"] input,
+html[data-theme="classiccss"] select,
+html[data-theme="classiccss"] textarea,
+html[data-theme="classiccss"] .search,
+html[data-theme="classiccss"] .model-picker,
+html[data-theme="classiccss"] .context-monitor,
+html[data-theme="classiccss"] .runtime-monitor {
+  border: 2px inset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-white);
+  color: var(--classic-black);
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] input::placeholder,
+html[data-theme="classiccss"] textarea::placeholder {
+  color: var(--classic-muted);
+  opacity: 1;
+}
+
+html[data-theme="classiccss"] .message-scroll {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--classic-desktop) 0,
+    var(--classic-desktop) 3px,
+    #d5dde1 3px,
+    #d5dde1 6px
+  );
+}
+
+html[data-theme="classiccss"] .welcome,
+html[data-theme="classiccss"] .message .bubble,
+html[data-theme="classiccss"] .message.user .bubble,
+html[data-theme="classiccss"] .starter,
+html[data-theme="classiccss"] .activity-summary-card,
+html[data-theme="classiccss"] .file-item,
+html[data-theme="classiccss"] .session-skeleton,
+html[data-theme="classiccss"] .drawer-card,
+html[data-theme="classiccss"] .notification-card,
+html[data-theme="classiccss"] .attachment-chip,
+html[data-theme="classiccss"] .inline-approval,
+html[data-theme="classiccss"] .edit-review,
+html[data-theme="classiccss"] .memory-card {
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  background: var(--classic-panel);
+  color: var(--classic-black);
+  box-shadow: 1px 1px 0 var(--classic-black);
+}
+
+html[data-theme="classiccss"] .welcome h3 {
+  color: var(--classic-black);
+  font-family: var(--classic-font);
+  font-size: clamp(22px, 4vw, 38px);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .welcome h3 em,
+html[data-theme="classiccss"] .welcome p,
+html[data-theme="classiccss"] .starter small,
+html[data-theme="classiccss"] .message-meta,
+html[data-theme="classiccss"] .hint,
+html[data-theme="classiccss"] .composer-note,
+html[data-theme="classiccss"] .developer-note,
+html[data-theme="classiccss"] .run-metrics span,
+html[data-theme="classiccss"] .run-metrics b,
+html[data-theme="classiccss"] .details-list span {
+  color: var(--classic-muted);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .welcome .welcome-kicker,
+html[data-theme="classiccss"] .starter span,
+html[data-theme="classiccss"] a {
+  color: var(--classic-black);
+  text-shadow: none;
+}
+
+html[data-theme="classiccss"] .composer-wrap {
+  border-top: 2px solid var(--classic-black);
+  background: var(--classic-surface);
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] .composer {
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  box-shadow: 1px 1px 0 var(--classic-black);
+}
+
+html[data-theme="classiccss"] .composer textarea {
+  background: var(--classic-white);
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .send-button,
+html[data-theme="classiccss"] .settings-actions .primary-button,
+html[data-theme="classiccss"] .drawer-actions .primary-button {
+  border-color: var(--classic-black);
+  background: var(--classic-black);
+  color: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .detail-card,
+html[data-theme="classiccss"] .project-picker,
+html[data-theme="classiccss"] .credential-library,
+html[data-theme="classiccss"] .file-library,
+html[data-theme="classiccss"] .sidebar-footer {
+  margin: 5px;
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  box-shadow: 1px 1px 0 var(--classic-black);
+}
+
+html[data-theme="classiccss"] .detail-card > summary,
+html[data-theme="classiccss"] .project-picker > summary,
+html[data-theme="classiccss"] .credential-library > summary,
+html[data-theme="classiccss"] .file-library > summary,
+html[data-theme="classiccss"] .sidebar-footer > summary {
+  border-bottom: 1px solid var(--classic-black);
+  background: var(--classic-surface);
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .session-item,
+html[data-theme="classiccss"] .session-entry,
+html[data-theme="classiccss"] .credential-item,
+html[data-theme="classiccss"] .workspace-entry {
+  border-radius: 0;
+  background: transparent;
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .session-item[aria-current="true"],
+html[data-theme="classiccss"] .session-entry.active,
+html[data-theme="classiccss"] .file-item.selected,
+html[data-theme="classiccss"] .workspace-entry.selected {
+  background: var(--classic-black);
+  color: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .session-item[aria-current="true"] *,
+html[data-theme="classiccss"] .session-entry.active * {
+  color: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .status-badge,
+html[data-theme="classiccss"] .job-status,
+html[data-theme="classiccss"] .risk,
+html[data-theme="classiccss"] .activity-chip,
+html[data-theme="classiccss"] .chip,
+html[data-theme="classiccss"] .attachment-chip {
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  background: var(--classic-white);
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .risk-high,
+html[data-theme="classiccss"] .job-waiting_for_approval {
+  background: var(--classic-black);
+  color: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .job-running {
+  background: var(--classic-white);
+  color: var(--classic-black);
+  border-style: double;
+}
+
+html[data-theme="classiccss"] .meter,
+html[data-theme="classiccss"] .context-bar {
+  border: 2px inset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .meter span,
+html[data-theme="classiccss"] #composer-context-meter {
+  background: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .settings-panel,
+html[data-theme="classiccss"] .palette,
+html[data-theme="classiccss"] .command-drawer,
+html[data-theme="classiccss"] .drawer-card {
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  box-shadow: 3px 3px 0 var(--classic-black);
+}
+
+html[data-theme="classiccss"] .palette-head {
+  margin: 0;
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--classic-surface) 0,
+    var(--classic-surface) 1px,
+    var(--classic-mid) 1px,
+    var(--classic-mid) 2px,
+    var(--classic-dark) 2px,
+    var(--classic-dark) 3px,
+    var(--classic-light) 3px,
+    var(--classic-light) 4px
+  );
+  box-shadow: none;
+}
+
+html[data-theme="classiccss"] .palette-head > * {
+  background: var(--classic-surface);
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .toast,
+html[data-theme="classiccss"] .run-strip {
+  border: 2px outset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-surface);
+  color: var(--classic-black);
+  box-shadow: 2px 2px 0 var(--classic-black);
+}
+
+html[data-theme="classiccss"] .code-block,
+html[data-theme="classiccss"] .memory-output,
+html[data-theme="classiccss"] .developer-panel pre,
+html[data-theme="classiccss"] .terminal-panel pre,
+html[data-theme="classiccss"] .edit-diff {
+  border: 2px inset var(--classic-white);
+  border-radius: 0;
+  background: var(--classic-black);
+  color: var(--classic-white);
+  font-family: "Courier New", monospace;
+}
+
+html[data-theme="classiccss"] .code-toolbar {
+  border-bottom: 1px solid var(--classic-white);
+  background: var(--classic-black);
+  color: var(--classic-white);
+}
+
+html[data-theme="classiccss"] .markdown-table-wrap {
+  border: 1px solid var(--classic-black);
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+html[data-theme="classiccss"] table th {
+  background: var(--classic-surface);
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] table td,
+html[data-theme="classiccss"] table th {
+  border-color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .drawer-tab {
+  color: var(--classic-black);
+}
+
+html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
+  background: var(--classic-black);
+  color: var(--classic-white);
+}
+
+@media (max-width: 720px) {
+  html[data-theme="classiccss"] .topbar {
+    min-height: 44px;
+  }
+
+  html[data-theme="classiccss"] .settings-panel,
+  html[data-theme="classiccss"] .palette,
+  html[data-theme="classiccss"] .command-drawer {
+    max-width: calc(100vw - 16px);
+    box-shadow: 2px 2px 0 var(--classic-black);
+  }
+
+  html[data-theme="classiccss"] .sidebar-head,
+  html[data-theme="classiccss"] .detail-head,
+  html[data-theme="classiccss"] .palette-head,
+  html[data-theme="classiccss"] .drawer-head {
+    padding-inline: 44px;
+  }
+}

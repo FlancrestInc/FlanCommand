@@ -4,8 +4,8 @@
   "description": "A web-native command center for Hermes Agent.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1c6bae",
-  "theme_color": "#1c6bae",
+  "background_color": "#d0d0d0",
+  "theme_color": "#d0d0d0",
   "icons": [
     {
       "src": "/icon.svg",
