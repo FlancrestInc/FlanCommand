@@ -2208,7 +2208,6 @@ function completeLiveAssistantMessage(at = new Date().toISOString()) {
   const liveMessage = $("live-message");
   if (!liveMessage) return;
   liveMessage.removeAttribute("id");
-  removeLiveActivity();
   const meta = liveMessage.querySelector(".message-meta");
   if (meta)
     meta.innerHTML = `Hermes · complete<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>`;
@@ -2278,7 +2277,6 @@ async function send(text) {
     const live = () => document.querySelector("#live-message .bubble");
     const ensureLiveMessage = () => {
       if (!live()) {
-        removeLiveActivity();
         appendLiveAssistantMessage();
       }
       return live();
