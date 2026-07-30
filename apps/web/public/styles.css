@@ -6419,6 +6419,20 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   }
 }
 
+/* Keep user message bubbles visible after every theme layer. */
+.message.user .bubble {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+html[data-theme="cga"] .message.user .bubble,
+html[data-theme="amber"] .message.user .bubble,
+html[data-theme="green"] .message.user .bubble {
+  border: 1px solid var(--dos-accent);
+  background: var(--dos-panel);
+  color: var(--dos-bright);
+}
+
 /* Final interaction overrides after every platform theme layer. */
 html[data-theme] .drawer-tab:active,
 html[data-theme] .drawer-tab:focus-visible {
