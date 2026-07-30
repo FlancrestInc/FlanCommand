@@ -13,6 +13,9 @@ test("closes the slash command picker when canceled or selected", async ({ page 
   await input.fill("A normal message");
   await expect(menu).toBeHidden();
 
+  await input.fill("Mention /");
+  await expect(menu).toBeHidden();
+
   await input.fill("/");
   await expect(menu).toBeVisible();
   await page.locator("[data-command]").first().click();

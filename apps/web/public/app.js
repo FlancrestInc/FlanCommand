@@ -1993,7 +1993,7 @@ function insertCommand(command) {
 function renderCommandMenu({ forceOpen = false } = {}) {
   const menu = $("command-menu");
   const context = commandContext();
-  if (!forceOpen && !context.active) {
+  if (!forceOpen && (!context.active || context.start !== 0)) {
     hideCommandMenu();
     return;
   }
@@ -2017,7 +2017,7 @@ function renderCommandMenu({ forceOpen = false } = {}) {
 function completeCommand() {
   const context = commandContext();
   const commands = commandMatches(context.query);
-  if (!context.active || !commands.length) return false;
+  if (!context.active || context.start !== 0 || !commands.length) return false;
   insertCommand(commands[0].name);
   return true;
 }
