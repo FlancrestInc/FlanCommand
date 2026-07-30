@@ -2198,14 +2198,17 @@ function activityRow(event, label = activityLabel(event)) {
 function appendLiveAssistantMessage(at = new Date().toISOString()) {
   $("messages").insertAdjacentHTML(
     "beforeend",
-    `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><div class="live-activity" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
+    `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
   );
+}
+function removeLiveActivity() {
+  $("live-activity")?.remove();
 }
 function completeLiveAssistantMessage(at = new Date().toISOString()) {
   const liveMessage = $("live-message");
   if (!liveMessage) return;
   liveMessage.removeAttribute("id");
-  liveMessage.querySelector(".live-activity")?.remove();
+  removeLiveActivity();
   const meta = liveMessage.querySelector(".message-meta");
   if (meta)
     meta.innerHTML = `Hermes · complete<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>`;
@@ -2254,6 +2257,10 @@ async function send(text) {
       ...(attachmentNames.length ? { attachments: attachmentNames } : {}),
     }),
   );
+  messages.insertAdjacentHTML(
+    "beforeend",
+    '<div class="live-activity chat-working-status" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div>',
+  );
   clearComposer();
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
   try {
@@ -2270,7 +2277,10 @@ async function send(text) {
     let liveText = "";
     const live = () => document.querySelector("#live-message .bubble");
     const ensureLiveMessage = () => {
-      if (!live()) appendLiveAssistantMessage();
+      if (!live()) {
+        removeLiveActivity();
+        appendLiveAssistantMessage();
+      }
       return live();
     };
     while (true) {
@@ -2347,6 +2357,7 @@ async function send(text) {
       localStorage.setItem("flan-draft", recovery.draft);
       state.recovering = true;
       $("send-button").disabled = true;
+      removeLiveActivity();
       $("run-label").textContent = "Connection lost. Your message is saved.";
       $("stop-run").hidden = true;
       $("reconnect-run").hidden = false;
@@ -2355,12 +2366,14 @@ async function send(text) {
     } else {
       const liveBubble = document.querySelector("#live-message .bubble");
       if (liveBubble) liveBubble.textContent = error.message;
+      removeLiveActivity();
       toast(error.message);
     }
   } finally {
     state.running = false;
     state.abort = null;
     if (!state.recovering) {
+      removeLiveActivity();
       $("run-strip").hidden = true;
       $("run-status").textContent = "IDLE";
       $("send-button").disabled = false;

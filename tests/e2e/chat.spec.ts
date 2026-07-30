@@ -186,6 +186,8 @@ test("does not show an empty assistant bubble before the first response delta", 
   const before = await page.locator("#messages .assistant").count();
   await page.locator("#composer-input").fill("Wait for the reply.");
   await page.locator("#send-button").click();
+  await expect(page.locator("#live-activity")).toBeVisible();
+  await expect(page.locator("#live-activity")).toContainText("Hermes is working");
   await expect(page.locator("#messages .assistant")).toHaveCount(before);
 });
 
