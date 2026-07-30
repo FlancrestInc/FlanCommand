@@ -2225,6 +2225,11 @@ html[data-theme="win7css"] .settings-check input {
 html[data-theme="classiccss"] .settings-check input {
   accent-color: var(--classic-black);
 }
+
+/* The top-right controls sit directly on the header. */
+.top-actions {
+  background: transparent !important;
+}
 @media (max-width: 720px) {
   .notification-button,
   #theme-toggle,

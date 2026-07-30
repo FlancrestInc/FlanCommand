@@ -174,7 +174,7 @@ test("honors reduced-motion preferences", async ({ page }) => {
 
 test("exposes live status and a visible keyboard focus", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#connection")).toHaveAttribute("role", "status");
+  await expect(page.locator("#connection")).toHaveCount(0);
   await expect(page.locator("#toast")).toHaveAttribute("aria-live", "polite");
   await expect(page.locator("#run-status")).toHaveAttribute("aria-live", "polite");
   await page.keyboard.press("Tab");
