@@ -657,6 +657,26 @@ describe("API BFF", () => {
     expect(credentialBody).not.toContain("secret-value");
   });
 
+  it("rehydrates a session detail that is missing from the local session map", async () => {
+    const adapter = makeAdapter();
+    adapter.getSession = async (id) => ({
+      id,
+      title: "Rehydrated session",
+      source: "hermes",
+      status: "idle",
+    });
+    const base = await start(adapter);
+
+    const response = await fetch(`${base}/api/sessions/a1b2c3d4`);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      id: "a1b2c3d4",
+      title: "Rehydrated session",
+      messages: [],
+    });
+  });
+
   it("expands a project boundary with an explicit audited action", async () => {
     const base = await start(makeAdapter());
     const pathExpansion = await fetch(`${base}/api/projects/project-local/boundary`, {

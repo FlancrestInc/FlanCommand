@@ -1067,6 +1067,35 @@ export function createApiServer(options: ApiServerOptions = {}) {
     }
   };
 
+  const hydrateSession = async (sessionId: string): Promise<SessionState | undefined> => {
+    const existing = sessions.get(sessionId);
+    if (existing) return existing;
+    try {
+      const session = await adapter.getSession(sessionId);
+      const stored = metadataStore.value.sessions[sessionId];
+      const state: SessionState = {
+        session: { ...session },
+        messages: stored?.messages ?? [],
+        ...(stored?.skipResume || isEphemeralSessionId(session.id) ? { skipResume: true } : {}),
+        projectId: stored?.projectId ?? "project-local",
+        ...(stored?.permissionModeOverride
+          ? { permissionModeOverride: stored.permissionModeOverride }
+          : {}),
+        ...(stored?.conversationPolicy ? { conversationPolicy: stored.conversationPolicy } : {}),
+        ...(stored?.customTitle ? { customTitle: stored.customTitle } : {}),
+        ...(stored?.isPinned ? { isPinned: true } : {}),
+        ...(stored?.folderId ? { folderId: stored.folderId } : {}),
+        ...(stored?.archived ? { archived: true } : {}),
+      };
+      sessions.set(session.id, state);
+      await persistMetadata();
+      return state;
+    } catch (error) {
+      if (isMissingHermesSessionError(error)) return undefined;
+      throw error;
+    }
+  };
+
   return createServer(async (request, response) => {
     const requestStartedAt = process.hrtime.bigint();
     response.once("finish", () => {
@@ -2796,7 +2825,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
         return;
       }
       const sessionId = parts[2];
-      const state = sessionId ? sessions.get(sessionId) : undefined;
+      const state = sessionId ? await hydrateSession(sessionId) : undefined;
       if (!sessionId || !state || parts[0] !== "api" || parts[1] !== "sessions") {
         json(response, 404, {
           error: { code: "NOT_FOUND", message: "That command center resource was not found." },
