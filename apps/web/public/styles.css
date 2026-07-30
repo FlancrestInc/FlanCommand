@@ -6419,11 +6419,19 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   }
 }
 
-/* Let the composer reveal the chat column's actual wallpaper instead of painting its own layer. */
-html[data-theme] .chat-column {
-  background: var(--wallpaper);
-  background-position: center;
-  background-size: cover;
+/* Let the composer reveal the theme's actual chat surface instead of painting its own layer. */
+html[data-theme="cga"] .chat-column,
+html[data-theme="amber"] .chat-column,
+html[data-theme="green"] .chat-column {
+  background: var(--dos-black);
+}
+html[data-theme="cga"] .chat-column::before,
+html[data-theme="amber"] .chat-column::before,
+html[data-theme="green"] .chat-column::before,
+html[data-theme="cga"] .chat-column::after,
+html[data-theme="amber"] .chat-column::after,
+html[data-theme="green"] .chat-column::after {
+  display: none;
 }
 html[data-theme] .composer-wrap {
   background: transparent;
