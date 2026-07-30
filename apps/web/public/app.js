@@ -26,7 +26,7 @@ const state = {
   activeId: null,
   running: false,
   abort: null,
-  theme: ["xp", "win98"].includes(localStorage.getItem("flan-theme"))
+  theme: ["xp", "win98", "cga", "amber", "green"].includes(localStorage.getItem("flan-theme"))
     ? localStorage.getItem("flan-theme")
     : "xp",
   chatBackground: ["bliss", "clouds", "autumn", "3d-pipes", "azul", "none"].includes(
@@ -83,8 +83,14 @@ const state = {
   recovering: false,
   memory: null,
 };
-const themeNames = { xp: "Windows XP", win98: "Windows 98" };
-const themeOrder = ["xp", "win98"];
+const themeNames = {
+  xp: "System 6",
+  win98: "System 6 Compact",
+  cga: "BOOTSTRA.386 CGA",
+  amber: "BOOTSTRA.386 Amber",
+  green: "BOOTSTRA.386 Green",
+};
+const themeOrder = ["xp", "win98", "cga", "amber", "green"];
 const $ = (id) => document.getElementById(id);
 document.documentElement.dataset.theme = state.theme;
 document.documentElement.dataset.chatBackground = state.chatBackground;

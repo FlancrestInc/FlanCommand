@@ -2036,6 +2036,739 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* BOOTSTRA.386-inspired DOS themes. Local CSS only; no Bootstrap runtime dependency. */
+html[data-theme="cga"],
+html[data-theme="amber"],
+html[data-theme="green"] {
+  color-scheme: dark;
+  --dos-black: #000;
+  --dos-white: #fff;
+  --dos-border: var(--dos-accent);
+  --dos-shadow: #000;
+  --dos-window: var(--dos-surface);
+  --dos-panel: var(--dos-panel-color);
+  --dos-input: var(--dos-input-color);
+  --dos-text: var(--dos-text-color);
+  --dos-muted: var(--dos-muted-color);
+  --dos-accent-ink: var(--dos-black);
+  --dos-radius: 0;
+  --dos-font: "Perfect DOS VGA 437", "IBM VGA8", "Courier New", monospace;
+}
+
+html[data-theme="cga"] {
+  --dos-surface: #0000aa;
+  --dos-panel-color: #000055;
+  --dos-input-color: #000080;
+  --dos-text-color: #55ffff;
+  --dos-muted-color: #aaaaff;
+  --dos-accent: #55ffff;
+  --dos-bright: #fff;
+  --dos-warning: #ffff55;
+  --dos-danger: #ff55ff;
+}
+
+html[data-theme="amber"] {
+  --dos-surface: #291500;
+  --dos-panel-color: #140a00;
+  --dos-input-color: #0a0500;
+  --dos-text-color: #ffb000;
+  --dos-muted-color: #bd7d18;
+  --dos-accent: #ffb000;
+  --dos-bright: #ffd45a;
+  --dos-warning: #fff0a0;
+  --dos-danger: #ff7347;
+}
+
+html[data-theme="green"] {
+  --dos-surface: #003300;
+  --dos-panel-color: #001900;
+  --dos-input-color: #000d00;
+  --dos-text-color: #66ff66;
+  --dos-muted-color: #39a339;
+  --dos-accent: #66ff66;
+  --dos-bright: #c2ffc2;
+  --dos-warning: #eaff7a;
+  --dos-danger: #ff8066;
+}
+
+html[data-theme="cga"] body,
+html[data-theme="amber"] body,
+html[data-theme="green"] body {
+  background: var(--dos-black);
+  color: var(--dos-text);
+  font-family: var(--dos-font);
+  font-size: 13px;
+}
+
+html[data-theme="cga"] .app-shell,
+html[data-theme="amber"] .app-shell,
+html[data-theme="green"] .app-shell {
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .topbar,
+html[data-theme="amber"] .topbar,
+html[data-theme="green"] .topbar {
+  height: 48px;
+  padding: 4px 8px;
+  border-bottom: 2px solid var(--dos-accent);
+  background: var(--dos-black);
+  color: var(--dos-text);
+  box-shadow: 0 2px 0 var(--dos-surface);
+}
+
+html[data-theme="cga"] .topbar > *,
+html[data-theme="amber"] .topbar > *,
+html[data-theme="green"] .topbar > * {
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .brand,
+html[data-theme="amber"] .brand,
+html[data-theme="green"] .brand,
+html[data-theme="cga"] .brand:hover,
+html[data-theme="amber"] .brand:hover,
+html[data-theme="green"] .brand:hover {
+  min-height: 28px;
+  padding: 2px 7px;
+  background: var(--dos-black);
+  color: var(--dos-bright);
+  font-family: var(--dos-font);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-shadow: 2px 0 var(--dos-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme="cga"] .brand-mark,
+html[data-theme="amber"] .brand-mark,
+html[data-theme="green"] .brand-mark {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+  font-size: 14px;
+}
+
+html[data-theme="cga"] .topbar-center,
+html[data-theme="amber"] .topbar-center,
+html[data-theme="green"] .topbar-center {
+  padding: 4px 10px;
+  border: 1px solid var(--dos-accent);
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .topbar-center .session-summary h2,
+html[data-theme="amber"] .topbar-center .session-summary h2,
+html[data-theme="green"] .topbar-center .session-summary h2,
+html[data-theme="cga"] .topbar-center .session-summary span,
+html[data-theme="amber"] .topbar-center .session-summary span,
+html[data-theme="green"] .topbar-center .session-summary span {
+  color: var(--dos-bright);
+  font-family: var(--dos-font);
+  text-shadow: none;
+}
+
+html[data-theme="cga"] .eyebrow,
+html[data-theme="amber"] .eyebrow,
+html[data-theme="green"] .eyebrow,
+html[data-theme="cga"] .section-label,
+html[data-theme="amber"] .section-label,
+html[data-theme="green"] .section-label,
+html[data-theme="cga"] .card-label,
+html[data-theme="amber"] .card-label,
+html[data-theme="green"] .card-label,
+html[data-theme="cga"] .welcome-kicker,
+html[data-theme="amber"] .welcome-kicker,
+html[data-theme="green"] .welcome-kicker {
+  color: var(--dos-accent);
+  font-family: var(--dos-font);
+  letter-spacing: 0.08em;
+}
+
+html[data-theme="cga"] .connection,
+html[data-theme="amber"] .connection,
+html[data-theme="green"] .connection,
+html[data-theme="cga"] .connection-shell,
+html[data-theme="amber"] .connection-shell,
+html[data-theme="green"] .connection-shell {
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .connection i,
+html[data-theme="amber"] .connection i,
+html[data-theme="green"] .connection i,
+html[data-theme="cga"] .live-dot,
+html[data-theme="amber"] .live-dot,
+html[data-theme="green"] .live-dot,
+html[data-theme="cga"] .pulse,
+html[data-theme="amber"] .pulse,
+html[data-theme="green"] .pulse {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-accent);
+  box-shadow: none;
+}
+
+html[data-theme="cga"] .workspace,
+html[data-theme="amber"] .workspace,
+html[data-theme="green"] .workspace {
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .sidebar,
+html[data-theme="amber"] .sidebar,
+html[data-theme="green"] .sidebar,
+html[data-theme="cga"] .detail-panel,
+html[data-theme="amber"] .detail-panel,
+html[data-theme="green"] .detail-panel,
+html[data-theme="cga"] .chat-column,
+html[data-theme="amber"] .chat-column,
+html[data-theme="green"] .chat-column {
+  background: var(--dos-window);
+  color: var(--dos-text);
+  border-color: var(--dos-accent);
+}
+
+html[data-theme="cga"] .sidebar-head,
+html[data-theme="amber"] .sidebar-head,
+html[data-theme="green"] .sidebar-head,
+html[data-theme="cga"] .detail-head,
+html[data-theme="amber"] .detail-head,
+html[data-theme="green"] .detail-head,
+html[data-theme="cga"] .palette-head,
+html[data-theme="amber"] .palette-head,
+html[data-theme="green"] .palette-head {
+  margin: 5px;
+  padding: 4px 6px;
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-black);
+  color: var(--dos-bright);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .sidebar-head > *,
+html[data-theme="amber"] .sidebar-head > *,
+html[data-theme="green"] .sidebar-head > *,
+html[data-theme="cga"] .detail-head > *,
+html[data-theme="amber"] .detail-head > *,
+html[data-theme="green"] .detail-head > *,
+html[data-theme="cga"] .palette-head > *,
+html[data-theme="amber"] .palette-head > *,
+html[data-theme="green"] .palette-head > * {
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .sidebar-head h1,
+html[data-theme="amber"] .sidebar-head h1,
+html[data-theme="green"] .sidebar-head h1,
+html[data-theme="cga"] .detail-head .eyebrow,
+html[data-theme="amber"] .detail-head .eyebrow,
+html[data-theme="green"] .detail-head .eyebrow {
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] button,
+html[data-theme="amber"] button,
+html[data-theme="green"] button,
+html[data-theme="cga"] select,
+html[data-theme="amber"] select,
+html[data-theme="green"] select,
+html[data-theme="cga"] input,
+html[data-theme="amber"] input,
+html[data-theme="green"] input,
+html[data-theme="cga"] textarea,
+html[data-theme="amber"] textarea,
+html[data-theme="green"] textarea {
+  font-family: var(--dos-font);
+}
+
+html[data-theme="cga"] button,
+html[data-theme="amber"] button,
+html[data-theme="green"] button,
+html[data-theme="cga"] .drawer-tab,
+html[data-theme="amber"] .drawer-tab,
+html[data-theme="green"] .drawer-tab,
+html[data-theme="cga"] .starter,
+html[data-theme="amber"] .starter,
+html[data-theme="green"] .starter,
+html[data-theme="cga"] .footer-link,
+html[data-theme="amber"] .footer-link,
+html[data-theme="green"] .footer-link {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] button:hover:not(:disabled),
+html[data-theme="amber"] button:hover:not(:disabled),
+html[data-theme="green"] button:hover:not(:disabled),
+html[data-theme="cga"] .starter:hover,
+html[data-theme="amber"] .starter:hover,
+html[data-theme="green"] .starter:hover {
+  background: var(--dos-accent);
+  color: var(--dos-accent-ink);
+}
+
+html[data-theme="cga"] button:active:not(:disabled),
+html[data-theme="amber"] button:active:not(:disabled),
+html[data-theme="green"] button:active:not(:disabled),
+html[data-theme="cga"] .starter:active,
+html[data-theme="amber"] .starter:active,
+html[data-theme="green"] .starter:active {
+  border-color: var(--dos-accent);
+  box-shadow: inset 2px 2px 0 var(--dos-shadow);
+  transform: translate(1px, 1px);
+}
+
+html[data-theme="cga"] button:disabled,
+html[data-theme="amber"] button:disabled,
+html[data-theme="green"] button:disabled,
+html[data-theme="cga"] select:disabled,
+html[data-theme="amber"] select:disabled,
+html[data-theme="green"] select:disabled,
+html[data-theme="cga"] input:disabled,
+html[data-theme="amber"] input:disabled,
+html[data-theme="green"] input:disabled,
+html[data-theme="cga"] textarea:disabled,
+html[data-theme="amber"] textarea:disabled,
+html[data-theme="green"] textarea:disabled {
+  color: var(--dos-muted);
+  text-shadow: none;
+}
+
+html[data-theme="cga"] :focus-visible,
+html[data-theme="amber"] :focus-visible,
+html[data-theme="green"] :focus-visible {
+  outline: 2px solid var(--dos-bright);
+  outline-offset: 2px;
+}
+
+html[data-theme="cga"] input,
+html[data-theme="amber"] input,
+html[data-theme="green"] input,
+html[data-theme="cga"] select,
+html[data-theme="amber"] select,
+html[data-theme="green"] select,
+html[data-theme="cga"] textarea,
+html[data-theme="amber"] textarea,
+html[data-theme="green"] textarea,
+html[data-theme="cga"] .search,
+html[data-theme="amber"] .search,
+html[data-theme="green"] .search,
+html[data-theme="cga"] .model-picker,
+html[data-theme="amber"] .model-picker,
+html[data-theme="green"] .model-picker,
+html[data-theme="cga"] .context-monitor,
+html[data-theme="amber"] .context-monitor,
+html[data-theme="green"] .context-monitor,
+html[data-theme="cga"] .runtime-monitor,
+html[data-theme="amber"] .runtime-monitor,
+html[data-theme="green"] .runtime-monitor {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-input);
+  color: var(--dos-bright);
+  box-shadow: inset 2px 2px 0 var(--dos-black);
+}
+
+html[data-theme="cga"] input::placeholder,
+html[data-theme="amber"] input::placeholder,
+html[data-theme="green"] input::placeholder,
+html[data-theme="cga"] textarea::placeholder,
+html[data-theme="amber"] textarea::placeholder,
+html[data-theme="green"] textarea::placeholder {
+  color: var(--dos-muted);
+  opacity: 1;
+}
+
+html[data-theme="cga"] .message-scroll,
+html[data-theme="amber"] .message-scroll,
+html[data-theme="green"] .message-scroll {
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .welcome,
+html[data-theme="amber"] .welcome,
+html[data-theme="green"] .welcome,
+html[data-theme="cga"] .message .bubble,
+html[data-theme="amber"] .message .bubble,
+html[data-theme="green"] .message .bubble,
+html[data-theme="cga"] .message.user .bubble,
+html[data-theme="amber"] .message.user .bubble,
+html[data-theme="green"] .message.user .bubble {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-panel);
+  color: var(--dos-bright);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .welcome h3,
+html[data-theme="amber"] .welcome h3,
+html[data-theme="green"] .welcome h3 {
+  color: var(--dos-bright);
+  font-family: var(--dos-font);
+  font-size: clamp(22px, 4vw, 38px);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+html[data-theme="cga"] .welcome h3 em,
+html[data-theme="amber"] .welcome h3 em,
+html[data-theme="green"] .welcome h3 em,
+html[data-theme="cga"] .welcome p,
+html[data-theme="amber"] .welcome p,
+html[data-theme="green"] .welcome p,
+html[data-theme="cga"] .starter small,
+html[data-theme="amber"] .starter small,
+html[data-theme="green"] .starter small,
+html[data-theme="cga"] .message-meta,
+html[data-theme="amber"] .message-meta,
+html[data-theme="green"] .message-meta,
+html[data-theme="cga"] .hint,
+html[data-theme="amber"] .hint,
+html[data-theme="green"] .hint,
+html[data-theme="cga"] .composer-note,
+html[data-theme="amber"] .composer-note,
+html[data-theme="green"] .composer-note,
+html[data-theme="cga"] .developer-note,
+html[data-theme="amber"] .developer-note,
+html[data-theme="green"] .developer-note {
+  color: var(--dos-muted);
+  text-shadow: none;
+}
+
+html[data-theme="cga"] .starter span,
+html[data-theme="amber"] .starter span,
+html[data-theme="green"] .starter span {
+  color: var(--dos-accent);
+}
+
+html[data-theme="cga"] .composer-wrap,
+html[data-theme="amber"] .composer-wrap,
+html[data-theme="green"] .composer-wrap {
+  border-top: 1px solid var(--dos-accent);
+  background: var(--dos-window);
+}
+
+html[data-theme="cga"] .composer,
+html[data-theme="amber"] .composer,
+html[data-theme="green"] .composer {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-panel);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .composer textarea,
+html[data-theme="amber"] .composer textarea,
+html[data-theme="green"] .composer textarea {
+  color: var(--dos-bright);
+  background: var(--dos-input);
+}
+
+html[data-theme="cga"] .send-button,
+html[data-theme="amber"] .send-button,
+html[data-theme="green"] .send-button,
+html[data-theme="cga"] .settings-actions .primary-button,
+html[data-theme="amber"] .settings-actions .primary-button,
+html[data-theme="green"] .settings-actions .primary-button {
+  background: var(--dos-accent);
+  color: var(--dos-accent-ink);
+  border-color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .detail-card,
+html[data-theme="amber"] .detail-card,
+html[data-theme="green"] .detail-card,
+html[data-theme="cga"] .project-picker,
+html[data-theme="amber"] .project-picker,
+html[data-theme="green"] .project-picker,
+html[data-theme="cga"] .credential-library,
+html[data-theme="amber"] .credential-library,
+html[data-theme="green"] .credential-library,
+html[data-theme="cga"] .file-library,
+html[data-theme="amber"] .file-library,
+html[data-theme="green"] .file-library,
+html[data-theme="cga"] .sidebar-footer,
+html[data-theme="amber"] .sidebar-footer,
+html[data-theme="green"] .sidebar-footer {
+  border-color: var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-panel);
+  box-shadow: 2px 2px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .detail-card > summary,
+html[data-theme="amber"] .detail-card > summary,
+html[data-theme="green"] .detail-card > summary,
+html[data-theme="cga"] .project-picker > summary,
+html[data-theme="amber"] .project-picker > summary,
+html[data-theme="green"] .project-picker > summary,
+html[data-theme="cga"] .credential-library > summary,
+html[data-theme="amber"] .credential-library > summary,
+html[data-theme="green"] .credential-library > summary,
+html[data-theme="cga"] .file-library > summary,
+html[data-theme="amber"] .file-library > summary,
+html[data-theme="green"] .file-library > summary,
+html[data-theme="cga"] .sidebar-footer > summary,
+html[data-theme="amber"] .sidebar-footer > summary,
+html[data-theme="green"] .sidebar-footer > summary {
+  border-bottom-color: var(--dos-accent);
+  background: var(--dos-black);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .session-item,
+html[data-theme="amber"] .session-item,
+html[data-theme="green"] .session-item,
+html[data-theme="cga"] .session-entry,
+html[data-theme="amber"] .session-entry,
+html[data-theme="green"] .session-entry,
+html[data-theme="cga"] .file-item,
+html[data-theme="amber"] .file-item,
+html[data-theme="green"] .file-item,
+html[data-theme="cga"] .credential-item,
+html[data-theme="amber"] .credential-item,
+html[data-theme="green"] .credential-item,
+html[data-theme="cga"] .workspace-entry,
+html[data-theme="amber"] .workspace-entry,
+html[data-theme="green"] .workspace-entry,
+html[data-theme="cga"] .activity-summary-card,
+html[data-theme="amber"] .activity-summary-card,
+html[data-theme="green"] .activity-summary-card {
+  border-color: var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-panel);
+  color: var(--dos-text);
+  box-shadow: 1px 1px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .session-item[aria-current="true"],
+html[data-theme="amber"] .session-item[aria-current="true"],
+html[data-theme="green"] .session-item[aria-current="true"],
+html[data-theme="cga"] .session-entry.active,
+html[data-theme="amber"] .session-entry.active,
+html[data-theme="green"] .session-entry.active,
+html[data-theme="cga"] .file-item.selected,
+html[data-theme="amber"] .file-item.selected,
+html[data-theme="green"] .file-item.selected {
+  background: var(--dos-accent);
+  color: var(--dos-accent-ink);
+}
+
+html[data-theme="cga"] .session-item[aria-current="true"] *,
+html[data-theme="amber"] .session-item[aria-current="true"] *,
+html[data-theme="green"] .session-item[aria-current="true"] *,
+html[data-theme="cga"] .session-entry.active *,
+html[data-theme="amber"] .session-entry.active *,
+html[data-theme="green"] .session-entry.active * {
+  color: var(--dos-accent-ink);
+}
+
+html[data-theme="cga"] .status-badge,
+html[data-theme="amber"] .status-badge,
+html[data-theme="green"] .status-badge,
+html[data-theme="cga"] .job-status,
+html[data-theme="amber"] .job-status,
+html[data-theme="green"] .job-status,
+html[data-theme="cga"] .risk,
+html[data-theme="amber"] .risk,
+html[data-theme="green"] .risk,
+html[data-theme="cga"] .activity-chip,
+html[data-theme="amber"] .activity-chip,
+html[data-theme="green"] .activity-chip,
+html[data-theme="cga"] .chip,
+html[data-theme="amber"] .chip,
+html[data-theme="green"] .chip,
+html[data-theme="cga"] .attachment-chip,
+html[data-theme="amber"] .attachment-chip,
+html[data-theme="green"] .attachment-chip {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-black);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .risk-high,
+html[data-theme="amber"] .risk-high,
+html[data-theme="green"] .risk-high,
+html[data-theme="cga"] .job-running,
+html[data-theme="amber"] .job-running,
+html[data-theme="green"] .job-running,
+html[data-theme="cga"] .job-waiting_for_approval,
+html[data-theme="amber"] .job-waiting_for_approval,
+html[data-theme="green"] .job-waiting_for_approval {
+  border-color: var(--dos-danger);
+  color: var(--dos-danger);
+}
+
+html[data-theme="cga"] .meter,
+html[data-theme="amber"] .meter,
+html[data-theme="green"] .meter,
+html[data-theme="cga"] .context-bar,
+html[data-theme="amber"] .context-bar,
+html[data-theme="green"] .context-bar {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-black);
+}
+
+html[data-theme="cga"] .meter span,
+html[data-theme="amber"] .meter span,
+html[data-theme="green"] .meter span,
+html[data-theme="cga"] #composer-context-meter,
+html[data-theme="amber"] #composer-context-meter,
+html[data-theme="green"] #composer-context-meter {
+  background: var(--dos-accent);
+}
+
+html[data-theme="cga"] .settings-panel,
+html[data-theme="amber"] .settings-panel,
+html[data-theme="green"] .settings-panel,
+html[data-theme="cga"] .palette,
+html[data-theme="amber"] .palette,
+html[data-theme="green"] .palette,
+html[data-theme="cga"] .command-drawer,
+html[data-theme="amber"] .command-drawer,
+html[data-theme="green"] .command-drawer,
+html[data-theme="cga"] .drawer-card,
+html[data-theme="amber"] .drawer-card,
+html[data-theme="green"] .drawer-card {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-window);
+  color: var(--dos-bright);
+  box-shadow: 4px 4px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .palette-head,
+html[data-theme="amber"] .palette-head,
+html[data-theme="green"] .palette-head {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--dos-accent);
+  box-shadow: none;
+}
+
+html[data-theme="cga"] .palette-head > *,
+html[data-theme="amber"] .palette-head > *,
+html[data-theme="green"] .palette-head > * {
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .toast,
+html[data-theme="amber"] .toast,
+html[data-theme="green"] .toast,
+html[data-theme="cga"] .run-strip,
+html[data-theme="amber"] .run-strip,
+html[data-theme="green"] .run-strip {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-black);
+  color: var(--dos-bright);
+  box-shadow: 3px 3px 0 var(--dos-shadow);
+}
+
+html[data-theme="cga"] .code-block,
+html[data-theme="amber"] .code-block,
+html[data-theme="green"] .code-block,
+html[data-theme="cga"] .memory-output,
+html[data-theme="amber"] .memory-output,
+html[data-theme="green"] .memory-output,
+html[data-theme="cga"] .developer-panel pre,
+html[data-theme="amber"] .developer-panel pre,
+html[data-theme="green"] .developer-panel pre,
+html[data-theme="cga"] .terminal-panel pre,
+html[data-theme="amber"] .terminal-panel pre,
+html[data-theme="green"] .terminal-panel pre,
+html[data-theme="cga"] .edit-diff,
+html[data-theme="amber"] .edit-diff,
+html[data-theme="green"] .edit-diff {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  background: var(--dos-black);
+  color: var(--dos-bright);
+  font-family: var(--dos-font);
+}
+
+html[data-theme="cga"] .code-toolbar,
+html[data-theme="amber"] .code-toolbar,
+html[data-theme="green"] .code-toolbar {
+  border-bottom: 1px solid var(--dos-accent);
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .markdown-table-wrap,
+html[data-theme="amber"] .markdown-table-wrap,
+html[data-theme="green"] .markdown-table-wrap {
+  border: 1px solid var(--dos-accent);
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+html[data-theme="cga"] table th,
+html[data-theme="amber"] table th,
+html[data-theme="green"] table th {
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] table td,
+html[data-theme="amber"] table td,
+html[data-theme="green"] table td,
+html[data-theme="cga"] table th,
+html[data-theme="amber"] table th,
+html[data-theme="green"] table th {
+  border-color: var(--dos-accent);
+}
+
+html[data-theme="cga"] .drawer-tab,
+html[data-theme="amber"] .drawer-tab,
+html[data-theme="green"] .drawer-tab {
+  background: var(--dos-surface);
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .drawer-tab[aria-expanded="true"],
+html[data-theme="amber"] .drawer-tab[aria-expanded="true"],
+html[data-theme="green"] .drawer-tab[aria-expanded="true"] {
+  background: var(--dos-accent);
+  color: var(--dos-accent-ink);
+}
+
+@media (max-width: 720px) {
+  html[data-theme="cga"] .topbar,
+  html[data-theme="amber"] .topbar,
+  html[data-theme="green"] .topbar {
+    height: 54px;
+  }
+
+  html[data-theme="cga"] .settings-panel,
+  html[data-theme="amber"] .settings-panel,
+  html[data-theme="green"] .settings-panel,
+  html[data-theme="cga"] .palette,
+  html[data-theme="amber"] .palette,
+  html[data-theme="green"] .palette,
+  html[data-theme="cga"] .command-drawer,
+  html[data-theme="amber"] .command-drawer,
+  html[data-theme="green"] .command-drawer {
+    max-width: calc(100vw - 16px);
+  }
+}
 .drawer-backdrop {
   position: fixed;
   z-index: 20;
@@ -3598,4 +4331,25 @@ html[data-theme="win98"] .palette-head {
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Keep DOS cards above the legacy theme rules that precede the System 6 layer. */
+html[data-theme="cga"] .starter,
+html[data-theme="amber"] .starter,
+html[data-theme="green"] .starter {
+  background: var(--dos-surface) !important;
+  color: var(--dos-bright) !important;
+  border-color: var(--dos-accent) !important;
+}
+
+html[data-theme="cga"] .starter b,
+html[data-theme="amber"] .starter b,
+html[data-theme="green"] .starter b {
+  color: var(--dos-bright);
+}
+
+html[data-theme="cga"] .starter small,
+html[data-theme="amber"] .starter small,
+html[data-theme="green"] .starter small {
+  color: var(--dos-muted);
 }

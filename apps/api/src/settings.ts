@@ -1,5 +1,5 @@
 export type ReasoningEffort = "low" | "medium" | "high";
-export type SettingsTheme = "xp" | "win98";
+export type SettingsTheme = "xp" | "win98" | "cga" | "amber" | "green";
 export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
 
 export interface UserSettings {
@@ -53,7 +53,14 @@ export function normalizeSettings(
     notifications:
       typeof input.notifications === "boolean" ? input.notifications : base.notifications,
     retentionDays: boundedInteger(input.retentionDays, base.retentionDays, 1, 365),
-    theme: input.theme === "xp" || input.theme === "win98" ? input.theme : base.theme,
+    theme:
+      input.theme === "xp" ||
+      input.theme === "win98" ||
+      input.theme === "cga" ||
+      input.theme === "amber" ||
+      input.theme === "green"
+        ? input.theme
+        : base.theme,
     chatBackground:
       input.chatBackground === "bliss" ||
       input.chatBackground === "clouds" ||
