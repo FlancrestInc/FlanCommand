@@ -42,6 +42,25 @@ test("opens commands from the composer button and inserts only the active token"
   await expect(input).toHaveValue("Run /status now");
 });
 
+test("shows the full slash command catalog in a scrollable picker", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const input = page.locator("#composer-input");
+  const menu = page.locator("#command-menu");
+
+  await input.fill("Browse commands");
+  await page.locator("#command-picker-composer").click();
+  await expect(menu.locator("[data-command]")).toHaveCount(8);
+  await expect(menu.locator("[data-command='/workspace']")).toBeVisible();
+  await expect(menu).toHaveCSS("overflow-y", "auto");
+  await menu.evaluate((element) => {
+    if (element.scrollHeight <= element.clientHeight)
+      throw new Error("command menu is not scrollable");
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(menu.locator("[data-command='/workspace']")).toBeVisible();
+});
+
 test("completes slash commands with Tab and keeps Tab inside the textarea", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");

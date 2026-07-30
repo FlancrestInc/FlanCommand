@@ -201,7 +201,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v16"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v17"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {
