@@ -127,7 +127,15 @@ function wireMethodForOperation(operation: string): string {
 }
 
 function wireParamsForOperation(operation: string, input: unknown): unknown {
-  if (operation === "listModels") return { explicit_only: true };
+  if (operation === "listModels") {
+    return {
+      // Newer Hermes gateways use explicit_only; older gateways used the
+      // inverse include_unconfigured switch. Send both so the picker stays
+      // limited to configured providers across gateway versions.
+      explicit_only: true,
+      include_unconfigured: false,
+    };
+  }
   if (!isRecord(input)) return input;
   if (operation === "getSession" || operation === "resumeSession") {
     return { session_id: input.sessionId };

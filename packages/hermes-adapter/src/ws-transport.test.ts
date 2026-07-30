@@ -630,7 +630,7 @@ describe("WebSocket Hermes transport", () => {
     const modelRequest = request(socket);
     expect(modelRequest).toMatchObject({
       method: "model.options",
-      params: { explicit_only: true },
+      params: { explicit_only: true, include_unconfigured: false },
     });
     socket.receive(JSON.stringify({ jsonrpc: "2.0", id: modelRequest.id, result: [] }));
     await expect(models).resolves.toEqual([]);
