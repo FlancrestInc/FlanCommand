@@ -183,9 +183,10 @@ test("does not show an empty assistant bubble before the first response delta", 
   });
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  const before = await page.locator("#messages .assistant").count();
   await page.locator("#composer-input").fill("Wait for the reply.");
   await page.locator("#send-button").click();
-  await expect(page.locator("#messages .assistant")).toHaveCount(0);
+  await expect(page.locator("#messages .assistant")).toHaveCount(before);
 });
 
 test("renders tables and task lists in streamed Hermes Markdown", async ({ page }) => {
