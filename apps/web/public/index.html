@@ -398,15 +398,19 @@
               </div>
             </div>
           </details>
-          <details class="detail-card file-preview-card" id="file-preview-card" hidden>
-            <summary class="activity-heading">
-              <span class="card-label" id="file-preview-title">FILE PREVIEW</span>
-              <button class="activity-summary" id="file-preview-close" type="button">Close</button>
-            </summary>
-            <div class="section-body">
-              <div id="file-preview-body" class="file-preview-body"></div>
+          <dialog
+            class="file-preview-modal"
+            id="file-preview-card"
+            aria-labelledby="file-preview-title"
+          >
+            <div class="file-preview-modal-head">
+              <strong id="file-preview-title">FILE PREVIEW</strong>
+              <button id="file-preview-close" type="button" aria-label="Close file preview">
+                Close
+              </button>
             </div>
-          </details>
+            <div id="file-preview-body" class="file-preview-body"></div>
+          </dialog>
           <details class="detail-card workspace-panel" id="workspace-section" open>
             <summary class="card-label">WORKSPACE BROWSER</summary>
             <div class="section-body">

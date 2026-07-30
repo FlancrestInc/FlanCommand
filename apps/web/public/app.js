@@ -184,8 +184,7 @@ function toast(message) {
 function setConnection(text, good = true) {
   const indicator = $("connection");
   if (!indicator) return;
-  indicator.innerHTML =
-    `<i style="background:${good ? "var(--accent)" : "var(--warm)"}"></i> ${text}`;
+  indicator.innerHTML = `<i style="background:${good ? "var(--accent)" : "var(--warm)"}"></i> ${text}`;
 }
 function renderSessions() {
   const projectOptions = (selectedId) =>
@@ -343,7 +342,34 @@ function renderChatMessage(message) {
     ["observed", "source-inferred"].includes(state.capabilities.retry?.status);
   const at = message.at || new Date().toISOString();
   const label = message.role === "user" ? "You" : `Hermes · ${message.status || "complete"}`;
-  return `<article class="message ${message.role}" data-message-id="${escapeHtml(message.id || "")}"><div class="bubble">${renderText(message.text)}${message.attachments?.length ? `<div class="message-attachments">Attached: ${message.attachments.map((name) => escapeHtml(name)).join(", ")}</div>` : ""}</div><span class="message-meta">${label}<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>${canRetry ? `<button class="retry-button" type="button" data-retry-turn="${escapeHtml(message.turnId)}">Retry turn</button>` : ""}</span></article>`;
+  const attachments = renderMessageAttachments(message.attachments);
+  return `<article class="message ${message.role}" data-message-id="${escapeHtml(message.id || "")}"><div class="bubble">${renderText(message.text)}${attachments}</div><span class="message-meta">${label}<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>${canRetry ? `<button class="retry-button" type="button" data-retry-turn="${escapeHtml(message.turnId)}">Retry turn</button>` : ""}</span></article>`;
+}
+function renderMessageAttachments(attachments) {
+  if (!attachments?.length) return "";
+  const items = attachments
+    .map((attachment) => {
+      const item = typeof attachment === "string" ? { name: attachment } : attachment;
+      const name = item.name || item.safeName || "Attached file";
+      if (!item.id) return `<span class="message-attachment legacy">▤ ${escapeHtml(name)}</span>`;
+      const href = `/api/files/${encodeURIComponent(item.id)}`;
+      const kind = previewKind(item);
+      if (kind === "download")
+        return `<a class="message-attachment" href="${href}/download" download="${escapeHtml(name)}" title="Download ${escapeHtml(name)}"><span class="attachment-icon" aria-hidden="true">▤</span><span>${escapeHtml(name)}</span></a>`;
+      return `<button class="message-attachment" type="button" data-message-file-preview="${escapeHtml(item.id)}" title="Open ${escapeHtml(name)}">${kind === "image" ? `<img src="${href}/preview" alt="" aria-hidden="true" />` : '<span class="attachment-icon" aria-hidden="true">▤</span>'}<span>${escapeHtml(name)}</span></button>`;
+    })
+    .join("");
+  return `<div class="message-attachments" aria-label="Attached files"><span class="attachment-summary">Attached: ${attachments.map((attachment) => escapeHtml(typeof attachment === "string" ? attachment : attachment.name || attachment.safeName || "Attached file")).join(", ")}</span>${items}</div>`;
+}
+function bindMessageAttachmentActions(container) {
+  container
+    .querySelectorAll("[data-message-file-preview]")
+    .forEach((button) =>
+      button.addEventListener(
+        "click",
+        () => void openFilePreview(button.dataset.messageFilePreview),
+      ),
+    );
 }
 function renderSession(session) {
   const changingSession = state.activeId !== session.id;
@@ -375,6 +401,7 @@ function renderSession(session) {
   $("folder-select").value = session.folderId || "";
   $("messages").innerHTML = (session.messages || []).map(renderChatMessage).join("");
   bindMarkdownActions($("messages"));
+  bindMessageAttachmentActions($("messages"));
   bindRetryActions($("messages"));
   renderConversationApprovals(session.id);
   $("welcome").style.display = session.messages?.length ? "none" : "block";
@@ -1606,17 +1633,17 @@ async function openFilePreview(id) {
   const file = state.files.find((item) => item.id === id);
   if (!file) return;
   const kind = previewKind(file);
-  $("file-preview-card").hidden = false;
-  $("file-preview-card").open = true;
+  const modal = $("file-preview-card");
   $("file-preview-title").textContent = file.safeName || file.name;
   const body = $("file-preview-body");
   body.innerHTML = "<span>Loading preview…</span>";
+  if (!modal.open) modal.showModal();
   if (kind === "image") {
     body.innerHTML = `<img src="/api/files/${encodeURIComponent(file.id)}/preview" alt="${escapeHtml(file.safeName || file.name)}" />`;
     return;
   }
   if (kind === "download") {
-    body.innerHTML = `<p>This file type is not previewed in the browser.</p><a class="primary-button" href="/api/files/${encodeURIComponent(file.id)}/download">Download file</a>`;
+    body.innerHTML = `<p>This file type is not previewed in the browser.</p><a class="primary-button" href="/api/files/${encodeURIComponent(file.id)}/download" download="${escapeHtml(file.safeName || file.name)}">Download file</a>`;
     return;
   }
   try {
@@ -1634,8 +1661,7 @@ async function deleteFile(id) {
   if (!file || !window.confirm(`Delete ${file.safeName || file.name}?`)) return;
   try {
     await api(`/files/${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!$("file-preview-card").hidden && $("file-preview-title").textContent === file.safeName)
-      $("file-preview-card").hidden = true;
+    if ($("file-preview-title").textContent === file.safeName) $("file-preview-card").close();
     await loadFiles();
     toast("File deleted.");
   } catch (error) {
@@ -2223,8 +2249,8 @@ async function send(text) {
   state.pendingText = text;
   state.recovering = false;
   const attachmentIds = [...state.pendingAttachments];
-  const attachmentNames = attachmentIds
-    .map((id) => state.files.find((file) => file.id === id)?.safeName)
+  const attachmentRecords = attachmentIds
+    .map((id) => state.files.find((file) => file.id === id))
     .filter(Boolean);
   state.events = [];
   state.activitySummary = null;
@@ -2257,9 +2283,10 @@ async function send(text) {
       text,
       at: userMessageAt,
       status: "complete",
-      ...(attachmentNames.length ? { attachments: attachmentNames } : {}),
+      ...(attachmentRecords.length ? { attachments: attachmentRecords } : {}),
     }),
   );
+  bindMessageAttachmentActions(messages);
   messages.insertAdjacentHTML(
     "beforeend",
     '<div class="live-activity chat-working-status" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div>',
@@ -2645,8 +2672,9 @@ $("file-search").addEventListener("input", () => {
   clearTimeout(fileSearchTimer);
   fileSearchTimer = setTimeout(() => void loadFiles(), 180);
 });
-$("file-preview-close").addEventListener("click", () => {
-  $("file-preview-card").hidden = true;
+$("file-preview-close").addEventListener("click", () => $("file-preview-card").close());
+$("file-preview-card").addEventListener("click", (event) => {
+  if (event.target === $("file-preview-card")) $("file-preview-card").close();
 });
 $("composer").addEventListener("dragover", (event) => {
   event.preventDefault();

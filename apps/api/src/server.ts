@@ -66,7 +66,13 @@ interface ChatMessage {
   runId?: string;
   turnId?: string;
   status?: "complete" | "working" | "failed" | "stopped";
-  attachments?: string[];
+  attachments?: ChatAttachment[];
+}
+
+interface ChatAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
 }
 
 interface SessionState {
@@ -619,9 +625,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
       status: "complete",
       ...(attachments.length
         ? {
-            attachments: attachments.flatMap((id) => {
+            attachments: attachments.flatMap((id): ChatAttachment[] => {
               const record = fileStore.get(id);
-              return record ? [record.safeName] : [];
+              return record
+                ? [{ id: record.id, name: record.safeName, mimeType: record.mimeType }]
+                : [];
             }),
           }
         : {}),
@@ -1001,8 +1009,24 @@ export function createApiServer(options: ApiServerOptions = {}) {
         );
       })();
     }
-    await metadataReady;
-    await adapter.connect();
+    const currentMetadataReady = metadataReady;
+    try {
+      await currentMetadataReady;
+    } catch (error) {
+      // Do not cache a failed startup transaction forever. A short-lived
+      // Hermes outage during a redeploy must be recoverable on the next
+      // request once the upstream gateway is ready again.
+      if (metadataReady === currentMetadataReady) metadataReady = undefined;
+      throw error;
+    }
+    try {
+      await adapter.connect();
+    } catch (error) {
+      // The adapter owns the socket lifecycle, but a failed readiness check
+      // should not leave a half-open client state for the next request.
+      await adapter.disconnect().catch(() => undefined);
+      throw error;
+    }
     if (!sessions.size) {
       const listed = await adapter.listSessions();
       for (const session of listed) {
