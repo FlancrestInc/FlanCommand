@@ -4861,7 +4861,13 @@ html[data-theme="xpcss"] .app-shell {
 html[data-theme="xpcss"] .topbar {
   min-height: 48px;
   border-bottom: 1px solid var(--xp-blue-dark);
-  background: linear-gradient(180deg, var(--xp-blue-light) 0%, #1171d2 48%, var(--xp-blue) 52%, #0b62c9 100%);
+  background: linear-gradient(
+    180deg,
+    var(--xp-blue-light) 0%,
+    #1171d2 48%,
+    var(--xp-blue) 52%,
+    #0b62c9 100%
+  );
   color: var(--xp-white);
   box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
 }
@@ -4933,7 +4939,13 @@ html[data-theme="xpcss"] .detail-head,
 html[data-theme="xpcss"] .palette-head,
 html[data-theme="xpcss"] .drawer-head {
   border-color: var(--xp-blue-dark);
-  background: linear-gradient(180deg, var(--xp-blue-light) 0%, #1171d2 48%, var(--xp-blue) 52%, #0b62c9 100%);
+  background: linear-gradient(
+    180deg,
+    var(--xp-blue-light) 0%,
+    #1171d2 48%,
+    var(--xp-blue) 52%,
+    #0b62c9 100%
+  );
   color: var(--xp-white);
   text-shadow: 1px 1px 0 var(--xp-blue-dark);
 }
@@ -4953,7 +4965,9 @@ html[data-theme="xpcss"] .footer-link {
   border-radius: 3px;
   background: linear-gradient(180deg, var(--xp-white), #e5e5e5);
   color: var(--xp-text);
-  box-shadow: inset 1px 1px rgb(255 255 255 / 90%), 1px 1px 0 var(--xp-shadow);
+  box-shadow:
+    inset 1px 1px rgb(255 255 255 / 90%),
+    1px 1px 0 var(--xp-shadow);
   text-shadow: none;
 }
 
@@ -4996,7 +5010,9 @@ html[data-theme="xpcss"] .runtime-monitor {
   border-radius: 2px;
   background: var(--xp-white);
   color: var(--xp-text);
-  box-shadow: inset 1px 1px #777, inset -1px -1px var(--xp-white);
+  box-shadow:
+    inset 1px 1px #777,
+    inset -1px -1px var(--xp-white);
 }
 
 html[data-theme="xpcss"] input::placeholder,
@@ -5065,7 +5081,9 @@ html[data-theme="xpcss"] .composer {
   border: 1px solid var(--xp-border);
   border-radius: 4px;
   background: var(--xp-panel);
-  box-shadow: inset 1px 1px var(--xp-white), 1px 1px 0 var(--xp-shadow);
+  box-shadow:
+    inset 1px 1px var(--xp-white),
+    1px 1px 0 var(--xp-shadow);
 }
 
 html[data-theme="xpcss"] .composer textarea {
@@ -5285,9 +5303,16 @@ html[data-theme="win7css"] .app-shell {
 html[data-theme="win7css"] .topbar {
   min-height: 48px;
   border-bottom: 1px solid var(--win7-blue-dark);
-  background: linear-gradient(180deg, rgb(111 186 239 / 90%), rgb(37 116 185 / 92%) 52%, rgb(19 75 139 / 94%));
+  background: linear-gradient(
+    180deg,
+    rgb(111 186 239 / 90%),
+    rgb(37 116 185 / 92%) 52%,
+    rgb(19 75 139 / 94%)
+  );
   color: var(--win7-white);
-  box-shadow: 0 2px 6px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 70%);
+  box-shadow:
+    0 2px 6px var(--win7-shadow),
+    inset 0 1px rgb(255 255 255 / 70%);
 }
 
 html[data-theme="win7css"] .topbar > *,
@@ -5347,7 +5372,9 @@ html[data-theme="win7css"] .chat-column {
   border-color: var(--win7-border);
   background: var(--win7-glass);
   color: var(--win7-text);
-  box-shadow: 0 3px 8px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 85%);
+  box-shadow:
+    0 3px 8px var(--win7-shadow),
+    inset 0 1px rgb(255 255 255 / 85%);
 }
 
 html[data-theme="win7css"] .sidebar-head,
@@ -5355,7 +5382,12 @@ html[data-theme="win7css"] .detail-head,
 html[data-theme="win7css"] .palette-head,
 html[data-theme="win7css"] .drawer-head {
   border-color: var(--win7-blue-dark);
-  background: linear-gradient(180deg, rgb(88 169 226 / 94%), rgb(28 105 174 / 96%) 54%, rgb(18 76 140 / 98%));
+  background: linear-gradient(
+    180deg,
+    rgb(88 169 226 / 94%),
+    rgb(28 105 174 / 96%) 54%,
+    rgb(18 76 140 / 98%)
+  );
   color: var(--win7-white);
   text-shadow: 1px 1px 0 var(--win7-blue-dark);
   box-shadow: inset 0 1px rgb(255 255 255 / 65%);
@@ -5376,7 +5408,9 @@ html[data-theme="win7css"] .footer-link {
   border-radius: 3px;
   background: linear-gradient(180deg, var(--win7-white), #dcecf8 48%, #c3dff0 52%, #eaf5fb);
   color: var(--win7-text);
-  box-shadow: inset 0 1px rgb(255 255 255 / 95%), 0 1px 2px #8b9da8;
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 95%),
+    0 1px 2px #8b9da8;
   text-shadow: none;
 }
 
@@ -5386,7 +5420,9 @@ html[data-theme="win7css"] .starter:hover,
 html[data-theme="win7css"] .footer-link:hover {
   border-color: #2c76ab;
   background: linear-gradient(180deg, #fff, #e8f6ff 48%, #ccecff 52%, #f7fcff);
-  box-shadow: inset 0 1px #fff, 0 0 5px rgb(93 177 235 / 75%);
+  box-shadow:
+    inset 0 1px #fff,
+    0 0 5px rgb(93 177 235 / 75%);
 }
 
 html[data-theme="win7css"] button:active:not(:disabled),
@@ -5421,7 +5457,9 @@ html[data-theme="win7css"] .runtime-monitor {
   border-radius: 2px;
   background: var(--win7-white);
   color: var(--win7-text);
-  box-shadow: inset 1px 1px #8999a5, inset -1px -1px var(--win7-white);
+  box-shadow:
+    inset 1px 1px #8999a5,
+    inset -1px -1px var(--win7-white);
 }
 
 html[data-theme="win7css"] input::placeholder,
@@ -5493,7 +5531,9 @@ html[data-theme="win7css"] .composer {
   border: 1px solid var(--win7-border);
   border-radius: 4px;
   background: var(--win7-panel);
-  box-shadow: inset 0 1px #fff, 0 2px 5px var(--win7-shadow);
+  box-shadow:
+    inset 0 1px #fff,
+    0 2px 5px var(--win7-shadow);
 }
 
 html[data-theme="win7css"] .composer textarea {
@@ -5547,7 +5587,9 @@ html[data-theme="win7css"] .file-item.selected,
 html[data-theme="win7css"] .workspace-entry.selected {
   background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
   color: var(--win7-white);
-  box-shadow: inset 0 1px rgb(255 255 255 / 35%), 0 1px 2px var(--win7-shadow);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 35%),
+    0 1px 2px var(--win7-shadow);
 }
 
 html[data-theme="win7css"] .session-item[aria-current="true"] *,
@@ -5599,7 +5641,9 @@ html[data-theme="win7css"] .drawer-card {
   border-radius: 7px;
   background: var(--win7-glass);
   color: var(--win7-text);
-  box-shadow: 0 8px 18px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 90%);
+  box-shadow:
+    0 8px 18px var(--win7-shadow),
+    inset 0 1px rgb(255 255 255 / 90%);
 }
 
 html[data-theme="win7css"] .palette-head {
