@@ -40,9 +40,13 @@ describe("settings", () => {
     });
   });
 
-  it("accepts the XP and Windows 98 themes", () => {
+  it("accepts all supported themes", () => {
     expect(normalizeSettings({ theme: "xp" }).theme).toBe("xp");
     expect(normalizeSettings({ theme: "win98" }).theme).toBe("win98");
+    expect(normalizeSettings({ theme: "cga" }).theme).toBe("cga");
+    expect(normalizeSettings({ theme: "amber" }).theme).toBe("amber");
+    expect(normalizeSettings({ theme: "green" }).theme).toBe("green");
+    expect(normalizeSettings({ theme: "unknown" }).theme).toBe("xp");
   });
 
   it("accepts classic chat backgrounds", () => {
