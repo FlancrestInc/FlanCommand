@@ -182,7 +182,9 @@ function toast(message) {
   setTimeout(() => $("toast").classList.remove("show"), 3200);
 }
 function setConnection(text, good = true) {
-  $("connection").innerHTML =
+  const indicator = $("connection");
+  if (!indicator) return;
+  indicator.innerHTML =
     `<i style="background:${good ? "var(--accent)" : "var(--warm)"}"></i> ${text}`;
 }
 function renderSessions() {
