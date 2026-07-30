@@ -1,4 +1,4 @@
-const CACHE_NAME = "flancommand-shell-v22";
+const CACHE_NAME = "flancommand-shell-v21";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
