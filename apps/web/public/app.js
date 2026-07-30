@@ -559,7 +559,9 @@ async function loadNotifications() {
     const data = await api("/notifications");
     state.notifications = data.notifications || [];
     const unread = state.notifications.filter((item) => !item.read);
-    $("notification-count").textContent = String(unread.length);
+    const notificationCount = $("notification-count");
+    notificationCount.textContent = String(unread.length);
+    notificationCount.hidden = unread.length === 0;
     if (state.settings?.notifications && "Notification" in window) {
       if (state.notificationsLoaded && Notification.permission === "granted")
         for (const item of unread.filter((item) => !state.notificationIds.has(item.id)))
@@ -568,7 +570,9 @@ async function loadNotifications() {
     }
     state.notificationsLoaded = true;
   } catch {
-    $("notification-count").textContent = "—";
+    const notificationCount = $("notification-count");
+    notificationCount.textContent = "—";
+    notificationCount.hidden = false;
   }
 }
 function formatDrawerValue(value) {

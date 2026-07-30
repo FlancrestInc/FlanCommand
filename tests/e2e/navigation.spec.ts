@@ -54,6 +54,7 @@ test("dismisses a notification from the notifications drawer", async ({ page }) 
   });
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+  await expect(page.locator("#notification-count")).toBeHidden();
   await page.locator("#notification-bell").click();
   await expect(page.locator(".notification-card")).toContainText("Test notification");
   await page.locator("[data-delete-notification='notification-e2e']").click();
