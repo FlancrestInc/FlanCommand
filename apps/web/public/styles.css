@@ -6815,3 +6815,71 @@ html[data-theme] :focus-visible {
     min-height: 44px !important;
   }
 }
+
+/* Keep message metadata readable and reserve composer space while a run changes state. */
+.message-meta,
+.message-meta time,
+.hint,
+.composer-note {
+  color: var(--muted) !important;
+  opacity: 1;
+}
+html[data-theme="cga"] .message-meta,
+html[data-theme="cga"] .message-meta time,
+html[data-theme="cga"] .hint,
+html[data-theme="cga"] .composer-note,
+html[data-theme="amber"] .message-meta,
+html[data-theme="amber"] .message-meta time,
+html[data-theme="amber"] .hint,
+html[data-theme="amber"] .composer-note,
+html[data-theme="green"] .message-meta,
+html[data-theme="green"] .message-meta time,
+html[data-theme="green"] .hint,
+html[data-theme="green"] .composer-note {
+  color: var(--dos-muted) !important;
+}
+html[data-theme="xp"] .message-meta,
+html[data-theme="xp"] .message-meta time,
+html[data-theme="xp"] .hint,
+html[data-theme="xp"] .composer-note {
+  color: var(--retro-muted) !important;
+}
+html[data-theme="win98css"] .message-meta,
+html[data-theme="win98css"] .message-meta time,
+html[data-theme="win98css"] .hint,
+html[data-theme="win98css"] .composer-note {
+  color: var(--win98-text, #333) !important;
+}
+html[data-theme="xpcss"] .message-meta,
+html[data-theme="xpcss"] .message-meta time,
+html[data-theme="xpcss"] .hint,
+html[data-theme="xpcss"] .composer-note {
+  color: var(--xp-text, #333) !important;
+}
+html[data-theme="win7css"] .message-meta,
+html[data-theme="win7css"] .message-meta time,
+html[data-theme="win7css"] .hint,
+html[data-theme="win7css"] .composer-note {
+  color: var(--win7-muted) !important;
+}
+html[data-theme="classiccss"] .message-meta,
+html[data-theme="classiccss"] .message-meta time,
+html[data-theme="classiccss"] .hint,
+html[data-theme="classiccss"] .composer-note {
+  color: var(--classic-black, #222) !important;
+}
+.composer-monitors {
+  flex: 1 1 0;
+}
+.runtime-monitor {
+  width: 78px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+#composer-hint {
+  display: inline-flex;
+  flex: 0 0 142px;
+  min-height: 28px;
+  align-items: center;
+  line-height: 1.25;
+}
