@@ -69,9 +69,12 @@ describe("mock Hermes transport", () => {
     await expect(adapter.listModels()).resolves.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "mock-model", name: "Mock model" })]),
     );
-    await expect(adapter.listCommands("session-1")).resolves.toEqual([
-      expect.objectContaining({ name: "/status" }),
-    ]);
+    await expect(adapter.listCommands("session-1")).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "/status" }),
+        expect.objectContaining({ name: "/workspace" }),
+      ]),
+    );
     await expect(adapter.setSessionModel("session-1", "mock-model-fast")).resolves.toBeUndefined();
     await expect(adapter.getSession("session-1")).resolves.toMatchObject({
       modelId: "mock-model-fast",

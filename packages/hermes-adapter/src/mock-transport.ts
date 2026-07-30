@@ -66,7 +66,19 @@ export class MockHermesTransport {
         { id: "mock-model", name: "Mock model", provider: "fixture", reasoning: true },
         { id: "mock-model-fast", name: "Mock model fast", provider: "fixture", reasoning: false },
       ];
-    if (operation === "listCommands") return { pairs: [["/status", "Show mock session status."]] };
+    if (operation === "listCommands")
+      return {
+        pairs: [
+          ["/status", "Show mock session status."],
+          ["/sessions", "List mock sessions."],
+          ["/models", "List available models."],
+          ["/files", "List attached files."],
+          ["/history", "Show recent session history."],
+          ["/memory", "Show saved session memory."],
+          ["/projects", "List workspace projects."],
+          ["/workspace", "Show workspace details."],
+        ],
+      };
     if (operation === "setSessionModel") {
       const sessionId = String(value.sessionId);
       const session = this.getSession(sessionId);

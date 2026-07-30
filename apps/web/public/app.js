@@ -1812,7 +1812,7 @@ function commandContext() {
   return { start: tokenStart, end: tokenEnd, query: token.slice(1).toLowerCase(), active: true };
 }
 function commandMatches(query = commandContext().query) {
-  return state.commands.filter((command) => command.name.toLowerCase().includes(query)).slice(0, 6);
+  return state.commands.filter((command) => command.name.toLowerCase().includes(query));
 }
 function insertCommand(command) {
   const input = $("composer-input");
