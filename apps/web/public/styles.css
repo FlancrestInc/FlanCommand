@@ -6419,6 +6419,15 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   }
 }
 
+/* Extend the chat wallpaper behind the floating composer card. */
+html[data-theme] .composer-wrap {
+  background: var(--wallpaper);
+  background-position: center bottom;
+  background-size: cover;
+  border-top: 0;
+  box-shadow: none;
+}
+
 /* Final interaction overrides after every platform theme layer. */
 html[data-theme] .drawer-tab:active,
 html[data-theme] .drawer-tab:focus-visible {
