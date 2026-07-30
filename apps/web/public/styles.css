@@ -5251,3 +5251,433 @@ html[data-theme="xpcss"] .drawer-tab[aria-expanded="true"] {
     border-radius: 5px 5px 0 0;
   }
 }
+
+/* 7.css-inspired Windows 7 Aero theme. Local CSS only; no runtime dependency. */
+html[data-theme="win7css"] {
+  color-scheme: light;
+  --win7-sky: #75b4e3;
+  --win7-blue: #1769aa;
+  --win7-blue-dark: #164d83;
+  --win7-blue-light: #b9e2ff;
+  --win7-glass: rgb(229 242 250 / 82%);
+  --win7-panel: rgb(248 251 253 / 94%);
+  --win7-white: #fff;
+  --win7-border: #7f9db9;
+  --win7-shadow: rgb(0 38 70 / 35%);
+  --win7-text: #18222a;
+  --win7-muted: #506270;
+  --win7-yellow: #fff2a8;
+  --win7-font: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+html[data-theme="win7css"] body {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #6ba9d4 0%, #d9eef8 52%, #8bb778 53%, #5d963b 100%);
+  color: var(--win7-text);
+  font-family: var(--win7-font);
+}
+
+html[data-theme="win7css"] .app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+html[data-theme="win7css"] .topbar {
+  min-height: 48px;
+  border-bottom: 1px solid var(--win7-blue-dark);
+  background: linear-gradient(180deg, rgb(111 186 239 / 90%), rgb(37 116 185 / 92%) 52%, rgb(19 75 139 / 94%));
+  color: var(--win7-white);
+  box-shadow: 0 2px 6px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 70%);
+}
+
+html[data-theme="win7css"] .topbar > *,
+html[data-theme="win7css"] .brand,
+html[data-theme="win7css"] .topbar-center,
+html[data-theme="win7css"] .connection,
+html[data-theme="win7css"] .avatar,
+html[data-theme="win7css"] .icon-button {
+  color: var(--win7-white);
+}
+
+html[data-theme="win7css"] .brand,
+html[data-theme="win7css"] .brand:hover {
+  font-family: var(--win7-font);
+  font-weight: 600;
+  text-shadow: 1px 1px 0 var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] .brand-mark {
+  border: 1px solid var(--win7-blue-dark);
+  border-radius: 3px;
+  background: linear-gradient(#fff, #d4ebfb);
+  color: var(--win7-blue-dark);
+  text-shadow: none;
+  box-shadow: inset 0 1px #fff;
+}
+
+html[data-theme="win7css"] .topbar-center .session-summary h2,
+html[data-theme="win7css"] .topbar-center .session-summary span,
+html[data-theme="win7css"] .eyebrow,
+html[data-theme="win7css"] .section-label,
+html[data-theme="win7css"] .card-label {
+  color: var(--win7-white);
+  text-shadow: 1px 1px 0 var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] .connection {
+  border-color: rgb(255 255 255 / 70%);
+  background: rgb(0 47 102 / 32%);
+  box-shadow: inset 0 1px rgb(255 255 255 / 35%);
+}
+
+html[data-theme="win7css"] .connection i,
+html[data-theme="win7css"] .live-dot,
+html[data-theme="win7css"] .pulse {
+  background: #7dff73;
+  box-shadow: 0 0 5px #fff;
+}
+
+html[data-theme="win7css"] .workspace {
+  background: rgb(218 237 248 / 24%);
+}
+
+html[data-theme="win7css"] .sidebar,
+html[data-theme="win7css"] .detail-panel,
+html[data-theme="win7css"] .chat-column {
+  border-color: var(--win7-border);
+  background: var(--win7-glass);
+  color: var(--win7-text);
+  box-shadow: 0 3px 8px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 85%);
+}
+
+html[data-theme="win7css"] .sidebar-head,
+html[data-theme="win7css"] .detail-head,
+html[data-theme="win7css"] .palette-head,
+html[data-theme="win7css"] .drawer-head {
+  border-color: var(--win7-blue-dark);
+  background: linear-gradient(180deg, rgb(88 169 226 / 94%), rgb(28 105 174 / 96%) 54%, rgb(18 76 140 / 98%));
+  color: var(--win7-white);
+  text-shadow: 1px 1px 0 var(--win7-blue-dark);
+  box-shadow: inset 0 1px rgb(255 255 255 / 65%);
+}
+
+html[data-theme="win7css"] .sidebar-head > *,
+html[data-theme="win7css"] .detail-head > *,
+html[data-theme="win7css"] .palette-head > *,
+html[data-theme="win7css"] .drawer-head > * {
+  color: var(--win7-white);
+}
+
+html[data-theme="win7css"] button,
+html[data-theme="win7css"] .drawer-tab,
+html[data-theme="win7css"] .starter,
+html[data-theme="win7css"] .footer-link {
+  border: 1px solid #5685a9;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--win7-white), #dcecf8 48%, #c3dff0 52%, #eaf5fb);
+  color: var(--win7-text);
+  box-shadow: inset 0 1px rgb(255 255 255 / 95%), 0 1px 2px #8b9da8;
+  text-shadow: none;
+}
+
+html[data-theme="win7css"] button:hover:not(:disabled),
+html[data-theme="win7css"] .drawer-tab:hover,
+html[data-theme="win7css"] .starter:hover,
+html[data-theme="win7css"] .footer-link:hover {
+  border-color: #2c76ab;
+  background: linear-gradient(180deg, #fff, #e8f6ff 48%, #ccecff 52%, #f7fcff);
+  box-shadow: inset 0 1px #fff, 0 0 5px rgb(93 177 235 / 75%);
+}
+
+html[data-theme="win7css"] button:active:not(:disabled),
+html[data-theme="win7css"] .drawer-tab:active,
+html[data-theme="win7css"] .starter:active {
+  background: #c6e3f5;
+  box-shadow: inset 1px 1px #7694aa;
+  transform: translate(1px, 1px);
+}
+
+html[data-theme="win7css"] button:disabled,
+html[data-theme="win7css"] select:disabled,
+html[data-theme="win7css"] input:disabled,
+html[data-theme="win7css"] textarea:disabled {
+  color: #8a9aa5;
+  text-shadow: 1px 1px var(--win7-white);
+}
+
+html[data-theme="win7css"] :focus-visible {
+  outline: 1px dotted var(--win7-blue-dark);
+  outline-offset: 2px;
+}
+
+html[data-theme="win7css"] input,
+html[data-theme="win7css"] select,
+html[data-theme="win7css"] textarea,
+html[data-theme="win7css"] .search,
+html[data-theme="win7css"] .model-picker,
+html[data-theme="win7css"] .context-monitor,
+html[data-theme="win7css"] .runtime-monitor {
+  border: 1px solid var(--win7-border);
+  border-radius: 2px;
+  background: var(--win7-white);
+  color: var(--win7-text);
+  box-shadow: inset 1px 1px #8999a5, inset -1px -1px var(--win7-white);
+}
+
+html[data-theme="win7css"] input::placeholder,
+html[data-theme="win7css"] textarea::placeholder {
+  color: var(--win7-muted);
+  opacity: 1;
+}
+
+html[data-theme="win7css"] .message-scroll {
+  background: linear-gradient(180deg, #75b4e3 0%, #d9eef8 55%, #8bb778 56%, #5d963b 100%);
+}
+
+html[data-theme="win7css"] .welcome,
+html[data-theme="win7css"] .message .bubble,
+html[data-theme="win7css"] .message.user .bubble,
+html[data-theme="win7css"] .starter,
+html[data-theme="win7css"] .activity-summary-card,
+html[data-theme="win7css"] .file-item,
+html[data-theme="win7css"] .session-skeleton,
+html[data-theme="win7css"] .drawer-card,
+html[data-theme="win7css"] .notification-card,
+html[data-theme="win7css"] .attachment-chip,
+html[data-theme="win7css"] .inline-approval,
+html[data-theme="win7css"] .edit-review,
+html[data-theme="win7css"] .memory-card {
+  border: 1px solid #9fb5c7;
+  border-radius: 3px;
+  background: var(--win7-panel);
+  color: var(--win7-text);
+  box-shadow: 0 1px 3px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .welcome h3 {
+  color: var(--win7-blue-dark);
+  font-family: var(--win7-font);
+  font-size: clamp(24px, 4vw, 42px);
+  letter-spacing: 0;
+  text-shadow: 1px 1px var(--win7-white);
+}
+
+html[data-theme="win7css"] .welcome h3 em,
+html[data-theme="win7css"] .welcome p,
+html[data-theme="win7css"] .starter small,
+html[data-theme="win7css"] .message-meta,
+html[data-theme="win7css"] .hint,
+html[data-theme="win7css"] .composer-note,
+html[data-theme="win7css"] .developer-note,
+html[data-theme="win7css"] .run-metrics span,
+html[data-theme="win7css"] .run-metrics b,
+html[data-theme="win7css"] .details-list span {
+  color: var(--win7-muted);
+  text-shadow: none;
+}
+
+html[data-theme="win7css"] .welcome .welcome-kicker,
+html[data-theme="win7css"] .starter span,
+html[data-theme="win7css"] a {
+  color: var(--win7-blue-dark);
+  text-shadow: none;
+}
+
+html[data-theme="win7css"] .composer-wrap {
+  border-top: 1px solid var(--win7-border);
+  background: var(--win7-glass);
+  box-shadow: 0 -2px 7px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .composer {
+  border: 1px solid var(--win7-border);
+  border-radius: 4px;
+  background: var(--win7-panel);
+  box-shadow: inset 0 1px #fff, 0 2px 5px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .composer textarea {
+  background: var(--win7-white);
+  color: var(--win7-text);
+}
+
+html[data-theme="win7css"] .send-button,
+html[data-theme="win7css"] .settings-actions .primary-button,
+html[data-theme="win7css"] .drawer-actions .primary-button {
+  border-color: var(--win7-blue-dark);
+  background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
+  color: var(--win7-white);
+  text-shadow: 1px 1px var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] .detail-card,
+html[data-theme="win7css"] .project-picker,
+html[data-theme="win7css"] .credential-library,
+html[data-theme="win7css"] .file-library,
+html[data-theme="win7css"] .sidebar-footer {
+  margin: 5px;
+  border: 1px solid var(--win7-border);
+  border-radius: 4px;
+  background: var(--win7-glass);
+  box-shadow: 0 1px 4px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .detail-card > summary,
+html[data-theme="win7css"] .project-picker > summary,
+html[data-theme="win7css"] .credential-library > summary,
+html[data-theme="win7css"] .file-library > summary,
+html[data-theme="win7css"] .sidebar-footer > summary {
+  border-bottom: 1px solid #aac2d5;
+  background: linear-gradient(180deg, rgb(255 255 255 / 85%), rgb(213 231 243 / 85%));
+  color: var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] .session-item,
+html[data-theme="win7css"] .session-entry,
+html[data-theme="win7css"] .credential-item,
+html[data-theme="win7css"] .workspace-entry {
+  border-radius: 3px;
+  background: transparent;
+  color: var(--win7-text);
+}
+
+html[data-theme="win7css"] .session-item[aria-current="true"],
+html[data-theme="win7css"] .session-entry.active,
+html[data-theme="win7css"] .file-item.selected,
+html[data-theme="win7css"] .workspace-entry.selected {
+  background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
+  color: var(--win7-white);
+  box-shadow: inset 0 1px rgb(255 255 255 / 35%), 0 1px 2px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .session-item[aria-current="true"] *,
+html[data-theme="win7css"] .session-entry.active * {
+  color: var(--win7-white);
+}
+
+html[data-theme="win7css"] .status-badge,
+html[data-theme="win7css"] .job-status,
+html[data-theme="win7css"] .risk,
+html[data-theme="win7css"] .activity-chip,
+html[data-theme="win7css"] .chip,
+html[data-theme="win7css"] .attachment-chip {
+  border: 1px solid #9fb5c7;
+  border-radius: 9px;
+  background: var(--win7-white);
+  color: var(--win7-text);
+}
+
+html[data-theme="win7css"] .risk-high,
+html[data-theme="win7css"] .job-waiting_for_approval {
+  background: var(--win7-yellow);
+  color: var(--win7-text);
+}
+
+html[data-theme="win7css"] .job-running {
+  background: #c7f1c7;
+  color: #075407;
+}
+
+html[data-theme="win7css"] .meter,
+html[data-theme="win7css"] .context-bar {
+  border: 1px solid var(--win7-border);
+  border-radius: 2px;
+  background: var(--win7-white);
+  box-shadow: inset 1px 1px #8999a5;
+}
+
+html[data-theme="win7css"] .meter span,
+html[data-theme="win7css"] #composer-context-meter {
+  background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
+}
+
+html[data-theme="win7css"] .settings-panel,
+html[data-theme="win7css"] .palette,
+html[data-theme="win7css"] .command-drawer,
+html[data-theme="win7css"] .drawer-card {
+  border: 1px solid var(--win7-blue-dark);
+  border-radius: 7px;
+  background: var(--win7-glass);
+  color: var(--win7-text);
+  box-shadow: 0 8px 18px var(--win7-shadow), inset 0 1px rgb(255 255 255 / 90%);
+}
+
+html[data-theme="win7css"] .palette-head {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--win7-blue-dark);
+  border-radius: 6px 6px 0 0;
+  box-shadow: none;
+}
+
+html[data-theme="win7css"] .palette-head > * {
+  background: transparent;
+  color: var(--win7-white);
+}
+
+html[data-theme="win7css"] .toast,
+html[data-theme="win7css"] .run-strip {
+  border: 1px solid var(--win7-border);
+  border-radius: 4px;
+  background: var(--win7-panel);
+  color: var(--win7-text);
+  box-shadow: 0 2px 5px var(--win7-shadow);
+}
+
+html[data-theme="win7css"] .code-block,
+html[data-theme="win7css"] .memory-output,
+html[data-theme="win7css"] .developer-panel pre,
+html[data-theme="win7css"] .terminal-panel pre,
+html[data-theme="win7css"] .edit-diff {
+  border: 1px solid #24435d;
+  border-radius: 2px;
+  background: #101b27;
+  color: #e7f4ff;
+  font-family: "Courier New", monospace;
+}
+
+html[data-theme="win7css"] .code-toolbar {
+  border-bottom: 1px solid var(--win7-blue-dark);
+  background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
+  color: var(--win7-white);
+}
+
+html[data-theme="win7css"] .markdown-table-wrap {
+  border: 1px solid var(--win7-border);
+  border-radius: 2px;
+  overflow-x: auto;
+}
+
+html[data-theme="win7css"] table th {
+  background: linear-gradient(180deg, #e5f4ff, #c3deef);
+  color: var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] table td,
+html[data-theme="win7css"] table th {
+  border-color: #aac2d5;
+}
+
+html[data-theme="win7css"] .drawer-tab {
+  color: var(--win7-blue-dark);
+}
+
+html[data-theme="win7css"] .drawer-tab[aria-expanded="true"] {
+  background: linear-gradient(180deg, #67b6ed, #1c6bae 55%, #14518d);
+  color: var(--win7-white);
+  text-shadow: 1px 1px var(--win7-blue-dark);
+}
+
+@media (max-width: 720px) {
+  html[data-theme="win7css"] .topbar {
+    min-height: 54px;
+  }
+
+  html[data-theme="win7css"] .settings-panel,
+  html[data-theme="win7css"] .palette,
+  html[data-theme="win7css"] .command-drawer {
+    max-width: calc(100vw - 16px);
+    border-radius: 5px;
+    box-shadow: 0 5px 12px var(--win7-shadow);
+  }
+}
