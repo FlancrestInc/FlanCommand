@@ -6425,12 +6425,16 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   visibility: visible;
   opacity: 1;
 }
-html[data-theme="cga"] .message.user .bubble,
-html[data-theme="amber"] .message.user .bubble,
 html[data-theme="green"] .message.user .bubble {
-  border: 1px solid var(--dos-accent);
-  background: var(--dos-panel);
-  color: var(--dos-bright);
+  display: block !important;
+  position: relative;
+  z-index: 2;
+  min-height: 1.5em;
+  border: 1px solid #66ff66 !important;
+  background: #001900 !important;
+  color: #c2ffc2 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Final interaction overrides after every platform theme layer. */
