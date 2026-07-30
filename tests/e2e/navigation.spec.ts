@@ -196,7 +196,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v11");
+    const cache = await browser.caches.open("flancommand-shell-v12");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -443,7 +443,7 @@ test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "win98");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
 
-  for (const theme of ["cga", "amber", "green"]) {
+  for (const theme of ["cga", "amber", "green", "win98css"]) {
     await page.locator("#settings-button").click();
     await page.locator("#settings-theme").selectOption(theme);
     await page.locator("#settings-form").locator("button[type=submit]").click();
@@ -462,6 +462,8 @@ test("switches and persists the classic and BOOTSTRA.386 themes", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "amber");
   await page.locator("#theme-toggle").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "green");
+  await page.locator("#theme-toggle").click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
 });
 
 test("associates a credential reference through the browser form", async ({ page }) => {

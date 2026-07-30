@@ -1,5 +1,5 @@
 export type ReasoningEffort = "low" | "medium" | "high";
-export type SettingsTheme = "xp" | "win98" | "cga" | "amber" | "green";
+export type SettingsTheme = "xp" | "win98" | "cga" | "amber" | "green" | "win98css";
 export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
 
 export interface UserSettings {
@@ -58,7 +58,8 @@ export function normalizeSettings(
       input.theme === "win98" ||
       input.theme === "cga" ||
       input.theme === "amber" ||
-      input.theme === "green"
+      input.theme === "green" ||
+      input.theme === "win98css"
         ? input.theme
         : base.theme,
     chatBackground:

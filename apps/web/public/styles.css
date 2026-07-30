@@ -4353,3 +4353,475 @@ html[data-theme="amber"] .starter small,
 html[data-theme="green"] .starter small {
   color: var(--dos-muted);
 }
+
+/* 98.css-inspired Windows 98 theme. Local CSS only; no runtime dependency. */
+html[data-theme="win98css"] {
+  color-scheme: light;
+  --win98-desktop: #008080;
+  --win98-surface: #c0c0c0;
+  --win98-panel: #dfdfdf;
+  --win98-white: #fff;
+  --win98-light: #dfdfdf;
+  --win98-mid: #808080;
+  --win98-dark: #404040;
+  --win98-black: #000;
+  --win98-blue: #000080;
+  --win98-text: #111;
+  --win98-muted: #404040;
+  --win98-font: "MS Sans Serif", Tahoma, Arial, sans-serif;
+}
+
+html[data-theme="win98css"] body {
+  min-height: 100vh;
+  background: var(--win98-desktop);
+  color: var(--win98-text);
+  font-family: var(--win98-font);
+  font-size: 13px;
+}
+
+html[data-theme="win98css"] .app-shell,
+html[data-theme="win98css"] .workspace {
+  background: var(--win98-desktop);
+}
+
+html[data-theme="win98css"] .topbar {
+  height: 44px;
+  padding: 3px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--win98-black);
+  background: var(--win98-surface);
+  color: var(--win98-text);
+  box-shadow: inset 0 -1px var(--win98-white);
+}
+
+html[data-theme="win98css"] .topbar > * {
+  background: var(--win98-surface);
+}
+
+html[data-theme="win98css"] .brand,
+html[data-theme="win98css"] .brand:hover,
+html[data-theme="win98css"] .brand:active {
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 0;
+  background: var(--win98-surface);
+  color: var(--win98-text);
+  font-family: var(--win98-font);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-shadow: none;
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme="win98css"] .brand-mark {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--win98-black);
+  border-top-color: var(--win98-white);
+  border-left-color: var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  color: var(--win98-black);
+  font-size: 14px;
+}
+
+html[data-theme="win98css"] .topbar-center {
+  min-height: 28px;
+  padding: 3px 8px;
+  border: 2px inset var(--win98-white);
+  background: var(--win98-panel);
+  color: var(--win98-text);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .topbar-center .session-summary h2,
+html[data-theme="win98css"] .topbar-center .session-summary span,
+html[data-theme="win98css"] .connection,
+html[data-theme="win98css"] .connection-shell,
+html[data-theme="win98css"] .eyebrow,
+html[data-theme="win98css"] .section-label,
+html[data-theme="win98css"] .card-label,
+html[data-theme="win98css"] .welcome-kicker {
+  color: var(--win98-text);
+  font-family: var(--win98-font);
+  text-shadow: none;
+}
+
+html[data-theme="win98css"] .topbar-center .session-summary h2 {
+  font-size: 12px;
+}
+
+html[data-theme="win98css"] .connection i,
+html[data-theme="win98css"] .live-dot,
+html[data-theme="win98css"] .pulse {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--win98-black);
+  border-radius: 50%;
+  background: #008000;
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .workspace {
+  gap: 2px;
+  background: var(--win98-black);
+}
+
+html[data-theme="win98css"] .sidebar,
+html[data-theme="win98css"] .detail-panel,
+html[data-theme="win98css"] .chat-column {
+  background: var(--win98-surface);
+  color: var(--win98-text);
+  border-color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .sidebar-head,
+html[data-theme="win98css"] .detail-head,
+html[data-theme="win98css"] .palette-head {
+  margin: 4px;
+  padding: 3px 5px;
+  border: 2px outset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-blue);
+  color: var(--win98-white);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .sidebar-head > *,
+html[data-theme="win98css"] .detail-head > *,
+html[data-theme="win98css"] .palette-head > * {
+  background: var(--win98-blue);
+}
+
+html[data-theme="win98css"] .sidebar-head h1,
+html[data-theme="win98css"] .detail-head .eyebrow,
+html[data-theme="win98css"] .palette-head .eyebrow {
+  color: var(--win98-white);
+  font-size: 12px;
+}
+
+html[data-theme="win98css"] button,
+html[data-theme="win98css"] select,
+html[data-theme="win98css"] input,
+html[data-theme="win98css"] textarea {
+  font-family: var(--win98-font);
+}
+
+html[data-theme="win98css"] button,
+html[data-theme="win98css"] select,
+html[data-theme="win98css"] .drawer-tab,
+html[data-theme="win98css"] .starter,
+html[data-theme="win98css"] .footer-link,
+html[data-theme="win98css"] .activity-summary,
+html[data-theme="win98css"] .session-menu-toggle,
+html[data-theme="win98css"] .file-attach,
+html[data-theme="win98css"] .file-delete,
+html[data-theme="win98css"] .retry-button,
+html[data-theme="win98css"] .settings-actions button,
+html[data-theme="win98css"] .drawer-actions button,
+html[data-theme="win98css"] .notification-card > button,
+html[data-theme="win98css"] .palette button,
+html[data-theme="win98css"] .project-actions button,
+html[data-theme="win98css"] .workspace-path-row button,
+html[data-theme="win98css"] .workspace-search-row button,
+html[data-theme="win98css"] .terminal-input-row button,
+html[data-theme="win98css"] .edit-actions button {
+  min-height: 24px;
+  border: 2px outset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  color: var(--win98-text);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] button:hover:not(:disabled),
+html[data-theme="win98css"] select:hover:not(:disabled),
+html[data-theme="win98css"] .starter:hover {
+  background: var(--win98-panel);
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] button:active:not(:disabled),
+html[data-theme="win98css"] .starter:active {
+  border-top-color: var(--win98-dark);
+  border-left-color: var(--win98-dark);
+  border-right-color: var(--win98-white);
+  border-bottom-color: var(--win98-white);
+  box-shadow: inset 1px 1px var(--win98-mid);
+  transform: translate(1px, 1px);
+}
+
+html[data-theme="win98css"] button:disabled,
+html[data-theme="win98css"] select:disabled,
+html[data-theme="win98css"] input:disabled,
+html[data-theme="win98css"] textarea:disabled {
+  color: var(--win98-mid);
+  text-shadow: 1px 1px var(--win98-white);
+}
+
+html[data-theme="win98css"] :focus-visible {
+  outline: 1px dotted var(--win98-black);
+  outline-offset: 2px;
+}
+
+html[data-theme="win98css"] input,
+html[data-theme="win98css"] select,
+html[data-theme="win98css"] textarea,
+html[data-theme="win98css"] .search,
+html[data-theme="win98css"] .model-picker,
+html[data-theme="win98css"] .context-monitor,
+html[data-theme="win98css"] .runtime-monitor {
+  border: 2px inset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-white);
+  color: var(--win98-black);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] input::placeholder,
+html[data-theme="win98css"] textarea::placeholder {
+  color: var(--win98-muted);
+  opacity: 1;
+}
+
+html[data-theme="win98css"] .message-scroll {
+  background: var(--win98-desktop);
+}
+
+html[data-theme="win98css"] .welcome,
+html[data-theme="win98css"] .message .bubble,
+html[data-theme="win98css"] .message.user .bubble,
+html[data-theme="win98css"] .starter,
+html[data-theme="win98css"] .activity-summary-card,
+html[data-theme="win98css"] .file-item,
+html[data-theme="win98css"] .session-skeleton,
+html[data-theme="win98css"] .drawer-card,
+html[data-theme="win98css"] .notification-card,
+html[data-theme="win98css"] .attachment-chip,
+html[data-theme="win98css"] .inline-approval,
+html[data-theme="win98css"] .edit-review,
+html[data-theme="win98css"] .memory-card {
+  border: 1px solid var(--win98-black);
+  border-radius: 0;
+  background: var(--win98-panel);
+  color: var(--win98-text);
+  box-shadow: 2px 2px 0 var(--win98-dark);
+}
+
+html[data-theme="win98css"] .welcome h3 {
+  color: var(--win98-black);
+  font-family: var(--win98-font);
+  font-size: clamp(24px, 4vw, 42px);
+  letter-spacing: 0;
+}
+
+html[data-theme="win98css"] .welcome h3 em,
+html[data-theme="win98css"] .welcome p,
+html[data-theme="win98css"] .starter small,
+html[data-theme="win98css"] .message-meta,
+html[data-theme="win98css"] .hint,
+html[data-theme="win98css"] .composer-note,
+html[data-theme="win98css"] .developer-note,
+html[data-theme="win98css"] .run-metrics span,
+html[data-theme="win98css"] .run-metrics b,
+html[data-theme="win98css"] .details-list span {
+  color: var(--win98-muted);
+  text-shadow: none;
+}
+
+html[data-theme="win98css"] .starter span {
+  color: var(--win98-blue);
+}
+
+html[data-theme="win98css"] .composer-wrap {
+  border-top: 1px solid var(--win98-black);
+  background: var(--win98-surface);
+}
+
+html[data-theme="win98css"] .composer {
+  border: 2px inset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .composer textarea {
+  background: var(--win98-white);
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .send-button,
+html[data-theme="win98css"] .settings-actions .primary-button,
+html[data-theme="win98css"] .drawer-actions .primary-button {
+  background: var(--win98-blue);
+  color: var(--win98-white);
+  border-color: var(--win98-white);
+}
+
+html[data-theme="win98css"] .detail-card,
+html[data-theme="win98css"] .project-picker,
+html[data-theme="win98css"] .credential-library,
+html[data-theme="win98css"] .file-library,
+html[data-theme="win98css"] .sidebar-footer {
+  margin: 5px;
+  border: 2px outset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .detail-card > summary,
+html[data-theme="win98css"] .project-picker > summary,
+html[data-theme="win98css"] .credential-library > summary,
+html[data-theme="win98css"] .file-library > summary,
+html[data-theme="win98css"] .sidebar-footer > summary {
+  border-bottom: 1px solid var(--win98-black);
+  background: var(--win98-surface);
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .session-item,
+html[data-theme="win98css"] .session-entry,
+html[data-theme="win98css"] .credential-item,
+html[data-theme="win98css"] .workspace-entry {
+  border-radius: 0;
+  background: var(--win98-panel);
+  color: var(--win98-text);
+}
+
+html[data-theme="win98css"] .session-item[aria-current="true"],
+html[data-theme="win98css"] .session-entry.active,
+html[data-theme="win98css"] .file-item.selected,
+html[data-theme="win98css"] .workspace-entry.selected {
+  background: var(--win98-blue);
+  color: var(--win98-white);
+}
+
+html[data-theme="win98css"] .session-item[aria-current="true"] *,
+html[data-theme="win98css"] .session-entry.active * {
+  color: var(--win98-white);
+}
+
+html[data-theme="win98css"] .status-badge,
+html[data-theme="win98css"] .job-status,
+html[data-theme="win98css"] .risk,
+html[data-theme="win98css"] .activity-chip,
+html[data-theme="win98css"] .chip,
+html[data-theme="win98css"] .attachment-chip {
+  border: 1px solid var(--win98-black);
+  border-radius: 0;
+  background: var(--win98-panel);
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .risk-high,
+html[data-theme="win98css"] .job-waiting_for_approval {
+  background: #ffff00;
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .job-running {
+  background: #00ff00;
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .meter,
+html[data-theme="win98css"] .context-bar {
+  border: 2px inset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-white);
+}
+
+html[data-theme="win98css"] .meter span,
+html[data-theme="win98css"] #composer-context-meter {
+  background: var(--win98-blue);
+}
+
+html[data-theme="win98css"] .settings-panel,
+html[data-theme="win98css"] .palette,
+html[data-theme="win98css"] .command-drawer,
+html[data-theme="win98css"] .drawer-card {
+  border: 2px outset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  color: var(--win98-text);
+  box-shadow: 3px 3px 0 var(--win98-black);
+}
+
+html[data-theme="win98css"] .palette-head {
+  margin: 0;
+  border: 0;
+  border-bottom: 2px solid var(--win98-black);
+  box-shadow: none;
+}
+
+html[data-theme="win98css"] .palette-head > * {
+  background: var(--win98-blue);
+  color: var(--win98-white);
+}
+
+html[data-theme="win98css"] .toast,
+html[data-theme="win98css"] .run-strip {
+  border: 2px outset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-surface);
+  color: var(--win98-black);
+  box-shadow: 2px 2px 0 var(--win98-black);
+}
+
+html[data-theme="win98css"] .code-block,
+html[data-theme="win98css"] .memory-output,
+html[data-theme="win98css"] .developer-panel pre,
+html[data-theme="win98css"] .terminal-panel pre,
+html[data-theme="win98css"] .edit-diff {
+  border: 2px inset var(--win98-white);
+  border-radius: 0;
+  background: var(--win98-black);
+  color: var(--win98-white);
+  font-family: "Courier New", monospace;
+}
+
+html[data-theme="win98css"] .code-toolbar {
+  border-bottom: 1px solid var(--win98-white);
+  background: var(--win98-blue);
+  color: var(--win98-white);
+}
+
+html[data-theme="win98css"] .markdown-table-wrap {
+  border: 1px solid var(--win98-black);
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+html[data-theme="win98css"] table th {
+  background: var(--win98-blue);
+  color: var(--win98-white);
+}
+
+html[data-theme="win98css"] table td,
+html[data-theme="win98css"] table th {
+  border-color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .drawer-tab {
+  background: var(--win98-surface);
+  color: var(--win98-black);
+}
+
+html[data-theme="win98css"] .drawer-tab[aria-expanded="true"] {
+  background: var(--win98-blue);
+  color: var(--win98-white);
+}
+
+@media (max-width: 720px) {
+  html[data-theme="win98css"] .topbar {
+    height: 54px;
+  }
+
+  html[data-theme="win98css"] .settings-panel,
+  html[data-theme="win98css"] .palette,
+  html[data-theme="win98css"] .command-drawer {
+    max-width: calc(100vw - 16px);
+  }
+}
