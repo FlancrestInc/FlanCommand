@@ -6419,18 +6419,6 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   }
 }
 
-/* Let the composer reveal the chat column's actual wallpaper instead of painting its own layer. */
-html[data-theme] .chat-column {
-  background: var(--wallpaper);
-  background-position: center;
-  background-size: cover;
-}
-html[data-theme] .composer-wrap {
-  background: transparent;
-  border-top: 0;
-  box-shadow: none;
-}
-
 /* Final interaction overrides after every platform theme layer. */
 html[data-theme] .drawer-tab:active,
 html[data-theme] .drawer-tab:focus-visible {
