@@ -1,14 +1,6 @@
 export type ReasoningEffort = "low" | "medium" | "high";
 export type SettingsTheme =
-  | "xp"
-  | "win98"
-  | "cga"
-  | "amber"
-  | "green"
-  | "win98css"
-  | "xpcss"
-  | "win7css"
-  | "classiccss";
+  "xp" | "win98" | "cga" | "amber" | "green" | "win98css" | "xpcss" | "win7css" | "classiccss";
 export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
 
 export interface UserSettings {

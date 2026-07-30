@@ -36,9 +36,7 @@ const state = {
     "xpcss",
     "win7css",
     "classiccss",
-  ].includes(
-    localStorage.getItem("flan-theme"),
-  )
+  ].includes(localStorage.getItem("flan-theme"))
     ? localStorage.getItem("flan-theme")
     : "xp",
   chatBackground: ["bliss", "clouds", "autumn", "3d-pipes", "azul", "none"].includes(
