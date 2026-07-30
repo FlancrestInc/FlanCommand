@@ -2198,17 +2198,6 @@ html[data-theme] .drawer-tab:active {
   opacity: 1;
 }
 
-html[data-theme="classiccss"] .sidebar-head::before,
-html[data-theme="classiccss"] .detail-head::before,
-html[data-theme="classiccss"] .palette-head::before,
-html[data-theme="classiccss"] .drawer-head::before,
-html[data-theme="classiccss"] .sidebar-head::after,
-html[data-theme="classiccss"] .detail-head::after,
-html[data-theme="classiccss"] .palette-head::after,
-html[data-theme="classiccss"] .drawer-head::after {
-  content: none;
-}
-
 html[data-theme="classiccss"] .stop-button {
   color: var(--classic-black);
   border-color: var(--classic-black);
@@ -6058,7 +6047,7 @@ html[data-theme="classiccss"] .detail-head,
 html[data-theme="classiccss"] .palette-head,
 html[data-theme="classiccss"] .drawer-head {
   position: relative;
-  padding-inline: 56px;
+  padding-inline: 16px;
   border: 1px solid var(--classic-black);
   border-radius: 0;
   background: repeating-linear-gradient(
@@ -6083,41 +6072,6 @@ html[data-theme="classiccss"] .palette-head > *,
 html[data-theme="classiccss"] .drawer-head > * {
   color: var(--classic-black);
   text-shadow: none;
-}
-
-html[data-theme="classiccss"] .sidebar-head::before,
-html[data-theme="classiccss"] .detail-head::before,
-html[data-theme="classiccss"] .palette-head::before,
-html[data-theme="classiccss"] .drawer-head::before {
-  content: "Close";
-  position: absolute;
-  left: 6px;
-  padding: 0 4px;
-  background: var(--classic-surface);
-  color: var(--classic-black);
-  font-size: 9px;
-  font-weight: 400;
-  line-height: 1.2;
-}
-
-html[data-theme="classiccss"] .sidebar-head::after,
-html[data-theme="classiccss"] .detail-head::after,
-html[data-theme="classiccss"] .palette-head::after,
-html[data-theme="classiccss"] .drawer-head::after {
-  content: "Zoom";
-  position: absolute;
-  right: 6px;
-  padding: 0 4px;
-  background: var(--classic-surface);
-  color: var(--classic-black);
-  font-size: 9px;
-  font-weight: 400;
-  line-height: 1.2;
-}
-
-html[data-theme="classiccss"] .settings-panel .palette-head::after,
-html[data-theme="classiccss"] .drawer-head::after {
-  right: 58px;
 }
 
 html[data-theme="classiccss"] .palette-head > .eyebrow {

@@ -499,6 +499,26 @@ test("settings checkboxes use the active theme accent", async ({ page }) => {
     .toBe("rgb(85, 255, 255)");
 });
 
+test("Classic Mac title bars do not show Close or Zoom labels", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+  await page.locator("#settings-theme").selectOption("classiccss");
+  await page.locator("#settings-form").locator("button[type=submit]").click();
+  await page.locator("#settings-button").click();
+
+  await expect
+    .poll(() =>
+      page
+        .locator("#settings-form .palette-head")
+        .evaluate((element) => ({
+          before: element.ownerDocument.defaultView!.getComputedStyle(element, "::before").content,
+          after: element.ownerDocument.defaultView!.getComputedStyle(element, "::after").content,
+          paddingLeft: element.ownerDocument.defaultView!.getComputedStyle(element).paddingLeft,
+        })),
+    )
+    .toEqual({ before: "none", after: "none", paddingLeft: "16px" });
+});
+
 test("associates a credential reference through the browser form", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
