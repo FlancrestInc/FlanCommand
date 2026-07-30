@@ -8,6 +8,7 @@ coverage/
 probe-output/
 probe-output*/
 storage/
+scripts/
 test-results/
 transcripts/
 e2e-created*.txt
