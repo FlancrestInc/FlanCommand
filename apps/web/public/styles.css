@@ -3274,10 +3274,26 @@ html[data-theme="green"] .drawer-tab[aria-expanded="true"] {
 .live-activity {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  margin-top: 8px;
-  color: var(--muted);
-  font-size: 11px;
+  gap: 9px;
+  justify-self: start;
+  width: min(420px, 100%);
+  min-height: 52px;
+  padding: 12px 15px;
+  margin-top: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--ink);
+  box-shadow: 0 6px 18px color-mix(in oklab, var(--bg) 28%, transparent);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.live-activity > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .live-activity[hidden] {
   display: none;
