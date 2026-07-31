@@ -3,6 +3,7 @@ import {
   activityDetail,
   activityLabel,
   activitySummaryLabel,
+  chatBackgroundsForTheme,
   formatApiError,
   formatDuration,
   formatMessageTimestamp,
@@ -31,14 +32,11 @@ const state = {
   )
     ? localStorage.getItem("flan-theme")
     : "xp",
-  chatBackground: ["bliss", "clouds", "autumn", "3d-pipes", "azul", "none"].includes(
-    localStorage.getItem("flan-chat-background"),
-  )
-    ? localStorage.getItem("flan-chat-background")
-    : localStorage.getItem("flan-chat-background") === "custom" &&
-        localStorage.getItem("flan-custom-wallpaper")
+  chatBackground:
+    localStorage.getItem("flan-chat-background") === "custom" &&
+    localStorage.getItem("flan-custom-wallpaper")
       ? "custom"
-      : "bliss",
+      : localStorage.getItem("flan-chat-background") || "mac-checkerboard",
   events: [],
   activityExpanded: false,
   activitySummary: null,
@@ -494,12 +492,26 @@ function renderSettings() {
   $("settings-notifications").checked = state.settings.notifications;
   $("settings-compact").checked = state.settings.compactActivity;
   $("settings-theme").value = state.settings.theme;
-  $("settings-chat-background").value = state.settings.chatBackground || "bliss";
-  if (state.chatBackground === "custom") $("settings-chat-background").value = "custom";
+  renderChatBackgroundOptions(state.settings.theme, state.chatBackground);
   $("settings-chat-background-preview").textContent =
     state.chatBackground === "custom"
       ? "Using the custom wallpaper saved in this browser."
       : "Custom wallpaper stays in this browser.";
+}
+function renderChatBackgroundOptions(theme, preferredValue = state.chatBackground) {
+  const select = $("settings-chat-background");
+  const options = chatBackgroundsForTheme(theme);
+  select.replaceChildren(
+    ...options.map(({ value, label }) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      return option;
+    }),
+  );
+  select.value = options.some((item) => item.value === preferredValue)
+    ? preferredValue
+    : options[0].value;
 }
 async function saveSettings() {
   const saved = await api("/settings", {
@@ -2790,6 +2802,9 @@ $("settings-chat-background").addEventListener("change", (event) => {
     value === "custom"
       ? "Using the custom wallpaper saved in this browser."
       : "Custom wallpaper stays in this browser.";
+});
+$("settings-theme").addEventListener("change", (event) => {
+  renderChatBackgroundOptions(event.target.value);
 });
 $("settings-chat-background-upload").addEventListener("change", (event) => {
   const file = event.target.files?.[0];

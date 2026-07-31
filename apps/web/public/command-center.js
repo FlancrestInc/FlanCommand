@@ -121,3 +121,57 @@ export function sortNewest(items) {
       Date.parse(b.createdAt || b.updatedAt || "") - Date.parse(a.createdAt || a.updatedAt || ""),
   );
 }
+
+const sharedChatBackgrounds = [
+  { value: "none", label: "Plain desktop" },
+  { value: "custom", label: "Custom upload" },
+];
+
+const chatBackgroundsByTheme = {
+  xp: [
+    { value: "mac-checkerboard", label: "System 6 checkerboard" },
+    { value: "mac-dots", label: "System 6 dot field" },
+    { value: "mac-bricks", label: "System 6 brick pattern" },
+    { value: "mac-diagonal", label: "System 6 diagonal weave" },
+  ],
+  cga: [
+    { value: "cga-grid", label: "CGA cyan grid" },
+    { value: "cga-magenta", label: "CGA magenta raster" },
+    { value: "dos-blue", label: "DOS blue field" },
+  ],
+  amber: [
+    { value: "amber-phosphor", label: "Amber phosphor" },
+    { value: "amber-grid", label: "Amber scanline grid" },
+    { value: "amber-terminal", label: "Amber terminal" },
+  ],
+  green: [
+    { value: "green-phosphor", label: "Green phosphor" },
+    { value: "green-grid", label: "Green scanline grid" },
+    { value: "green-terminal", label: "Green terminal" },
+  ],
+  win98css: [
+    { value: "win98-clouds", label: "Windows 98 clouds" },
+    { value: "win98-teal-tile", label: "Windows 98 teal tile" },
+    { value: "win98-desk-tile", label: "Windows 98 desk tile" },
+    { value: "3d-pipes", label: "3D Pipes" },
+  ],
+  xpcss: [
+    { value: "bliss", label: "Bliss" },
+    { value: "azul", label: "Azul" },
+    { value: "xp-green-hills", label: "Green hills" },
+  ],
+  win7css: [
+    { value: "win7-aurora", label: "Windows 7 Aurora" },
+    { value: "win7-bloom", label: "Windows 7 Bloom" },
+    { value: "win7-ribbons", label: "Windows 7 ribbons" },
+  ],
+  classiccss: [
+    { value: "mac-platinum", label: "Mac OS 8 platinum" },
+    { value: "mac-os8-clouds", label: "Mac OS 8 clouds" },
+    { value: "mac-os9-aqua", label: "Mac OS 9 aqua" },
+  ],
+};
+
+export function chatBackgroundsForTheme(theme) {
+  return [...(chatBackgroundsByTheme[theme] || chatBackgroundsByTheme.xp), ...sharedChatBackgrounds];
+}

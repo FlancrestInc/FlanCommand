@@ -3643,6 +3643,70 @@ html[data-chat-background="none"] {
 html[data-chat-background="custom"] {
   --wallpaper: var(--custom-wallpaper, #d5d5d5);
 }
+html[data-chat-background="mac-checkerboard"] {
+  --wallpaper: repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 / 16px 16px;
+}
+html[data-chat-background="mac-dots"] {
+  --wallpaper: radial-gradient(#111 1px, transparent 1.5px) 0 0 / 8px 8px, #fff;
+}
+html[data-chat-background="mac-bricks"] {
+  --wallpaper: linear-gradient(90deg, #111 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(#111 1px, transparent 1px) 0 0 / 16px 16px, #fff;
+}
+html[data-chat-background="mac-diagonal"] {
+  --wallpaper: repeating-linear-gradient(135deg, #111 0 2px, #fff 2px 8px);
+}
+html[data-chat-background="cga-grid"] {
+  --wallpaper: linear-gradient(#00aaaa 1px, transparent 1px) 0 0 / 16px 16px, linear-gradient(90deg, #00aaaa 1px, transparent 1px) 0 0 / 16px 16px, #0000aa;
+}
+html[data-chat-background="cga-magenta"] {
+  --wallpaper: repeating-linear-gradient(0deg, #ff55ff 0 3px, #000 3px 7px);
+}
+html[data-chat-background="dos-blue"] {
+  --wallpaper: radial-gradient(circle at 25% 25%, #5555ff 0 2px, transparent 3px) 0 0 / 12px 12px, #0000aa;
+}
+html[data-chat-background="amber-phosphor"], html[data-chat-background="amber-terminal"] {
+  --wallpaper: radial-gradient(circle at 20% 30%, #ffb000 0 1px, transparent 1.5px) 0 0 / 9px 9px, #241400;
+}
+html[data-chat-background="amber-grid"] {
+  --wallpaper: linear-gradient(#5f3a00 1px, transparent 1px) 0 0 / 18px 18px, linear-gradient(90deg, #5f3a00 1px, transparent 1px) 0 0 / 18px 18px, #241400;
+}
+html[data-chat-background="green-phosphor"], html[data-chat-background="green-terminal"] {
+  --wallpaper: radial-gradient(circle at 20% 30%, #55ff55 0 1px, transparent 1.5px) 0 0 / 9px 9px, #002b00;
+}
+html[data-chat-background="green-grid"] {
+  --wallpaper: linear-gradient(#075507 1px, transparent 1px) 0 0 / 18px 18px, linear-gradient(90deg, #075507 1px, transparent 1px) 0 0 / 18px 18px, #002b00;
+}
+html[data-chat-background="win98-clouds"] {
+  --wallpaper: radial-gradient(ellipse at 20% 28%, #fff 0 6%, transparent 7%), radial-gradient(ellipse at 74% 18%, #fff 0 8%, transparent 9%), linear-gradient(#39a9e8 0 55%, #68b84a 55%);
+}
+html[data-chat-background="win98-teal-tile"] {
+  --wallpaper: repeating-linear-gradient(45deg, #008080 0 8px, #007070 8px 16px);
+}
+html[data-chat-background="win98-desk-tile"] {
+  --wallpaper: repeating-linear-gradient(0deg, #b58b5b 0 5px, #caa06b 5px 10px), #b58b5b;
+}
+html[data-chat-background="xp-green-hills"] {
+  --wallpaper: linear-gradient(170deg, #72c5f0 0 45%, #77bc45 45% 64%, #358d36 64% 77%, #1d632e 77%);
+}
+html[data-chat-background="win7-aurora"] {
+  --wallpaper: radial-gradient(ellipse at 70% 35%, #b9f5ff 0 3%, transparent 4%), linear-gradient(135deg, #071b4c, #1594c4 50%, #06183e);
+}
+html[data-chat-background="win7-bloom"] {
+  --wallpaper: radial-gradient(ellipse at 25% 20%, #dffaff 0 2%, transparent 3%), radial-gradient(ellipse at 70% 80%, #a4efff 0 5%, transparent 6%), linear-gradient(135deg, #0c2a6b, #35b9d6);
+}
+html[data-chat-background="win7-ribbons"] {
+  --wallpaper: repeating-linear-gradient(145deg, transparent 0 22px, #53d6e6 23px 27px, transparent 28px 52px), linear-gradient(135deg, #061b49, #1a78b8);
+}
+html[data-chat-background="mac-platinum"] {
+  --wallpaper: repeating-linear-gradient(0deg, #d8d8d8 0 2px, #c4c4c4 2px 4px);
+}
+html[data-chat-background="mac-os8-clouds"] {
+  --wallpaper: radial-gradient(ellipse at 25% 25%, #fff 0 7%, transparent 8%), radial-gradient(ellipse at 75% 35%, #fff 0 8%, transparent 9%), linear-gradient(#70b7e8 0 58%, #70a94a 58%);
+}
+html[data-chat-background="mac-os9-aqua"] {
+  --wallpaper: repeating-linear-gradient(135deg, #b7e8f2 0 12px, #85cddc 12px 24px);
+}
 
 body {
   font-family: var(--retro-font);

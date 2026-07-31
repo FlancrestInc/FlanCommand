@@ -1,7 +1,15 @@
 export type ReasoningEffort = "low" | "medium" | "high";
 export type SettingsTheme =
   "xp" | "cga" | "amber" | "green" | "win98css" | "xpcss" | "win7css" | "classiccss";
-export type ChatBackground = "bliss" | "clouds" | "autumn" | "3d-pipes" | "azul" | "none";
+export type ChatBackground =
+  | "mac-checkerboard" | "mac-dots" | "mac-bricks" | "mac-diagonal"
+  | "cga-grid" | "cga-magenta" | "dos-blue"
+  | "amber-phosphor" | "amber-grid" | "amber-terminal"
+  | "green-phosphor" | "green-grid" | "green-terminal"
+  | "win98-clouds" | "win98-teal-tile" | "win98-desk-tile" | "3d-pipes"
+  | "bliss" | "clouds" | "autumn" | "azul" | "xp-green-hills"
+  | "win7-aurora" | "win7-bloom" | "win7-ribbons"
+  | "mac-platinum" | "mac-os8-clouds" | "mac-os9-aqua" | "none";
 
 export interface UserSettings {
   defaultModel: string;
@@ -68,13 +76,14 @@ export function normalizeSettings(
           ? input.theme
           : base.theme,
     chatBackground:
-      input.chatBackground === "bliss" ||
-      input.chatBackground === "clouds" ||
-      input.chatBackground === "autumn" ||
-      input.chatBackground === "3d-pipes" ||
-      input.chatBackground === "azul" ||
-      input.chatBackground === "none"
-        ? input.chatBackground
+      [
+        "mac-checkerboard", "mac-dots", "mac-bricks", "mac-diagonal", "cga-grid", "cga-magenta",
+        "dos-blue", "amber-phosphor", "amber-grid", "amber-terminal", "green-phosphor", "green-grid",
+        "green-terminal", "win98-clouds", "win98-teal-tile", "win98-desk-tile", "3d-pipes", "bliss", "clouds", "autumn",
+        "azul", "xp-green-hills", "win7-aurora", "win7-bloom", "win7-ribbons", "mac-platinum",
+        "mac-os8-clouds", "mac-os9-aqua", "none",
+      ].includes(input.chatBackground as ChatBackground)
+        ? (input.chatBackground as ChatBackground)
         : base.chatBackground,
     compactActivity:
       typeof input.compactActivity === "boolean" ? input.compactActivity : base.compactActivity,

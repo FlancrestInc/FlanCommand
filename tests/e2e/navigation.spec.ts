@@ -211,6 +211,40 @@ test("exposes live status and a visible keyboard focus", async ({ page }) => {
   await expect(page.locator("#settings-close")).toBeFocused();
 });
 
+test("updates wallpaper choices when the theme changes", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+  const wallpaper = page.locator("#settings-chat-background");
+  await expect(wallpaper.locator("option")).toHaveCount(6);
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "System 6 checkerboard",
+    "System 6 dot field",
+    "System 6 brick pattern",
+    "System 6 diagonal weave",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+
+  await page.locator("#settings-theme").selectOption("win98css");
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "Windows 98 clouds",
+    "Windows 98 teal tile",
+    "Windows 98 desk tile",
+    "3D Pipes",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+
+  await page.locator("#settings-theme").selectOption("win7css");
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "Windows 7 Aurora",
+    "Windows 7 Bloom",
+    "Windows 7 ribbons",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+});
+
 test("registers the offline app shell without caching API data", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(async () => {
