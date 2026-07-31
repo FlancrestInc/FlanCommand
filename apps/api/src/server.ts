@@ -225,6 +225,33 @@ function sse(response: ServerResponse, event: string, data: unknown): void {
   response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
+const sseKeepAliveIntervalMs = 15_000;
+
+function startSseKeepAlive(response: ServerResponse): () => void {
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    clearInterval(timer);
+  };
+  const timer = setInterval(() => {
+    if (response.destroyed) {
+      stop();
+      return;
+    }
+    try {
+      // Tool calls and model inference can be quiet for longer than a proxy's
+      // idle timeout. A comment is valid SSE and is ignored by the client.
+      response.write(": keepalive\n\n");
+    } catch {
+      stop();
+    }
+  }, sseKeepAliveIntervalMs);
+  timer.unref?.();
+  response.once("close", stop);
+  return stop;
+}
+
 async function body(
   request: IncomingMessage,
   maxBytes = 1_048_576,
@@ -1948,9 +1975,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
         }
         response.writeHead(200, {
           "content-type": "text/event-stream; charset=utf-8",
-          "cache-control": "no-cache",
+          "cache-control": "no-cache, no-transform",
           connection: "keep-alive",
+          "x-accel-buffering": "no",
         });
+        startSseKeepAlive(response);
         try {
           sse(response, "snapshot", { text: terminalManager.history(terminal.id) });
           for await (const chunk of terminalManager.stream(terminal.id)) {
@@ -3063,9 +3092,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
         await persistMetadata();
         response.writeHead(200, {
           "content-type": "text/event-stream; charset=utf-8",
-          "cache-control": "no-cache",
+          "cache-control": "no-cache, no-transform",
           connection: "keep-alive",
+          "x-accel-buffering": "no",
         });
+        startSseKeepAlive(response);
         sse(response, "message", state.messages[state.messages.length - 1]);
         await jobQueue.enqueue(job.id, async () => {
           await updateJob(job, { status: "running" });

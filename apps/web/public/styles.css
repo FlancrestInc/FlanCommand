@@ -6760,6 +6760,37 @@ html[data-theme="classiccss"] .drawer-tab[aria-expanded="true"] {
   color: var(--classic-white);
 }
 
+/* Code blocks use a dark editor surface in every theme. Keep the source text
+   and syntax tokens explicitly bright so theme-level bubble colors cannot
+   collapse the contrast back to black-on-black. */
+.message .code-block pre,
+.message .code-block pre code,
+.message .code-block .code-line {
+  color: #f5f7fa;
+  text-shadow: none;
+}
+
+.message .code-block .syntax-keyword {
+  color: #d8b4fe;
+}
+
+.message .code-block .syntax-string {
+  color: #bef264;
+}
+
+.message .code-block .syntax-number,
+.message .code-block .syntax-constant {
+  color: #fdba74;
+}
+
+.message .code-block .syntax-comment {
+  color: #a8b5c0;
+}
+
+.message .code-block .code-line::before {
+  color: #a8b5c0;
+}
+
 @media (max-width: 720px) {
   html[data-theme="classiccss"] .topbar {
     min-height: 44px;

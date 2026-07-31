@@ -204,7 +204,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v26"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v28"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {
@@ -1245,6 +1245,8 @@ describe("API BFF", () => {
     });
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toMatch(/^text\/event-stream/);
+    expect(response.headers.get("cache-control")).toBe("no-cache, no-transform");
+    expect(response.headers.get("x-accel-buffering")).toBe("no");
     const body = await response.text();
     expect(body).toContain('event: agent\ndata: {"type":"run.started"');
     expect(body).toContain('event: agent\ndata: {"type":"message.delta"');
