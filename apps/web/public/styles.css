@@ -2125,6 +2125,9 @@ kbd {
   .detail-panel {
     display: none;
   }
+  .detail-panel.side-drawer.open {
+    display: block;
+  }
 }
 @media (max-width: 720px) {
   .topbar {

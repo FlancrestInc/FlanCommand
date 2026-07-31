@@ -63,6 +63,7 @@ test("dismisses a notification from the notifications drawer", async ({ page }) 
 });
 
 test("renders the run details drawer above the chat surface", async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 900 });
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
 
@@ -73,6 +74,9 @@ test("renders the run details drawer above the chat surface", async ({ page }) =
   await expect(page.locator("#activity")).toBeVisible();
   await expect(page.locator("#detail-panel")).toHaveCSS("visibility", "visible");
   await expect(page.locator("#detail-panel")).toHaveCSS("opacity", "1");
+  const detailPanel = await page.locator("#detail-panel").boundingBox();
+  expect(detailPanel?.width).toBeGreaterThan(0);
+  expect(detailPanel?.height).toBeGreaterThan(0);
 });
 
 test("shows conversation actions in the recent conversations menu", async ({ page }) => {
@@ -221,7 +225,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v26");
+    const cache = await browser.caches.open("flancommand-shell-v27");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
