@@ -7062,6 +7062,13 @@ html[data-theme="classiccss"] .composer-note {
 html[data-chat-background] .chat-column {
   background: transparent;
 }
+html[data-chat-background] .chat-column::before,
+html[data-chat-background] .chat-column::after {
+  display: block;
+}
+html[data-chat-background] .chat-column::before {
+  background: var(--wallpaper);
+}
 html[data-chat-background] .message-scroll {
   background: transparent !important;
 }
