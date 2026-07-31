@@ -179,7 +179,9 @@ describe("API BFF", () => {
     expect(shell.status).toBe(200);
     expect(shell.headers.get("content-security-policy")).toContain("script-src 'self'");
     expect(shell.headers.get("x-content-type-options")).toBe("nosniff");
-    expect(await shell.text()).toContain('rel="manifest"');
+    const shellText = await shell.text();
+    expect(shellText).toContain('rel="manifest"');
+    expect(shellText).toContain('href="/favicon.png"');
 
     const approvalPage = await fetch(`${base}/approval-review.html`);
     expect(approvalPage.status).toBe(200);
@@ -197,6 +199,11 @@ describe("API BFF", () => {
       start_url: "/",
     });
 
+    const favicon = await fetch(`${base}/favicon.png`);
+    expect(favicon.status).toBe(200);
+    expect(favicon.headers.get("content-type")).toContain("image/png");
+    expect((await favicon.arrayBuffer()).byteLength).toBeGreaterThan(0);
+
     const icon = await fetch(`${base}/icon.svg`);
     expect(icon.status).toBe(200);
     expect(icon.headers.get("content-type")).toContain("image/svg+xml");
@@ -204,7 +211,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v28"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v29"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {

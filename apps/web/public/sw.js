@@ -1,4 +1,4 @@
-const CACHE_NAME = "flancommand-shell-v28";
+const CACHE_NAME = "flancommand-shell-v29";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -10,7 +10,7 @@ const SHELL_ASSETS = [
   "/file-library.js",
   "/unified-diff.js",
   "/manifest.webmanifest",
-  "/icon.svg",
+  "/favicon.png",
 ];
 
 self.addEventListener("install", (event) => {

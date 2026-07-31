@@ -1178,6 +1178,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
             ".js": "text/javascript; charset=utf-8",
             ".webmanifest": "application/manifest+json; charset=utf-8",
             ".svg": "image/svg+xml",
+            ".png": "image/png",
           };
           response.writeHead(200, {
             "content-type": types[extname(safePath)] ?? "application/octet-stream",
