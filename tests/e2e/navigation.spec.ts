@@ -259,7 +259,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v27");
+    const cache = await browser.caches.open("flancommand-shell-v31");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -502,17 +502,18 @@ test("switches and persists the supported classic and BOOTSTRA.386 themes", asyn
   await page.goto("/");
   await page.locator("#settings-button").click();
   await expect(page.locator("#settings-backdrop")).toBeVisible();
-  await page.locator("#settings-theme").selectOption("xp");
+  await page.locator("#settings-theme").selectOption("win98css");
   await page.locator("#settings-chat-background").selectOption("3d-pipes");
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
   await page.locator("#settings-form").locator("button[type=submit]").click();
 
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
   await expect(page.locator("#settings-theme option[value=dark]")).toHaveCount(0);
   await expect(page.locator("#settings-theme option[value=light]")).toHaveCount(0);
   await expect(page.locator("#settings-button")).toBeVisible();
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
 
   for (const theme of ["cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"]) {

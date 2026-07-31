@@ -32,6 +32,7 @@ const state = {
   )
     ? localStorage.getItem("flan-theme")
     : "xp",
+  themeChangeVersion: 0,
   chatBackground:
     localStorage.getItem("flan-chat-background") === "custom" &&
     localStorage.getItem("flan-custom-wallpaper")
@@ -460,9 +461,15 @@ async function load() {
     toast(error.message);
   }
 }
-function applySettings(settings) {
+function applyChatBackground(background) {
+  state.chatBackground = background;
+  document.documentElement.dataset.chatBackground = background;
+  localStorage.setItem("flan-chat-background", background);
+}
+function applySettings(settings, { preserveTheme = false } = {}) {
   state.settings = settings;
-  state.theme = settings.theme;
+  state.theme = preserveTheme ? state.theme : settings.theme;
+  if (preserveTheme) state.settings = { ...settings, theme: state.theme };
   state.chatBackground =
     localStorage.getItem("flan-chat-background") === "custom" &&
     localStorage.getItem("flan-custom-wallpaper")
@@ -477,8 +484,11 @@ function applySettings(settings) {
   document.body.classList.toggle("compact-activity", settings.compactActivity);
 }
 async function loadSettings() {
+  const themeChangeVersion = state.themeChangeVersion;
   try {
-    applySettings(await api("/settings"));
+    applySettings(await api("/settings"), {
+      preserveTheme: themeChangeVersion !== state.themeChangeVersion,
+    });
   } catch {
     state.settings = null;
   }
@@ -514,6 +524,7 @@ function renderChatBackgroundOptions(theme, preferredValue = state.chatBackgroun
     : options[0].value;
 }
 async function saveSettings() {
+  const selectedBackground = $("settings-chat-background").value;
   const saved = await api("/settings", {
     method: "POST",
     body: JSON.stringify({
@@ -525,12 +536,13 @@ async function saveSettings() {
       compactActivity: $("settings-compact").checked,
       theme: $("settings-theme").value,
       chatBackground:
-        $("settings-chat-background").value === "custom"
-          ? "bliss"
-          : $("settings-chat-background").value,
+        selectedBackground === "custom"
+          ? state.settings?.chatBackground || "bliss"
+          : selectedBackground,
     }),
   });
   applySettings(saved);
+  if (selectedBackground === "custom") applyChatBackground("custom");
   $("settings-backdrop").hidden = true;
   toast("Settings saved.");
 }
@@ -2770,15 +2782,34 @@ $("dev-toggle").addEventListener("click", () => {
   panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 $("theme-toggle").addEventListener("click", () => {
-  state.theme = themeOrder[(themeOrder.indexOf(state.theme) + 1) % themeOrder.length];
-  document.documentElement.dataset.theme = state.theme;
-  localStorage.setItem("flan-theme", state.theme);
-  $("theme-toggle").setAttribute("aria-label", `Switch theme. Current: ${themeNames[state.theme]}`);
-  $("send-icon").textContent = themeSendIcons[state.theme] || "↑";
+  const previousTheme = state.theme;
+  const nextTheme = themeOrder[(themeOrder.indexOf(state.theme) + 1) % themeOrder.length];
+  const themeChangeVersion = ++state.themeChangeVersion;
+  state.theme = nextTheme;
+  if (state.settings) state.settings = { ...state.settings, theme: nextTheme };
+  document.documentElement.dataset.theme = nextTheme;
+  localStorage.setItem("flan-theme", nextTheme);
+  $("theme-toggle").setAttribute("aria-label", `Switch theme. Current: ${themeNames[nextTheme]}`);
+  $("send-icon").textContent = themeSendIcons[nextTheme] || "↑";
   if (state.settings)
-    void api("/settings", { method: "POST", body: JSON.stringify({ theme: state.theme }) }).then(
-      applySettings,
-    );
+    void api("/settings", { method: "POST", body: JSON.stringify({ theme: nextTheme }) })
+      .then((saved) => {
+        if (themeChangeVersion !== state.themeChangeVersion) return;
+        state.settings = { ...state.settings, ...saved, theme: nextTheme };
+      })
+      .catch((error) => {
+        if (themeChangeVersion !== state.themeChangeVersion) return;
+        state.theme = previousTheme;
+        if (state.settings) state.settings = { ...state.settings, theme: previousTheme };
+        document.documentElement.dataset.theme = previousTheme;
+        localStorage.setItem("flan-theme", previousTheme);
+        $("theme-toggle").setAttribute(
+          "aria-label",
+          `Switch theme. Current: ${themeNames[previousTheme]}`,
+        );
+        $("send-icon").textContent = themeSendIcons[previousTheme] || "↑";
+        toast(error.message);
+      });
 });
 $("settings-button").addEventListener("click", () => void openSettings());
 $("settings-form").addEventListener("submit", async (event) => {
@@ -2798,6 +2829,7 @@ $("settings-chat-background").addEventListener("change", (event) => {
     toast("Upload a custom image first.");
     return;
   }
+  applyChatBackground(value);
   $("settings-chat-background-preview").textContent =
     value === "custom"
       ? "Using the custom wallpaper saved in this browser."
