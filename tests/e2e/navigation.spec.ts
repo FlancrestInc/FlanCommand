@@ -245,6 +245,48 @@ test("updates wallpaper choices when the theme changes", async ({ page }) => {
   ]);
 });
 
+test("renders the selected wallpaper behind chat content", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+
+  await page.locator("#settings-chat-background").selectOption("mac-dots");
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "mac-dots");
+  await expect(page.locator(".chat-column")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".message-scroll")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect
+    .poll(async () =>
+      page
+        .locator(".chat-column")
+        .evaluate(
+          (element) =>
+            element.ownerDocument.defaultView?.getComputedStyle(element, "::before")
+              .backgroundImage,
+        ),
+    )
+    .toMatch(/radial-gradient/);
+
+  await page.locator("#settings-chat-background-upload").setInputFiles({
+    name: "wallpaper.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "custom");
+  await expect
+    .poll(async () =>
+      page
+        .locator(".chat-column")
+        .evaluate(
+          (element) =>
+            element.ownerDocument.defaultView?.getComputedStyle(element, "::before")
+              .backgroundImage,
+        ),
+    )
+    .toContain("data:image/png");
+});
+
 test("registers the offline app shell without caching API data", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(async () => {

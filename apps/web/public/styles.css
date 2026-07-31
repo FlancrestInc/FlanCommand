@@ -7057,3 +7057,11 @@ html[data-theme="classiccss"] .composer-note {
 .session-entry:has(.session-menu:not([hidden])) {
   z-index: 31;
 }
+
+/* Keep the selected wallpaper visible behind every retro theme's chat content. */
+html[data-chat-background] .chat-column {
+  background: transparent;
+}
+html[data-chat-background] .message-scroll {
+  background: transparent !important;
+}
