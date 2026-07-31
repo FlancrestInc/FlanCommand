@@ -913,7 +913,7 @@ h1 {
 }
 .session-menu {
   position: absolute;
-  z-index: 2;
+  z-index: 40;
   top: 42px;
   right: 6px;
   left: 6px;
@@ -3440,8 +3440,9 @@ html[data-theme="green"] .drawer-tab[aria-expanded="true"] {
   content: "−";
 }
 .sidebar-section .session-list {
-  max-height: 35vh;
-  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
 }
 @media (max-width: 720px) {
   .side-drawer {
@@ -6882,4 +6883,26 @@ html[data-theme="classiccss"] .composer-note {
   min-height: 28px;
   align-items: center;
   line-height: 1.25;
+}
+
+/* Keep the run-details surface and its controls above the chat layer. */
+.detail-panel.side-drawer {
+  z-index: 12;
+  isolation: isolate;
+}
+.detail-panel.side-drawer.open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+/* Menus may extend below the recent list; let the sidebar scroll instead of clipping them. */
+.sidebar-section:has(.session-menu:not([hidden])) {
+  position: relative;
+  z-index: 30;
+}
+.session-entry:has(.session-menu:not([hidden])) {
+  z-index: 31;
 }

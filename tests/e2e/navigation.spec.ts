@@ -62,6 +62,19 @@ test("dismisses a notification from the notifications drawer", async ({ page }) 
   await expect(page.locator(".notification-card")).toHaveCount(0);
 });
 
+test("renders the run details drawer above the chat surface", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
+
+  await page.locator("#details-tab").click();
+  await expect(page.locator("#detail-panel")).toHaveClass(/open/);
+  await expect(page.locator("#detail-panel")).toContainText("CURRENT FOCUS");
+  await expect(page.locator("#focus-title")).toBeVisible();
+  await expect(page.locator("#activity")).toBeVisible();
+  await expect(page.locator("#detail-panel")).toHaveCSS("visibility", "visible");
+  await expect(page.locator("#detail-panel")).toHaveCSS("opacity", "1");
+});
+
 test("shows conversation actions in the recent conversations menu", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
@@ -69,8 +82,8 @@ test("shows conversation actions in the recent conversations menu", async ({ pag
   const menuToggle = page.locator("[data-session-menu-toggle]").first();
   await expect(menuToggle).toBeVisible();
   const menuToggleIsTopmost = await menuToggle.evaluate((element) => {
-    const box = (element as any).getBoundingClientRect();
-    const topmost = (element as any).ownerDocument.elementFromPoint(
+    const box = element.getBoundingClientRect();
+    const topmost = element.ownerDocument.elementFromPoint(
       box.left + box.width / 2,
       box.top + box.height / 2,
     );
@@ -87,6 +100,17 @@ test("shows conversation actions in the recent conversations menu", async ({ pag
   await expect(menu.locator("[data-session-action='pin']")).toBeVisible();
   await expect(menu.locator("[data-session-action='rename']")).toBeVisible();
   await expect(menu.locator("[data-session-project]")).toBeVisible();
+  const archiveIsTopmost = await menu
+    .locator("[data-session-action='archive']")
+    .evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const topmost = element.ownerDocument.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return topmost === element || element.contains(topmost);
+    });
+  expect(archiveIsTopmost).toBe(true);
 });
 
 test("dismisses all notifications from the notifications drawer", async ({ page }) => {
@@ -197,7 +221,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v25");
+    const cache = await browser.caches.open("flancommand-shell-v26");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
