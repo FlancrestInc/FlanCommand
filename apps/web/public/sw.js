@@ -1,4 +1,4 @@
-const CACHE_NAME = "flancommand-shell-v30";
+const CACHE_NAME = "flancommand-shell-v31";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -9,6 +9,7 @@ const SHELL_ASSETS = [
   "/chat-recovery.js",
   "/file-library.js",
   "/unified-diff.js",
+  "/stream-render.js",
   "/manifest.webmanifest",
   "/favicon.png",
 ];

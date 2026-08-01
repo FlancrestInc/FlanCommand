@@ -15,6 +15,7 @@ import {
 import { recoveryForSendFailure } from "./chat-recovery.js";
 import { filterFiles, previewKind } from "./file-library.js";
 import { buildUnifiedDiff } from "./unified-diff.js";
+import { createFrameBatcher } from "./stream-render.js";
 
 if ("serviceWorker" in navigator) {
   void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {});
@@ -120,6 +121,12 @@ const themeSendIcons = {
 };
 const themeOrder = ["xp", "cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"];
 const $ = (id) => document.getElementById(id);
+const rawEventRenderer = createFrameBatcher(() => {
+  $("raw-events").textContent = state.events.map((item) => JSON.stringify(item)).join("\n");
+});
+const messageScrollRenderer = createFrameBatcher(() => {
+  $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
+});
 document.documentElement.dataset.theme = state.theme;
 document.documentElement.dataset.chatBackground = state.chatBackground;
 if (localStorage.getItem("flan-custom-wallpaper"))
@@ -2094,7 +2101,7 @@ function addActivity(event) {
   const label = activityLabel(event);
   state.events.push(event);
   if (state.events.length > 120) state.events.shift();
-  $("raw-events").textContent = state.events.map((item) => JSON.stringify(item)).join("\n");
+  rawEventRenderer.request(state.events);
   if (!label) return;
   const item = activityRow(event, label);
   const activity = $("activity");
@@ -2306,6 +2313,10 @@ async function send(text) {
     let buffer = "";
     let liveText = "";
     const live = () => document.querySelector("#live-message .bubble");
+    const liveRenderer = createFrameBatcher((value) => {
+      const liveBubble = live();
+      if (liveBubble) liveBubble.innerHTML = renderText(value);
+    });
     const ensureLiveMessage = () => {
       if (!live()) {
         appendLiveAssistantMessage();
@@ -2356,18 +2367,22 @@ async function send(text) {
             shouldSeparateAssistantMessage(event) &&
             (event.type === "message.completed" || liveText.trim().length > 0)
           ) {
+            liveRenderer.flush();
             completeLiveAssistantMessage();
             liveText = "";
           }
           if (event.type === "message.delta") {
             liveText += event.text;
             const liveBubble = ensureLiveMessage();
-            if (liveBubble) liveBubble.innerHTML = renderText(liveText);
+            if (liveBubble) liveRenderer.request(liveText);
           }
         }
       }
-      $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
+      messageScrollRenderer.request(true);
     }
+    liveRenderer.flush();
+    rawEventRenderer.flush();
+    messageScrollRenderer.flush();
     const completedActivity = state.activitySummary;
     await openSession(state.activeId);
     renderCompletedActivityChip(completedActivity);

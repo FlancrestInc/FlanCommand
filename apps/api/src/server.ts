@@ -225,6 +225,10 @@ function sse(response: ServerResponse, event: string, data: unknown): void {
   response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
+export function shouldPersistAgentEvent(event: AgentEvent): boolean {
+  return event.type !== "message.delta";
+}
+
 const sseKeepAliveIntervalMs = 15_000;
 
 function startSseKeepAlive(response: ServerResponse): () => void {
@@ -809,82 +813,141 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
         }
       };
-      for await (const event of stream) {
-        const events = runEventLog.get(job.id) ?? [];
-        events.push(event);
-        if (events.length > 256) events.splice(0, events.length - 256);
-        runEventLog.set(job.id, events);
-        if (event.type === "run.started")
-          await updateJob(job, { runId: event.runId, status: "running" });
-        if (event.type === "approval.requested") {
-          const createdAt = new Date().toISOString();
-          const actionHash = createHash("sha256")
-            .update(JSON.stringify(event.approval))
-            .digest("hex");
-          approvals.set(event.approval.id, {
-            id: event.approval.id,
-            actionHash,
-            action: "command",
-            description: event.approval.description || event.approval.action,
-            sessionId: state.session.id,
-            projectId: state.projectId,
-            runId: event.runId,
-            anchorMessageId: state.messages.at(-1)?.id,
-            evaluation: {
-              decision: "approval",
+      const recoverInterruptedStream = async (): Promise<void> => {
+        const runId =
+          job.runId ??
+          state.activeRunId ??
+          [...state.messages].reverse().find((message) => message.status === "working")?.runId ??
+          `recovered-${job.id}`;
+        const recordRecoveryEvent = async (event: AgentEvent): Promise<void> => {
+          const events = runEventLog.get(job.id) ?? [];
+          events.push(event);
+          if (events.length > 256) events.splice(0, events.length - 256);
+          runEventLog.set(job.id, events);
+          applyEvent(state, event);
+          await persistMetadata();
+          if (response && !response.destroyed) sse(response, "agent", event);
+        };
+
+        for (;;) {
+          await adapter.connect();
+          const resumed = await adapter.resumeSession(state.session.id);
+          state.session = { ...state.session, ...resumed };
+          const latestAssistant = [...(resumed.history ?? [])]
+            .reverse()
+            .find((message) => message.role === "assistant");
+          const current = activeAssistantForRun(state, runId);
+          const currentText = current?.text ?? "";
+          if (latestAssistant?.text.startsWith(currentText)) {
+            const delta = latestAssistant.text.slice(currentText.length);
+            if (delta)
+              await recordRecoveryEvent({
+                type: "message.delta",
+                runId,
+                sessionId: state.session.id,
+                text: delta,
+              });
+          }
+          if (resumed.status !== "running") {
+            await recordRecoveryEvent({
+              type: "message.completed",
+              runId,
+              sessionId: state.session.id,
+              messageId: `${runId}-message`,
+            });
+            await recordRecoveryEvent({
+              type: "run.completed",
+              runId,
+              sessionId: state.session.id,
+              summary: latestAssistant ? { text: latestAssistant.text } : undefined,
+            });
+            await updateJob(job, { status: "completed", progress: 100 });
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      };
+      try {
+        for await (const event of stream) {
+          const events = runEventLog.get(job.id) ?? [];
+          events.push(event);
+          if (events.length > 256) events.splice(0, events.length - 256);
+          runEventLog.set(job.id, events);
+          if (event.type === "run.started")
+            await updateJob(job, { runId: event.runId, status: "running" });
+          if (event.type === "approval.requested") {
+            const createdAt = new Date().toISOString();
+            const actionHash = createHash("sha256")
+              .update(JSON.stringify(event.approval))
+              .digest("hex");
+            approvals.set(event.approval.id, {
+              id: event.approval.id,
+              actionHash,
               action: "command",
-              reason: "Hermes requested approval for an action.",
-              boundary: "conversation",
-            },
-            decision: "pending",
-            createdAt,
-          });
-          job.status = "waiting_for_approval";
-          const reviewUrl = approvalReviewUrl(event.approval.id);
-          await notify(
-            {
+              description: event.approval.description || event.approval.action,
+              sessionId: state.session.id,
+              projectId: state.projectId,
+              runId: event.runId,
+              anchorMessageId: state.messages.at(-1)?.id,
+              evaluation: {
+                decision: "approval",
+                action: "command",
+                reason: "Hermes requested approval for an action.",
+                boundary: "conversation",
+              },
+              decision: "pending",
+              createdAt,
+            });
+            job.status = "waiting_for_approval";
+            const reviewUrl = approvalReviewUrl(event.approval.id);
+            await notify(
+              {
+                kind: "approval",
+                title: "Hermes needs approval",
+                body: event.approval.description || event.approval.action,
+                approvalId: event.approval.id,
+                jobId: job.id,
+                reviewUrl,
+              },
+              {
+                title: "Hermes needs approval",
+                body: event.approval.description || event.approval.action,
+                url: reviewUrl,
+              },
+            );
+          }
+          if (event.type === "credential.requested") {
+            await updateJob(job, {
+              status: "waiting_for_credential",
+              credentialRequest: event.credential,
+            });
+            await notify({
               kind: "approval",
-              title: "Hermes needs approval",
-              body: event.approval.description || event.approval.action,
-              approvalId: event.approval.id,
+              title: "Hermes needs a credential",
+              body: `${event.credential.name}: ${event.credential.purpose ?? "Credential access is required."}`,
               jobId: job.id,
-              reviewUrl,
-            },
-            {
-              title: "Hermes needs approval",
-              body: event.approval.description || event.approval.action,
-              url: reviewUrl,
-            },
-          );
+            });
+          }
+          if (event.type === "artifact.created") await importArtifact(event);
+          applyEvent(state, event);
+          if (event.type === "run.completed")
+            await updateJob(job, { status: "completed", progress: 100 });
+          if (event.type === "run.failed") {
+            await updateJob(job, { status: "failed", error: event.error });
+            await notify({
+              kind: "job",
+              title: "Hermes run failed",
+              body: event.error.message,
+              jobId: job.id,
+            });
+          }
+          if (event.type === "run.stopped") await updateJob(job, { status: "canceled" });
+          if (shouldPersistAgentEvent(event)) await persistMetadata();
+          if (response && !response.destroyed) sse(response, "agent", event);
         }
-        if (event.type === "credential.requested") {
-          await updateJob(job, {
-            status: "waiting_for_credential",
-            credentialRequest: event.credential,
-          });
-          await notify({
-            kind: "approval",
-            title: "Hermes needs a credential",
-            body: `${event.credential.name}: ${event.credential.purpose ?? "Credential access is required."}`,
-            jobId: job.id,
-          });
-        }
-        if (event.type === "artifact.created") await importArtifact(event);
-        applyEvent(state, event);
-        if (event.type === "run.completed")
-          await updateJob(job, { status: "completed", progress: 100 });
-        if (event.type === "run.failed") {
-          await updateJob(job, { status: "failed", error: event.error });
-          await notify({
-            kind: "job",
-            title: "Hermes run failed",
-            body: event.error.message,
-            jobId: job.id,
-          });
-        }
-        if (event.type === "run.stopped") await updateJob(job, { status: "canceled" });
-        await persistMetadata();
-        if (response && !response.destroyed) sse(response, "agent", event);
+      } catch (error) {
+        if (!isRecoverableTransportError(error)) throw error;
+        await recoverInterruptedStream();
       }
       if (response && !response.destroyed) sse(response, "state", sessionPayload(state));
     } catch (error) {
@@ -3135,6 +3198,13 @@ function isEphemeralSessionId(id: string): boolean {
 
 function isMissingHermesSessionError(error: unknown): boolean {
   return error instanceof HermesAdapterError && /4007\b.*session not found/i.test(error.message);
+}
+
+function isRecoverableTransportError(error: unknown): boolean {
+  return (
+    error instanceof HermesAdapterError &&
+    ["TRANSPORT_CLOSED", "TRANSPORT_STREAM_FAILED", "TRANSPORT_CONNECT_FAILED"].includes(error.code)
+  );
 }
 
 function safeError(error: unknown): SafeError {

@@ -8,7 +8,7 @@ import type { AgentEvent, HermesSession } from "@flancommand/event-schema";
 import { HermesAdapterError, type HermesAdapter } from "@flancommand/hermes-adapter";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createApiServer } from "./server.js";
+import { createApiServer, shouldPersistAgentEvent } from "./server.js";
 import { FileStore } from "./file-store.js";
 import { TerminalManager } from "./terminal.js";
 import type { CredentialProvider } from "./credential-broker.js";
@@ -21,6 +21,10 @@ const sessions: HermesSession[] = [
 function makeAdapter(
   events: AgentEvent[] = [],
   missingResume = false,
+  options: {
+    resumeResponses?: HermesSession[];
+    streamError?: HermesAdapterError;
+  } = {},
 ): HermesAdapter & {
   resumed: string[];
   connects: number;
@@ -38,6 +42,7 @@ function makeAdapter(
   const provided: Array<{ sessionId: string; requestId: string; value: string }> = [];
   const attached: Array<{ kind: string; sessionId: string; name: string; contentBase64: string }> =
     [];
+  const resumeResponses = [...(options.resumeResponses ?? [])];
   return {
     stopped,
     resumed,
@@ -86,6 +91,7 @@ function makeAdapter(
           operation: "resumeSession",
           retryable: true,
         });
+      if (resumeResponses.length) return resumeResponses.shift()!;
       return {
         id,
         source: "hermes",
@@ -101,6 +107,7 @@ function makeAdapter(
     renameSession: async () => {},
     sendMessage: async function* (_sessionId, input) {
       sent.push(input.text);
+      if (options.streamError) throw options.streamError;
       for (const event of events) yield event;
     },
     stopRun: async (runId) => {
@@ -172,6 +179,73 @@ async function start(
 }
 
 describe("API BFF", () => {
+  it("does not durably write every tiny response delta", () => {
+    expect(
+      shouldPersistAgentEvent({
+        type: "message.delta",
+        runId: "run-1",
+        sessionId: "session-1",
+        text: "a",
+      }),
+    ).toBe(false);
+    expect(
+      shouldPersistAgentEvent({
+        type: "message.completed",
+        runId: "run-1",
+        sessionId: "session-1",
+        messageId: "message-1",
+      }),
+    ).toBe(true);
+  });
+
+  it("continues a response after a transport stream drop", async () => {
+    const streamError = new HermesAdapterError({
+      code: "TRANSPORT_STREAM_FAILED",
+      message: "Hermes WebSocket transport failed: WebSocket closed.",
+      operation: "sendMessage",
+      retryable: true,
+    });
+    const adapter = makeAdapter([], false, {
+      streamError,
+      resumeResponses: [
+        { id: "session-1", source: "hermes", status: "idle", history: [] },
+        {
+          id: "session-1",
+          source: "hermes",
+          status: "running",
+          history: [
+            { role: "user", text: "Recover this response" },
+            { role: "assistant", text: "partial" },
+          ],
+        },
+        {
+          id: "session-1",
+          source: "hermes",
+          status: "idle",
+          history: [
+            { role: "user", text: "Recover this response" },
+            { role: "assistant", text: "partial answer" },
+          ],
+        },
+      ],
+    });
+    const base = await start(adapter);
+    const response = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Recover this response" }),
+    });
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('"type":"message.delta"');
+    expect(body).toContain('"text":"partial"');
+    expect(body).toContain('"text":" answer"');
+    expect(body).toContain('"type":"run.completed"');
+    expect(body).not.toContain('"event":"error"');
+    expect(adapter.sent).toEqual(["Recover this response"]);
+    expect(adapter.resumed).toEqual(["session-1", "session-1", "session-1"]);
+  });
   it("serves an installable browser shell with security headers", async () => {
     const base = await start(makeAdapter());
 
@@ -211,7 +285,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v30"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v31"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {
