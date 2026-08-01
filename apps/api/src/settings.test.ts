@@ -55,5 +55,9 @@ describe("settings", () => {
 
   it("accepts classic chat backgrounds", () => {
     expect(normalizeSettings({ chatBackground: "3d-pipes" }).chatBackground).toBe("3d-pipes");
+    expect(normalizeSettings({ chatBackground: "mac-checkerboard" }).chatBackground).toBe(
+      "mac-checkerboard",
+    );
+    expect(normalizeSettings({ chatBackground: "win7-aurora" }).chatBackground).toBe("win7-aurora");
   });
 });

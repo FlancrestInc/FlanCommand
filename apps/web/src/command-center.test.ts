@@ -4,6 +4,7 @@ import {
   activityDetail,
   activityLabel,
   activitySummaryLabel,
+  chatBackgroundsForTheme,
   formatApiError,
   formatDuration,
   formatMessageTimestamp,
@@ -77,5 +78,18 @@ describe("command center presentation helpers", () => {
       jobActions({ id: "job-1", status: "failed", prompt: "Try again", sessionId: "session-1" }),
     ).toEqual(["retry", "duplicate"]);
     expect(jobActions({ id: "job-2", status: "completed" })).toEqual([]);
+  });
+
+  it("provides theme-specific wallpaper choices", () => {
+    expect(chatBackgroundsForTheme("xp").map((item) => item.value)).toEqual([
+      "mac-checkerboard",
+      "mac-dots",
+      "mac-bricks",
+      "mac-diagonal",
+      "none",
+      "custom",
+    ]);
+    expect(chatBackgroundsForTheme("win98css").map((item) => item.value)).toContain("win98-teal-tile");
+    expect(chatBackgroundsForTheme("unknown").map((item) => item.value)).toContain("mac-dots");
   });
 });

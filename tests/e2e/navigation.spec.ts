@@ -211,6 +211,82 @@ test("exposes live status and a visible keyboard focus", async ({ page }) => {
   await expect(page.locator("#settings-close")).toBeFocused();
 });
 
+test("updates wallpaper choices when the theme changes", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+  const wallpaper = page.locator("#settings-chat-background");
+  await expect(wallpaper.locator("option")).toHaveCount(6);
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "System 6 checkerboard",
+    "System 6 dot field",
+    "System 6 brick pattern",
+    "System 6 diagonal weave",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+
+  await page.locator("#settings-theme").selectOption("win98css");
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "Windows 98 clouds",
+    "Windows 98 teal tile",
+    "Windows 98 desk tile",
+    "3D Pipes",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+
+  await page.locator("#settings-theme").selectOption("win7css");
+  expect(await wallpaper.locator("option").allTextContents()).toEqual([
+    "Windows 7 Aurora",
+    "Windows 7 Bloom",
+    "Windows 7 ribbons",
+    "Plain desktop",
+    "Custom upload",
+  ]);
+});
+
+test("renders the selected wallpaper behind chat content", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#settings-button").click();
+
+  await page.locator("#settings-chat-background").selectOption("mac-dots");
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "mac-dots");
+  await expect(page.locator(".chat-column")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".message-scroll")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect
+    .poll(async () =>
+      page
+        .locator(".chat-column")
+        .evaluate(
+          (element) =>
+            element.ownerDocument.defaultView?.getComputedStyle(element, "::before")
+              .backgroundImage,
+        ),
+    )
+    .toMatch(/radial-gradient/);
+
+  await page.locator("#settings-chat-background-upload").setInputFiles({
+    name: "wallpaper.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "custom");
+  await expect
+    .poll(async () =>
+      page
+        .locator(".chat-column")
+        .evaluate(
+          (element) =>
+            element.ownerDocument.defaultView?.getComputedStyle(element, "::before")
+              .backgroundImage,
+        ),
+    )
+    .toContain("data:image/png");
+});
+
 test("registers the offline app shell without caching API data", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(async () => {
@@ -225,7 +301,7 @@ test("registers the offline app shell without caching API data", async ({ page }
         open(name: string): Promise<{ keys(): Promise<Array<{ url: string }>> }>;
       };
     };
-    const cache = await browser.caches.open("flancommand-shell-v27");
+    const cache = await browser.caches.open("flancommand-shell-v33");
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cacheEntries).toContain("/index.html");
@@ -468,17 +544,18 @@ test("switches and persists the supported classic and BOOTSTRA.386 themes", asyn
   await page.goto("/");
   await page.locator("#settings-button").click();
   await expect(page.locator("#settings-backdrop")).toBeVisible();
-  await page.locator("#settings-theme").selectOption("xp");
+  await page.locator("#settings-theme").selectOption("win98css");
   await page.locator("#settings-chat-background").selectOption("3d-pipes");
+  await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
   await page.locator("#settings-form").locator("button[type=submit]").click();
 
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
   await expect(page.locator("#settings-theme option[value=dark]")).toHaveCount(0);
   await expect(page.locator("#settings-theme option[value=light]")).toHaveCount(0);
   await expect(page.locator("#settings-button")).toBeVisible();
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "xp");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "win98css");
   await expect(page.locator("html")).toHaveAttribute("data-chat-background", "3d-pipes");
 
   for (const theme of ["cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"]) {

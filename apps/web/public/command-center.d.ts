@@ -28,3 +28,4 @@ export function jobActions(job: {
   status?: string;
 }): string[];
 export function sortNewest<T extends { createdAt?: string; updatedAt?: string }>(items: T[]): T[];
+export function chatBackgroundsForTheme(theme: string): Array<{ value: string; label: string }>;
