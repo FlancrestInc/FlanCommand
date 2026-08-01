@@ -9,13 +9,12 @@ import {
   jobActions,
   jobStatusLabel,
   runtimeMonitorLabel,
-  shouldSeparateAssistantMessage,
   sortNewest,
 } from "./command-center.js";
-import { recoveryForSendFailure } from "./chat-recovery.js";
 import { filterFiles, previewKind } from "./file-library.js";
 import { buildUnifiedDiff } from "./unified-diff.js";
 import { createFrameBatcher } from "./stream-render.js";
+import { createSessionEventStream } from "./session-events.js";
 
 if ("serviceWorker" in navigator) {
   void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {});
@@ -26,7 +25,10 @@ const state = {
   folders: [],
   activeId: null,
   running: false,
-  abort: null,
+  eventStream: null,
+  eventCursor: 0,
+  activeRunIds: new Set(),
+  liveTexts: new Map(),
   theme: ["xp", "cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"].includes(
     localStorage.getItem("flan-theme"),
   )
@@ -86,7 +88,6 @@ const state = {
   sideDrawerKind: null,
   sideDrawerTrigger: null,
   pendingText: "",
-  recovering: false,
   memory: null,
   filesystemPicker: {
     open: false,
@@ -378,6 +379,88 @@ function bindMessageAttachmentActions(container) {
       ),
     );
 }
+function setRunUi(running) {
+  state.running = running;
+  $("run-strip").hidden = !running;
+  $("run-status").textContent = running ? "ACTIVE" : "IDLE";
+  $("run-label").textContent = running ? "Hermes is working" : "Hermes is ready";
+  $("stop-run").hidden = !running;
+  $("reconnect-run").hidden = true;
+  $("send-button").disabled = false;
+}
+function activeRunIdsFromSession(session) {
+  return new Set(
+    (session.messages || [])
+      .filter((message) => message.role === "assistant" && message.status === "working")
+      .map((message) => message.runId)
+      .filter(Boolean),
+  );
+}
+function applySessionSnapshot(snapshot) {
+  if (!snapshot?.session || snapshot.session.id !== state.activeId) return;
+  state.eventCursor = Number.isFinite(snapshot.cursor) ? snapshot.cursor : state.eventCursor;
+  renderSession(snapshot.session);
+}
+function assistantArticleForRun(runId) {
+  const messageId = `message-${runId}`;
+  return [...document.querySelectorAll("[data-message-id]")].find(
+    (article) => article.dataset.messageId === messageId,
+  );
+}
+function updateLiveAssistant(event) {
+  if (event.type === "message.delta") {
+    const text = `${state.liveTexts.get(event.runId) || ""}${event.text}`;
+    state.liveTexts.set(event.runId, text);
+    let article = assistantArticleForRun(event.runId);
+    if (!article) {
+      appendLiveAssistantMessage(event.runId);
+      article = assistantArticleForRun(event.runId);
+    }
+    const bubble = article?.querySelector(".bubble");
+    if (bubble) bubble.innerHTML = renderText(text);
+    return;
+  }
+  if (event.type === "message.completed" || event.type === "run.completed") {
+    const article = assistantArticleForRun(event.runId);
+    const meta = article?.querySelector(".message-meta");
+    if (meta) meta.firstChild.textContent = "Hermes · complete";
+  }
+}
+function handleSessionAgentEvent(event, cursor) {
+  const numericCursor = Number(cursor);
+  if (Number.isFinite(numericCursor) && numericCursor <= state.eventCursor) return;
+  if (Number.isFinite(numericCursor)) state.eventCursor = numericCursor;
+  if (event.type === "run.started") state.activeRunIds.add(event.runId);
+  if (["run.completed", "run.failed", "run.stopped"].includes(event.type))
+    state.activeRunIds.delete(event.runId);
+  addActivity(event);
+  updateLiveAssistant(event);
+  if (event.type === "approval.requested") {
+    state.approvals = [
+      ...state.approvals.filter((item) => item.id !== event.approval.id),
+      {
+        id: event.approval.id,
+        description: event.approval.description || event.approval.action,
+        sessionId: state.activeId,
+        decision: "pending",
+        evaluation: { risk: "Review" },
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    renderConversationApprovals(state.activeId);
+  }
+  setRunUi(state.activeRunIds.size > 0);
+  messageScrollRenderer.request(true);
+}
+function connectSessionEventStream(sessionId) {
+  state.eventStream?.close();
+  state.eventCursor = 0;
+  state.eventStream = createSessionEventStream(sessionId, {
+    onSnapshot: applySessionSnapshot,
+    onAgent: handleSessionAgentEvent,
+    onError: () => setConnection("offline", false),
+  });
+}
 function renderSession(session) {
   const changingSession = state.activeId !== session.id;
   state.activeId = session.id;
@@ -388,8 +471,21 @@ function renderSession(session) {
     state.toolStartedAt = null;
     state.toolElapsedSeconds = null;
     state.toolElapsedCompleted = false;
+    state.events = [];
+    state.activitySummary = null;
+    state.activeRunIds = activeRunIdsFromSession(session);
+    state.liveTexts.clear();
+    $("raw-events").textContent = "No events yet.";
+    $("activity").innerHTML =
+      '<div class="activity-empty"><span>✦</span><p>Listening for Hermes activity…</p></div>';
     renderRunMonitors();
   }
+  state.activeRunIds = activeRunIdsFromSession(session);
+  state.liveTexts = new Map(
+    (session.messages || [])
+      .filter((message) => message.role === "assistant" && message.runId)
+      .map((message) => [message.runId, message.text]),
+  );
   localStorage.setItem("flan-active-session", session.id);
   $("session-title").textContent = session.title || "Untitled conversation";
   $("session-meta").textContent =
@@ -413,6 +509,7 @@ function renderSession(session) {
   renderConversationApprovals(session.id);
   $("welcome").style.display = session.messages?.length ? "none" : "block";
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
+  setRunUi(state.activeRunIds.size > 0 || session.status === "running");
   renderSessions();
 }
 function bindRetryActions(container) {
@@ -1790,57 +1887,16 @@ async function updateSessionOrganization(sessionId, patch) {
 async function updateOrganization(patch) {
   return updateSessionOrganization(state.activeId, patch);
 }
-async function reconnectActiveSessionIfNeeded(session) {
-  const hasWorkingMessage = (session.messages || []).some(
-    (message) => message.status === "working",
-  );
-  if (session.status !== "running" && !hasWorkingMessage) return false;
-  const refreshed = await api(`/sessions/${encodeURIComponent(session.id)}/reconnect`, {
-    method: "POST",
-    body: JSON.stringify({ after: state.events.length }),
-  });
-  renderSession(refreshed);
-  for (const event of refreshed.replay || []) addActivity(event);
-  await loadJobs();
-  const stillRunning = refreshed.reconnect?.status === "running";
-  state.running = stillRunning;
-  $("run-strip").hidden = !stillRunning;
-  $("run-status").textContent = stillRunning ? "ACTIVE" : "IDLE";
-  $("run-label").textContent = stillRunning
-    ? "Hermes is still working after FlanCommand restarted."
-    : "Hermes completed while FlanCommand was restarting.";
-  $("stop-run").hidden = !stillRunning;
-  $("reconnect-run").hidden = !stillRunning;
-  $("send-button").disabled = stillRunning;
-  if (!stillRunning) toast("Recovered the completed Hermes run after FlanCommand restarted.");
-  return true;
-}
-async function retryInterruptedSession(id) {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 10000)));
-    try {
-      const session = await api(`/sessions/${encodeURIComponent(id)}`);
-      await reconnectActiveSessionIfNeeded(session);
-      if (!state.running) {
-        state.recovering = false;
-        $("run-strip").hidden = true;
-        $("run-status").textContent = "IDLE";
-        $("send-button").disabled = false;
-        return;
-      }
-    } catch {
-      // The container may still be rebuilding. Continue with bounded backoff.
-    }
-  }
-}
 async function openSession(id) {
   try {
+    state.eventStream?.close();
+    state.eventStream = null;
     const session = await api(`/sessions/${encodeURIComponent(id)}`);
     state.pendingAttachments = [];
     renderSession(session);
     renderFiles();
     await loadCommands(id);
-    await reconnectActiveSessionIfNeeded(session);
+    connectSessionEventStream(id);
     closeSideDrawer({ restoreFocus: false });
   } catch (error) {
     toast(error.message);
@@ -2230,200 +2286,44 @@ function activityRow(event, label = activityLabel(event)) {
   }
   return item;
 }
-function appendLiveAssistantMessage(at = new Date().toISOString()) {
+function appendLiveAssistantMessage(runId, at = new Date().toISOString()) {
   $("messages").insertAdjacentHTML(
     "beforeend",
-    `<article class="message assistant" id="live-message" data-message-id="live-assistant-${Date.now()}"><div class="bubble"></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
+    `<article class="message assistant" data-message-id="message-${escapeHtml(runId)}"><div class="bubble"></div><span class="message-meta">Hermes · working<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time></span></article>`,
   );
-  const liveActivity = $("live-activity");
-  if (liveActivity) $("messages").append(liveActivity);
-}
-function removeLiveActivity() {
-  $("live-activity")?.remove();
-}
-function completeLiveAssistantMessage(at = new Date().toISOString()) {
-  const liveMessage = $("live-message");
-  if (!liveMessage) return;
-  liveMessage.removeAttribute("id");
-  const meta = liveMessage.querySelector(".message-meta");
-  if (meta)
-    meta.innerHTML = `Hermes · complete<time datetime="${escapeHtml(at)}">${escapeHtml(formatMessageTimestamp(at))}</time>`;
 }
 async function send(text) {
-  if (state.running || !state.activeId) return;
-  state.running = true;
-  $("send-button").disabled = true;
+  if (!state.activeId) return;
   state.pendingText = text;
-  state.recovering = false;
   const attachmentIds = [...state.pendingAttachments];
-  const attachmentRecords = attachmentIds
-    .map((id) => state.files.find((file) => file.id === id))
-    .filter(Boolean);
-  state.events = [];
-  state.activitySummary = null;
-  state.startedAt = null;
-  state.elapsedSeconds = null;
-  state.elapsedCompleted = false;
-  state.toolStartedAt = null;
-  state.toolElapsedSeconds = null;
-  state.toolElapsedCompleted = false;
-  renderRunMonitors();
-  $("raw-events").textContent = "No events yet.";
-  $("activity").innerHTML =
-    '<div class="activity-empty"><span>✦</span><p>Listening for Hermes activity…</p></div>';
-  $("run-strip").hidden = false;
-  $("stop-run").hidden = false;
-  $("reconnect-run").hidden = true;
-  $("run-status").textContent = "ACTIVE";
-  $("run-label").textContent = "Hermes is working";
-  $("focus-title").textContent = "Working on your request";
-  const controller = new AbortController();
-  state.abort = controller;
-  const messages = $("messages");
-  $("welcome").style.display = "none";
-  const userMessageAt = new Date().toISOString();
-  messages.insertAdjacentHTML(
-    "beforeend",
-    renderChatMessage({
-      id: `live-user-${Date.now()}`,
-      role: "user",
-      text,
-      at: userMessageAt,
-      status: "complete",
-      ...(attachmentRecords.length ? { attachments: attachmentRecords } : {}),
-    }),
-  );
-  bindMessageAttachmentActions(messages);
-  messages.insertAdjacentHTML(
-    "beforeend",
-    '<div class="live-activity chat-working-status" id="live-activity" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Hermes is working…</span></div>',
-  );
+  setRunUi(true);
   clearComposer();
-  $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
   try {
-    const response = await fetch(`/api/sessions/${encodeURIComponent(state.activeId)}/messages`, {
+    const result = await api(`/sessions/${encodeURIComponent(state.activeId)}/messages`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ text, ...(attachmentIds.length ? { fileIds: attachmentIds } : {}) }),
-      signal: controller.signal,
     });
-    if (!response.ok || !response.body) throw new Error("Hermes did not accept the message");
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let liveText = "";
-    const live = () => document.querySelector("#live-message .bubble");
-    const liveRenderer = createFrameBatcher((value) => {
-      const liveBubble = live();
-      if (liveBubble) liveBubble.innerHTML = renderText(value);
-    });
-    const ensureLiveMessage = () => {
-      if (!live()) {
-        appendLiveAssistantMessage();
+    if (result.message) {
+      const messages = $("messages");
+      if (!messages.querySelector(`[data-message-id="${CSS.escape(result.message.id)}"]`)) {
+        messages.insertAdjacentHTML("beforeend", renderChatMessage(result.message));
+        bindMessageAttachmentActions(messages);
       }
-      return live();
-    };
-    while (true) {
-      const part = await reader.read();
-      if (part.done) break;
-      buffer += decoder.decode(part.value, { stream: true });
-      const records = buffer.split("\n\n");
-      buffer = records.pop() || "";
-      for (const record of records) {
-        const data = record
-          .split("\n")
-          .find((line) => line.startsWith("data: "))
-          ?.slice(6);
-        const eventName = record
-          .split("\n")
-          .find((line) => line.startsWith("event: "))
-          ?.slice(7);
-        if (!data) continue;
-        const event = JSON.parse(data);
-        if (eventName === "session" && event.type === "replaced" && event.session?.id) {
-          state.activeId = event.session.id;
-          continue;
-        }
-        if (eventName === "error") {
-          throw new Error(event.error?.message || "Hermes rejected the message.");
-        }
-        if (eventName === "agent") {
-          addActivity(event);
-          if (event.type === "approval.requested") {
-            state.approvals = [
-              ...state.approvals.filter((item) => item.id !== event.approval.id),
-              {
-                id: event.approval.id,
-                description: event.approval.description || event.approval.action,
-                sessionId: state.activeId,
-                decision: "pending",
-                evaluation: { risk: "Review" },
-                createdAt: new Date().toISOString(),
-              },
-            ];
-            renderConversationApprovals(state.activeId);
-          }
-          if (
-            shouldSeparateAssistantMessage(event) &&
-            (event.type === "message.completed" || liveText.trim().length > 0)
-          ) {
-            liveRenderer.flush();
-            completeLiveAssistantMessage();
-            liveText = "";
-          }
-          if (event.type === "message.delta") {
-            liveText += event.text;
-            const liveBubble = ensureLiveMessage();
-            if (liveBubble) liveRenderer.request(liveText);
-          }
-        }
-      }
-      messageScrollRenderer.request(true);
+      $("welcome").style.display = "none";
+      $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
     }
-    liveRenderer.flush();
-    rawEventRenderer.flush();
-    messageScrollRenderer.flush();
-    const completedActivity = state.activitySummary;
-    await openSession(state.activeId);
-    renderCompletedActivityChip(completedActivity);
+    await loadSessions();
+    await loadJobs();
     state.pendingText = "";
-    state.draft = "";
     state.pendingAttachments = [];
     renderFiles();
     localStorage.removeItem("flan-draft");
   } catch (error) {
-    const recovery = recoveryForSendFailure(error, text);
-    if (recovery) {
-      const liveBubble = document.querySelector("#live-message .bubble");
-      if (liveBubble) liveBubble.textContent = error.message;
-      $("composer-input").value = recovery.draft;
-      state.draft = recovery.draft;
-      localStorage.setItem("flan-draft", recovery.draft);
-      state.recovering = true;
-      $("send-button").disabled = true;
-      removeLiveActivity();
-      $("run-label").textContent = "Connection lost. Your message is saved.";
-      $("stop-run").hidden = true;
-      $("reconnect-run").hidden = false;
-      toast(error.message);
-      void retryInterruptedSession(state.activeId);
-    } else {
-      const liveBubble = document.querySelector("#live-message .bubble");
-      if (liveBubble) liveBubble.textContent = error.message;
-      removeLiveActivity();
-      toast(error.message);
-    }
-  } finally {
-    state.running = false;
-    state.abort = null;
-    if (!state.recovering) {
-      removeLiveActivity();
-      $("run-strip").hidden = true;
-      $("run-status").textContent = "IDLE";
-      $("send-button").disabled = false;
-    } else {
-      $("run-status").textContent = "RECONNECT";
-    }
+    setRunUi(state.activeRunIds.size > 0);
+    $("composer-input").value = text;
+    state.draft = text;
+    localStorage.setItem("flan-draft", text);
+    toast(error.message);
   }
 }
 $("composer").addEventListener("submit", (event) => {
@@ -2505,7 +2405,6 @@ $("filesystem-use-folder").addEventListener("click", () => {
   hideFilesystemPicker();
 });
 $("stop-run").addEventListener("click", async () => {
-  if (state.abort) state.abort.abort();
   if (state.activeId)
     try {
       await api(`/sessions/${encodeURIComponent(state.activeId)}/stop`, { method: "POST" });
@@ -2518,25 +2417,8 @@ $("reconnect-run").addEventListener("click", async () => {
   const button = $("reconnect-run");
   button.disabled = true;
   try {
-    const refreshed = await api(`/sessions/${encodeURIComponent(state.activeId)}/reconnect`, {
-      method: "POST",
-      body: JSON.stringify({ after: state.events.length }),
-    });
-    renderSession(refreshed);
-    for (const event of refreshed.replay || []) addActivity(event);
-    await loadJobs();
-    state.recovering = false;
-    const stillRunning = refreshed.reconnect?.status === "running";
-    state.running = stillRunning;
-    $("run-strip").hidden = !stillRunning;
-    $("run-status").textContent = stillRunning ? "ACTIVE" : "IDLE";
-    $("run-label").textContent = stillRunning
-      ? "Hermes is still working. Refresh again when it settles."
-      : "Hermes is working";
-    $("stop-run").hidden = !stillRunning;
-    $("reconnect-run").hidden = !stillRunning;
-    $("send-button").disabled = stillRunning;
-    toast("Session refreshed. Check the latest job before sending again.");
+    await openSession(state.activeId);
+    toast("Session stream reconnected.");
   } catch (error) {
     toast(error.message);
   } finally {
