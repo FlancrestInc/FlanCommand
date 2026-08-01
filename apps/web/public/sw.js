@@ -1,4 +1,4 @@
-const CACHE_NAME = "flancommand-shell-v33";
+const CACHE_NAME = "flancommand-shell-v34";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -10,6 +10,7 @@ const SHELL_ASSETS = [
   "/file-library.js",
   "/unified-diff.js",
   "/stream-render.js",
+  "/session-events.js",
   "/manifest.webmanifest",
   "/favicon.png",
 ];

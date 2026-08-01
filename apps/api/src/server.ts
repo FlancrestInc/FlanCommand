@@ -57,6 +57,7 @@ import { isAllowedRequestOrigin, parseAllowedOrigins } from "./request-security.
 import { hasTrustedIdentity, readAuthConfig, type RequestAuthConfig } from "./request-auth.js";
 import { RateLimiter, readRateLimitConfig } from "./rate-limit.js";
 import { JobQueue } from "./job-queue.js";
+import { SessionEventHub } from "./session-events.js";
 
 interface ChatMessage {
   id: string;
@@ -221,8 +222,10 @@ function json(response: ServerResponse, status: number, body: unknown): void {
   response.end(text);
 }
 
-function sse(response: ServerResponse, event: string, data: unknown): void {
-  response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+function sse(response: ServerResponse, event: string, data: unknown, id?: number): void {
+  response.write(
+    `${id === undefined ? "" : `id: ${id}\n`}event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+  );
 }
 
 export function shouldPersistAgentEvent(event: AgentEvent): boolean {
@@ -484,6 +487,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
     options.maxConcurrentJobs ??
       (Number.isInteger(configuredJobLimit) && configuredJobLimit > 0 ? configuredJobLimit : 2),
   );
+  const sessionEventHub = new SessionEventHub();
   const runEventLog = new Map<string, AgentEvent[]>();
   const notifications = new Map<string, NotificationRecord>();
   const notificationAdapters =
@@ -623,6 +627,83 @@ export function createApiServer(options: ApiServerOptions = {}) {
     Object.assign(job, patch, { updatedAt: new Date().toISOString() });
     await persistMetadata();
   };
+  const recordAgentEvent = async (
+    job: JobRecord,
+    state: SessionState,
+    event: AgentEvent,
+  ): Promise<void> => {
+    const events = runEventLog.get(job.id) ?? [];
+    events.push(event);
+    if (events.length > 256) events.splice(0, events.length - 256);
+    runEventLog.set(job.id, events);
+    applyEvent(state, event);
+    sessionEventHub.publish(state.session.id, event);
+    if (shouldPersistAgentEvent(event)) await persistMetadata();
+  };
+  const recoverJobFromHistory = async (job: JobRecord, state: SessionState): Promise<void> => {
+    const runId =
+      job.runId ??
+      state.activeRunId ??
+      [...state.messages].reverse().find((message) => message.status === "working")?.runId ??
+      `recovered-${job.id}`;
+    for (;;) {
+      if (["canceled", "completed", "failed"].includes(job.status)) return;
+      await adapter.connect();
+      const resumed = await adapter.resumeSession(state.session.id);
+      state.session = { ...state.session, ...resumed };
+      const latestAssistant = [...(resumed.history ?? [])]
+        .reverse()
+        .find((message) => message.role === "assistant");
+      const current = activeAssistantForRun(state, runId);
+      const currentText = current?.text ?? "";
+      if (latestAssistant?.text.startsWith(currentText)) {
+        const delta = latestAssistant.text.slice(currentText.length);
+        if (delta)
+          await recordAgentEvent(job, state, {
+            type: "message.delta",
+            runId,
+            sessionId: state.session.id,
+            text: delta,
+          });
+      }
+      if (resumed.status !== "running") {
+        if (resumed.status === "failed") {
+          const error: SafeError = {
+            code: "RECOVERED_HERMES_FAILURE",
+            message: "Hermes reported a failed run while FlanCommand was reconnecting.",
+            component: "flancommand-recovery",
+            operation: "session.resume",
+            retryable: true,
+          };
+          await recordAgentEvent(job, state, {
+            type: "run.failed",
+            runId,
+            sessionId: state.session.id,
+            error,
+          });
+          await updateJob(job, { status: "failed", error });
+        } else {
+          await recordAgentEvent(job, state, {
+            type: "message.completed",
+            runId,
+            sessionId: state.session.id,
+            messageId: `${runId}-message`,
+          });
+          await recordAgentEvent(job, state, {
+            type: "run.completed",
+            runId,
+            sessionId: state.session.id,
+            summary: latestAssistant ? { text: latestAssistant.text } : undefined,
+          });
+          await updateJob(job, { status: "completed", progress: 100 });
+        }
+        await persistMetadata();
+        return;
+      }
+      await updateJob(job, { status: "running" });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  };
   const recreateLostSession = async (
     job: JobRecord,
     state: SessionState,
@@ -682,7 +763,6 @@ export function createApiServer(options: ApiServerOptions = {}) {
     job: JobRecord,
     state: SessionState,
     text: string,
-    response?: ServerResponse,
     requiresResume = state.messages.length > 0,
   ): Promise<void> => {
     try {
@@ -700,10 +780,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           resumedSessions.add(state.session.id);
         } catch (error) {
           if (isMissingHermesSessionError(error)) {
-            const replacement = await recreateLostSession(job, state);
-            if (!response?.destroyed) {
-              sse(response!, "session", { type: "replaced", session: replacement });
-            }
+            await recreateLostSession(job, state);
           } else if (requiresResume) {
             throw error;
           }
@@ -813,66 +890,8 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
         }
       };
-      const recoverInterruptedStream = async (): Promise<void> => {
-        const runId =
-          job.runId ??
-          state.activeRunId ??
-          [...state.messages].reverse().find((message) => message.status === "working")?.runId ??
-          `recovered-${job.id}`;
-        const recordRecoveryEvent = async (event: AgentEvent): Promise<void> => {
-          const events = runEventLog.get(job.id) ?? [];
-          events.push(event);
-          if (events.length > 256) events.splice(0, events.length - 256);
-          runEventLog.set(job.id, events);
-          applyEvent(state, event);
-          await persistMetadata();
-          if (response && !response.destroyed) sse(response, "agent", event);
-        };
-
-        for (;;) {
-          await adapter.connect();
-          const resumed = await adapter.resumeSession(state.session.id);
-          state.session = { ...state.session, ...resumed };
-          const latestAssistant = [...(resumed.history ?? [])]
-            .reverse()
-            .find((message) => message.role === "assistant");
-          const current = activeAssistantForRun(state, runId);
-          const currentText = current?.text ?? "";
-          if (latestAssistant?.text.startsWith(currentText)) {
-            const delta = latestAssistant.text.slice(currentText.length);
-            if (delta)
-              await recordRecoveryEvent({
-                type: "message.delta",
-                runId,
-                sessionId: state.session.id,
-                text: delta,
-              });
-          }
-          if (resumed.status !== "running") {
-            await recordRecoveryEvent({
-              type: "message.completed",
-              runId,
-              sessionId: state.session.id,
-              messageId: `${runId}-message`,
-            });
-            await recordRecoveryEvent({
-              type: "run.completed",
-              runId,
-              sessionId: state.session.id,
-              summary: latestAssistant ? { text: latestAssistant.text } : undefined,
-            });
-            await updateJob(job, { status: "completed", progress: 100 });
-            return;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      };
       try {
         for await (const event of stream) {
-          const events = runEventLog.get(job.id) ?? [];
-          events.push(event);
-          if (events.length > 256) events.splice(0, events.length - 256);
-          runEventLog.set(job.id, events);
           if (event.type === "run.started")
             await updateJob(job, { runId: event.runId, status: "running" });
           if (event.type === "approval.requested") {
@@ -929,7 +948,6 @@ export function createApiServer(options: ApiServerOptions = {}) {
             });
           }
           if (event.type === "artifact.created") await importArtifact(event);
-          applyEvent(state, event);
           if (event.type === "run.completed")
             await updateJob(job, { status: "completed", progress: 100 });
           if (event.type === "run.failed") {
@@ -942,14 +960,12 @@ export function createApiServer(options: ApiServerOptions = {}) {
             });
           }
           if (event.type === "run.stopped") await updateJob(job, { status: "canceled" });
-          if (shouldPersistAgentEvent(event)) await persistMetadata();
-          if (response && !response.destroyed) sse(response, "agent", event);
+          await recordAgentEvent(job, state, event);
         }
       } catch (error) {
         if (!isRecoverableTransportError(error)) throw error;
-        await recoverInterruptedStream();
+        await recoverJobFromHistory(job, state);
       }
-      if (response && !response.destroyed) sse(response, "state", sessionPayload(state));
     } catch (error) {
       const failure = safeError(error);
       const activeRunId =
@@ -965,11 +981,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           sessionId: state.session.id,
           error: failure,
         };
-        const events = runEventLog.get(job.id) ?? [];
-        events.push(failureEvent);
-        runEventLog.set(job.id, events.slice(-256));
-        applyEvent(state, failureEvent);
-        if (response && !response.destroyed) sse(response, "agent", failureEvent);
+        await recordAgentEvent(job, state, failureEvent);
       } else {
         state.session.status = "failed";
       }
@@ -980,10 +992,8 @@ export function createApiServer(options: ApiServerOptions = {}) {
         body: "The background run failed.",
         jobId: job.id,
       });
-      if (response && !response.destroyed) sse(response, "error", { error: failure });
     } finally {
-      await persistMetadata();
-      if (response && !response.destroyed) response.end();
+      if (!["completed", "failed", "canceled"].includes(job.status)) await persistMetadata();
     }
   };
 
@@ -993,11 +1003,36 @@ export function createApiServer(options: ApiServerOptions = {}) {
       if (job.status !== "paused" || !job.sessionId) continue;
       const state = sessions.get(job.sessionId);
       if (!state) continue;
+      const recoveryRunId =
+        job.runId ??
+        state.activeRunId ??
+        [...state.messages].reverse().find((message) => message.status === "working")?.runId ??
+        `recovered-${job.id}`;
       try {
         await adapter.connect();
         const resumed = await adapter.resumeSession(job.sessionId);
         state.session = { ...state.session, ...resumed };
-        if (resumed.status === "running" || !resumed.history?.length) continue;
+        if (resumed.status === "running") {
+          await updateJob(job, { status: "running" });
+          const monitor = async (): Promise<void> => {
+            for (;;) {
+              if (["canceled", "completed", "failed"].includes(job.status)) return;
+              try {
+                await recoverJobFromHistory(job, state);
+                return;
+              } catch (error) {
+                if (!isRecoverableTransportError(error)) throw error;
+                await new Promise((resolve) => setTimeout(resolve, 500));
+              }
+            }
+          };
+          void monitor().catch(async (error) => {
+            await updateJob(job, { status: "paused", error: safeError(error) });
+          });
+          recovered += 1;
+          continue;
+        }
+        if (!resumed.history?.length) continue;
         state.messages = resumed.history.map((message, index) => ({
           id: `hermes-recovered-${job.id}-${index}`,
           role: message.role,
@@ -1029,25 +1064,23 @@ export function createApiServer(options: ApiServerOptions = {}) {
             : {}),
         };
         Object.assign(job, patch, { updatedAt: new Date().toISOString() });
-        if (job.runId) {
-          const events = runEventLog.get(job.id) ?? [];
-          events.push(
-            terminalStatus === "completed"
-              ? {
-                  type: "run.completed",
-                  runId: job.runId,
-                  sessionId: job.sessionId,
-                  summary: { text: assistant.text },
-                }
-              : {
-                  type: "run.failed",
-                  runId: job.runId,
-                  sessionId: job.sessionId,
-                  error: patch.error!,
-                },
-          );
-          runEventLog.set(job.id, events.slice(-256));
-        }
+        const events = runEventLog.get(job.id) ?? [];
+        events.push(
+          terminalStatus === "completed"
+            ? {
+                type: "run.completed",
+                runId: recoveryRunId,
+                sessionId: job.sessionId,
+                summary: { text: assistant.text },
+              }
+            : {
+                type: "run.failed",
+                runId: recoveryRunId,
+                sessionId: job.sessionId,
+                error: patch.error!,
+              },
+        );
+        runEventLog.set(job.id, events.slice(-256));
         recovered += 1;
       } catch {
         // Leave ambiguous jobs paused. The existing manual reconnect/retry path remains available.
@@ -2941,6 +2974,31 @@ export function createApiServer(options: ApiServerOptions = {}) {
         json(response, 200, sessionPayload(state));
         return;
       }
+      if (request.method === "GET" && parts.length === 4 && parts[3] === "events") {
+        const headerCursor = request.headers["last-event-id"];
+        const rawAfter =
+          url.searchParams.get("after") ?? (typeof headerCursor === "string" ? headerCursor : "0");
+        const after = Number.isFinite(Number(rawAfter))
+          ? Math.max(0, Math.floor(Number(rawAfter)))
+          : 0;
+        response.writeHead(200, {
+          "content-type": "text/event-stream; charset=utf-8",
+          "cache-control": "no-cache, no-transform",
+          connection: "keep-alive",
+          "x-accel-buffering": "no",
+        });
+        startSseKeepAlive(response);
+        const unsubscribe = sessionEventHub.subscribe(sessionId, (record) => {
+          if (!response.destroyed) sse(response, "agent", record.event, record.cursor);
+        });
+        response.once("close", unsubscribe);
+        const cursor = sessionEventHub.currentCursor(sessionId);
+        sse(response, "snapshot", { session: sessionPayload(state), cursor });
+        for (const record of sessionEventHub.replay(sessionId, after)) {
+          if (!response.destroyed) sse(response, "agent", record.event, record.cursor);
+        }
+        return;
+      }
       if (request.method === "POST" && parts.length === 4 && parts[3] === "reconnect") {
         const input = await body(request);
         const resumed = await adapter.resumeSession(state.session.id);
@@ -3151,22 +3209,18 @@ export function createApiServer(options: ApiServerOptions = {}) {
             return;
           }
         }
-        const hadPersistedMessages = state.messages.length > 0;
         const job = createJob(state, sessionId, text, fileIds);
         await persistMetadata();
-        response.writeHead(200, {
-          "content-type": "text/event-stream; charset=utf-8",
-          "cache-control": "no-cache, no-transform",
-          connection: "keep-alive",
-          "x-accel-buffering": "no",
+        void jobQueue
+          .enqueue(job.id, async () => {
+            await updateJob(job, { status: "running" });
+            await runJob(job, state, text);
+          })
+          .catch(() => undefined);
+        json(response, 202, {
+          job,
+          message: state.messages[state.messages.length - 1],
         });
-        startSseKeepAlive(response);
-        sse(response, "message", state.messages[state.messages.length - 1]);
-        await jobQueue.enqueue(job.id, async () => {
-          await updateJob(job, { status: "running" });
-          await runJob(job, state, text, response, hadPersistedMessages);
-        });
-        if (!response.destroyed && job.status === "canceled") response.end();
         return;
       }
       json(response, 404, {

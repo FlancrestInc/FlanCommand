@@ -24,11 +24,13 @@ function makeAdapter(
   options: {
     resumeResponses?: HermesSession[];
     streamError?: HermesAdapterError;
+    streamFactory?: (sessionId: string, text: string) => AsyncIterable<AgentEvent>;
   } = {},
 ): HermesAdapter & {
   resumed: string[];
   connects: number;
   retried: string[];
+  commands: string[];
   stopped: string[];
   sent: string[];
   provided: Array<{ sessionId: string; requestId: string; value: string }>;
@@ -38,6 +40,7 @@ function makeAdapter(
   const resumed: string[] = [];
   let connects = 0;
   const retried: string[] = [];
+  const commands: string[] = [];
   const sent: string[] = [];
   const provided: Array<{ sessionId: string; requestId: string; value: string }> = [];
   const attached: Array<{ kind: string; sessionId: string; name: string; contentBase64: string }> =
@@ -50,6 +53,7 @@ function makeAdapter(
       return connects;
     },
     retried,
+    commands,
     sent,
     provided,
     attached,
@@ -108,6 +112,10 @@ function makeAdapter(
     sendMessage: async function* (_sessionId, input) {
       sent.push(input.text);
       if (options.streamError) throw options.streamError;
+      if (options.streamFactory) {
+        yield* options.streamFactory(_sessionId, input.text);
+        return;
+      }
       for (const event of events) yield event;
     },
     stopRun: async (runId) => {
@@ -116,7 +124,8 @@ function makeAdapter(
     retryTurn: async (_sessionId, turnId) => {
       retried.push(turnId);
     },
-    dispatchCommand: async function* () {
+    dispatchCommand: async function* (_sessionId, command) {
+      commands.push(command);
       for (const event of events) yield event;
     },
     listCommands: async () => [],
@@ -178,6 +187,23 @@ async function start(
   return `http://127.0.0.1:${address.port}`;
 }
 
+async function waitForJob(
+  base: string,
+  predicate: (job: { status: string }) => boolean,
+  timeoutMs = 2_000,
+): Promise<{ status: string }> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${base}/api/jobs`);
+    const jobs = (await response.json()) as { jobs?: Array<{ status: string }>; error?: unknown };
+    if (!Array.isArray(jobs.jobs)) throw new Error(`Jobs request failed: ${JSON.stringify(jobs)}`);
+    const job = jobs.jobs[0];
+    if (job && predicate(job)) return job;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("Timed out waiting for background job.");
+}
+
 describe("API BFF", () => {
   it("does not durably write every tiny response delta", () => {
     expect(
@@ -235,16 +261,139 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Recover this response" }),
     });
-    const body = await response.text();
-
-    expect(response.status).toBe(200);
-    expect(body).toContain('"type":"message.delta"');
-    expect(body).toContain('"text":"partial"');
-    expect(body).toContain('"text":" answer"');
-    expect(body).toContain('"type":"run.completed"');
-    expect(body).not.toContain('"event":"error"');
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
+    const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
+      result.json(),
+    )) as {
+      messages: Array<{ text?: string }>;
+    };
+    expect(session.messages.at(-1)?.text).toBe("partial answer");
     expect(adapter.sent).toEqual(["Recover this response"]);
     expect(adapter.resumed).toEqual(["session-1", "session-1", "session-1"]);
+  });
+
+  it("accepts a message without waiting for the background run to finish", async () => {
+    let release!: () => void;
+    const paused = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const adapter = makeAdapter([], false, {
+      streamFactory: async function* (sessionId) {
+        yield {
+          type: "run.started",
+          runId: "run-background",
+          sessionId,
+          at: new Date().toISOString(),
+        };
+        await paused;
+        yield { type: "message.delta", runId: "run-background", sessionId, text: "done" };
+        yield {
+          type: "message.completed",
+          runId: "run-background",
+          sessionId,
+          messageId: "message-background",
+        };
+        yield { type: "run.completed", runId: "run-background", sessionId };
+      },
+    });
+    const base = await start(adapter);
+    const request = fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "run in the background" }),
+    });
+    const result = await Promise.race([
+      request.then(() => "response"),
+      new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 100)),
+    ]);
+
+    expect(result).toBe("response");
+    const response = await request;
+    expect(response.status).toBe(202);
+    await expect(response.json()).resolves.toMatchObject({
+      job: { status: expect.stringMatching(/queued|running/) },
+      message: { role: "user", text: "run in the background" },
+    });
+    release();
+  });
+
+  it("accepts steering input while another run is active", async () => {
+    let release!: () => void;
+    const paused = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const adapter = makeAdapter([], false, {
+      streamFactory: async function* (sessionId) {
+        yield { type: "run.started", runId: "run-main", sessionId, at: new Date().toISOString() };
+        await paused;
+        yield { type: "run.completed", runId: "run-main", sessionId };
+      },
+    });
+    const base = await start(adapter);
+    const first = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "keep working" }),
+    });
+    expect(first.status).toBe(202);
+    await first.json();
+    await waitForJob(base, (job) => job.status === "running");
+
+    const steer = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "/steer focus on the failing test" }),
+    });
+    expect(steer.status).toBe(202);
+    await steer.json();
+    for (
+      let attempt = 0;
+      attempt < 20 && !adapter.commands.includes("/steer focus on the failing test");
+      attempt += 1
+    )
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(adapter.commands).toContain("/steer focus on the failing test");
+    release();
+  });
+
+  it("streams a session snapshot and agent events to a separate viewer", async () => {
+    const adapter = makeAdapter([
+      {
+        type: "run.started",
+        runId: "run-viewer",
+        sessionId: "session-1",
+        at: new Date().toISOString(),
+      },
+      { type: "message.delta", runId: "run-viewer", sessionId: "session-1", text: "hello viewer" },
+      { type: "run.completed", runId: "run-viewer", sessionId: "session-1" },
+    ]);
+    const base = await start(adapter);
+    const submitted = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "watch this" }),
+    });
+    expect(submitted.status).toBe(202);
+
+    const controller = new AbortController();
+    const viewer = await fetch(`${base}/api/sessions/session-1/events`, {
+      signal: controller.signal,
+    });
+    expect(viewer.status).toBe(200);
+    const reader = viewer.body!.getReader();
+    let text = "";
+    while (!text.includes("hello viewer")) {
+      const part = await reader.read();
+      if (part.done) break;
+      text += new TextDecoder().decode(part.value);
+    }
+    await reader.cancel();
+    controller.abort();
+    expect(text).toContain("event: snapshot");
+    expect(text).toContain("event: agent");
+    expect(text).toContain("hello viewer");
   });
   it("serves an installable browser shell with security headers", async () => {
     const base = await start(makeAdapter());
@@ -285,7 +434,7 @@ describe("API BFF", () => {
     const serviceWorker = await fetch(`${base}/sw.js`);
     expect(serviceWorker.status).toBe(200);
     expect(serviceWorker.headers.get("content-type")).toContain("text/javascript");
-    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v33"');
+    expect(await serviceWorker.text()).toContain('const CACHE_NAME = "flancommand-shell-v34"');
   });
 
   it("restores settings and conversation policy after an API restart", async () => {
@@ -404,7 +553,7 @@ describe("API BFF", () => {
       body: JSON.stringify({ text: "stream safely" }),
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(202);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
     await response.text();
   });
@@ -435,11 +584,9 @@ describe("API BFF", () => {
       body: JSON.stringify({ text: "Continue after being away" }),
     });
 
-    expect(response.status).toBe(200);
-    const stream = await response.text();
-    expect(stream).toContain('event: session\ndata: {"type":"replaced"');
-    expect(stream).toContain('"id":"session-new"');
-    expect(stream).not.toContain("session not found");
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
     await expect(fetch(`${base}/api/sessions/session-new`)).resolves.toMatchObject({ status: 200 });
   });
 
@@ -532,6 +679,8 @@ describe("API BFF", () => {
       body: JSON.stringify({ text: "Build the feature." }),
     });
     await contextualMessage.text();
+    for (let attempt = 0; attempt < 20 && !adapter.sent.length; attempt += 1)
+      await new Promise((resolve) => setTimeout(resolve, 10));
     expect(adapter.sent.at(-1)).toContain("<project-instructions>");
     expect(adapter.sent.at(-1)).toContain("Use terse repo style.");
     expect(adapter.sent.at(-1)).toContain("Build the feature.");
@@ -814,7 +963,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Build a useful thing" }),
     });
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
 
     const jobs = (await fetch(`${base}/api/jobs`).then((result) => result.json())) as {
       jobs: Array<{ id: string; title: string; prompt: string; status: string; sessionId: string }>;
@@ -872,7 +1023,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "A message before reconnect" }),
     });
-    await message.text();
+    expect(message.status).toBe(202);
+    await message.json();
+    await waitForJob(base, (job) => job.status === "completed");
     expect(adapter.resumed).toEqual(["session-1"]);
 
     const reconnect = await fetch(`${base}/api/sessions/session-1/reconnect`, {
@@ -924,7 +1077,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Run with an implicit tool boundary" }),
     });
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
     const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
       result.json(),
     )) as {
@@ -990,7 +1145,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Run with multiple responses" }),
     });
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
     const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
       result.json(),
     )) as {
@@ -1037,7 +1194,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Request approval" }),
     });
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
     const session = (await fetch(`${base}/api/sessions/session-1`).then((result) =>
       result.json(),
     )) as {
@@ -1068,7 +1227,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Replay this run" }),
     });
-    await message.text();
+    expect(message.status).toBe(202);
+    await message.json();
+    await waitForJob(base, (job) => job.status === "completed");
 
     const reconnect = await fetch(`${base}/api/sessions/session-1/reconnect`, {
       method: "POST",
@@ -1106,7 +1267,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Persist this replay" }),
     });
-    await message.text();
+    expect(message.status).toBe(202);
+    await message.json();
+    await waitForJob(base, (job) => job.status === "completed");
     await new Promise<void>((resolve) => server!.close(() => resolve()));
     server = undefined;
 
@@ -1203,6 +1366,65 @@ describe("API BFF", () => {
     });
   });
 
+  it("keeps recovering a running job after an API restart", async () => {
+    const metadataRoot = await mkdtemp(join(tmpdir(), "flancommand-live-recovery-"));
+    tempRoots.push(metadataRoot);
+    const metadataPath = join(metadataRoot, "state.json");
+    const paused = new Promise<void>(() => {});
+    const firstAdapter = makeAdapter([], false, {
+      streamFactory: async function* (sessionId) {
+        yield { type: "run.started", runId: "run-live", sessionId, at: new Date().toISOString() };
+        await paused;
+      },
+    });
+    const base = await start(firstAdapter, undefined, undefined, metadataPath);
+    const submitted = await fetch(`${base}/api/sessions/session-1/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "recover this live run" }),
+    });
+    expect(submitted.status).toBe(202);
+    await submitted.json();
+    await waitForJob(base, (job) => job.status === "running");
+    await new Promise<void>((resolve) => server!.close(() => resolve()));
+    server = undefined;
+
+    const secondAdapter = makeAdapter([], false, {
+      resumeResponses: [
+        {
+          id: "session-1",
+          source: "hermes",
+          status: "running",
+          history: [
+            { role: "user", text: "recover this live run" },
+            { role: "assistant", text: "partial" },
+          ],
+        },
+        {
+          id: "session-1",
+          source: "hermes",
+          status: "idle",
+          history: [
+            { role: "user", text: "recover this live run" },
+            { role: "assistant", text: "partial answer" },
+          ],
+        },
+      ],
+    });
+    const restarted = await start(secondAdapter, undefined, undefined, metadataPath);
+    await fetch(`${restarted}/api/jobs`);
+    await waitForJob(restarted, (job) => job.status === "completed", 5_000);
+    expect(secondAdapter.resumed.length).toBeGreaterThanOrEqual(2);
+    await expect(
+      fetch(`${restarted}/api/sessions/session-1`).then((response) => response.json()),
+    ).resolves.toMatchObject({
+      messages: expect.arrayContaining([
+        expect.objectContaining({ role: "assistant", text: "partial answer" }),
+      ]),
+    });
+    expect(secondAdapter.sent).toEqual([]);
+  });
+
   it("retries a failed background job from its saved prompt", async () => {
     const adapter = makeAdapter([
       {
@@ -1224,7 +1446,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Retry this work" }),
     });
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "failed");
     const jobs = (await fetch(`${base}/api/jobs`).then((result) => result.json())) as {
       jobs: Array<{ id: string; status: string }>;
     };
@@ -1324,11 +1548,21 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "hi" }),
     });
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toMatch(/^text\/event-stream/);
-    expect(response.headers.get("cache-control")).toBe("no-cache, no-transform");
-    expect(response.headers.get("x-accel-buffering")).toBe("no");
-    const body = await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
+    const viewer = await fetch(`${base}/api/sessions/session-1/events?after=0`);
+    expect(viewer.headers.get("content-type")).toMatch(/^text\/event-stream/);
+    expect(viewer.headers.get("cache-control")).toBe("no-cache, no-transform");
+    expect(viewer.headers.get("x-accel-buffering")).toBe("no");
+    const reader = viewer.body!.getReader();
+    let body = "";
+    while (!body.includes('"type":"run.completed"')) {
+      const part = await reader.read();
+      if (part.done) break;
+      body += new TextDecoder().decode(part.value);
+    }
+    await reader.cancel();
     expect(body).toContain('event: agent\ndata: {"type":"run.started"');
     expect(body).toContain('event: agent\ndata: {"type":"message.delta"');
     expect(body).toContain('event: agent\ndata: {"type":"run.completed"');
@@ -1393,7 +1627,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "try this again" }),
     });
-    await messageResponse.text();
+    expect(messageResponse.status).toBe(202);
+    await messageResponse.json();
+    await waitForJob(base, (job) => job.status === "failed");
 
     const retry = await fetch(`${base}/api/sessions/session-1/retry`, {
       method: "POST",
@@ -1432,8 +1668,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "check the remote host" }),
     });
-    expect(response.status).toBe(200);
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "waiting_for_credential");
     const jobs = await fetch(`${base}/api/jobs`);
     await expect(jobs.json()).resolves.toMatchObject({
       jobs: [{ status: "waiting_for_credential" }],
@@ -1499,6 +1736,7 @@ describe("API BFF", () => {
         body: JSON.stringify({ text: "use the API" }),
       })
     ).text();
+    await waitForJob(base, (job) => job.status === "waiting_for_credential");
     const jobs = (await fetch(`${base}/api/jobs`).then((response) => response.json())) as {
       jobs: Array<{ id: string }>;
     };
@@ -1719,8 +1957,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "make a report" }),
     });
-    expect(message.status).toBe(200);
-    await message.text();
+    expect(message.status).toBe(202);
+    await message.json();
+    await waitForJob(base, (job) => job.status === "completed");
 
     await expect(
       fetch(`${base}/api/artifacts`).then((response) => response.json()),
@@ -1789,8 +2028,9 @@ describe("API BFF", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ text: "Read this file", fileIds: [file.id] }),
     });
-    expect(response.status).toBe(200);
-    await response.text();
+    expect(response.status).toBe(202);
+    await response.json();
+    await waitForJob(base, (job) => job.status === "completed");
     expect(adapter.attached).toEqual([
       {
         kind: "file",
