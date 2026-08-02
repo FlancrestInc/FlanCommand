@@ -29,6 +29,7 @@ const state = {
   eventStream: null,
   eventCursor: 0,
   activeRunIds: new Set(),
+  pendingSend: false,
   liveTexts: new Map(),
   theme: ["xp", "cga", "amber", "green", "win98css", "xpcss", "win7css", "classiccss"].includes(
     localStorage.getItem("flan-theme"),
@@ -429,7 +430,10 @@ function handleSessionAgentEvent(event, cursor) {
   const numericCursor = Number(cursor);
   if (Number.isFinite(numericCursor) && numericCursor <= state.eventCursor) return;
   if (Number.isFinite(numericCursor)) state.eventCursor = numericCursor;
-  if (event.type === "run.started") state.activeRunIds.add(event.runId);
+  if (event.type === "run.started") {
+    state.activeRunIds.add(event.runId);
+    state.pendingSend = false;
+  }
   if (["run.completed", "run.failed", "run.stopped"].includes(event.type))
     state.activeRunIds.delete(event.runId);
   addActivity(event);
@@ -508,7 +512,7 @@ function renderSession(session) {
   renderConversationApprovals(session.id);
   $("welcome").style.display = session.messages?.length ? "none" : "block";
   $("message-scroll").scrollTop = $("message-scroll").scrollHeight;
-  setRunUi(state.activeRunIds.size > 0 || session.status === "running");
+  setRunUi(state.activeRunIds.size > 0 || session.status === "running" || state.pendingSend);
   renderSessions();
 }
 function bindRetryActions(container) {
@@ -2320,6 +2324,7 @@ async function send(text) {
   if (!state.activeId) return;
   state.pendingText = text;
   const attachmentIds = [...state.pendingAttachments];
+  state.pendingSend = true;
   setRunUi(true);
   clearComposer();
   try {
@@ -2343,6 +2348,7 @@ async function send(text) {
     renderFiles();
     localStorage.removeItem("flan-draft");
   } catch (error) {
+    state.pendingSend = false;
     setRunUi(state.activeRunIds.size > 0);
     $("composer-input").value = text;
     state.draft = text;

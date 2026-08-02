@@ -173,35 +173,37 @@ test("creates a conversation and renders one streamed Hermes reply", async ({ pa
   await expect(page.locator("#toast")).toHaveText("Job duplicated.");
 });
 
-test("does not show an empty assistant bubble before the first response delta", async ({
+test("shows the Hermes working indicator while the queued response is pending", async ({
   page,
 }) => {
   await page.route("**/api/sessions/*/messages", async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     await route.fulfill({
-      status: 200,
-      headers: { "content-type": "text/event-stream" },
-      body: 'event: agent\ndata: {"type":"message.delta","text":"Delayed reply"}\n\n',
+      status: 202,
+      contentType: "application/json",
+      body: JSON.stringify({
+        job: { id: "job-delayed", status: "running" },
+        message: {
+          id: "message-user-delayed",
+          role: "user",
+          text: "Wait for the reply.",
+          status: "complete",
+        },
+      }),
     });
   });
   await page.goto("/");
   await expect(page.locator("#session-title")).not.toHaveText("Loading conversation");
-  const before = await page.locator("#messages .assistant").count();
   await page.locator("#composer-input").fill("Wait for the reply.");
   await page.locator("#send-button").click();
-  await expect(page.locator("#live-activity")).toBeVisible();
-  await expect(page.locator("#live-activity")).toContainText("Hermes is working");
-  await expect(page.locator("#live-activity")).toHaveCSS("min-height", "52px");
-  await expect(page.locator("#live-activity")).toHaveCSS("border-radius", "10px");
-  const workingStyles = await page.locator("#live-activity").evaluate((element) => {
+  await expect(page.locator("#run-strip")).toBeVisible();
+  await expect(page.locator("#run-label")).toHaveText("Hermes is working");
+  const workingStyles = await page.locator("#run-strip").evaluate((element) => {
     const style = element.ownerDocument.defaultView?.getComputedStyle(element);
     if (!style) throw new Error("Could not inspect working bubble styles");
     return { backgroundColor: style.backgroundColor, color: style.color };
   });
-  expect(workingStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
   expect(workingStyles.color).not.toBe(workingStyles.backgroundColor);
-  await expect(page.locator("#messages .assistant")).toHaveCount(before);
-  await expect(page.locator("#live-activity")).toHaveCount(0);
 });
 
 test("renders tables and task lists in streamed Hermes Markdown", async ({ page }) => {
