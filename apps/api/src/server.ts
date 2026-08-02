@@ -218,8 +218,23 @@ function json(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "no-referrer",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
   });
   response.end(text);
+}
+
+function decodeBase64(value: string): Buffer {
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==?|[A-Za-z0-9+/]{3}=?)?$/u.test(value))
+    throw new ApiError(400, "File content is not valid base64.");
+  const content = Buffer.from(value, "base64");
+  const normalized = value.replace(/=+$/u, "");
+  const encoded = content.toString("base64").replace(/=+$/u, "");
+  if (encoded !== normalized) throw new ApiError(400, "File content is not valid base64.");
+  return content;
 }
 
 function sse(response: ServerResponse, event: string, data: unknown, id?: number): void {
@@ -1284,6 +1299,9 @@ export function createApiServer(options: ApiServerOptions = {}) {
             "permissions-policy": "camera=(), geolocation=(), microphone=()",
             "referrer-policy": "strict-origin-when-cross-origin",
             "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
           });
           response.end(content);
         } catch {
@@ -1586,6 +1604,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
             "content-length": Buffer.byteLength(content),
             "cache-control": "private, no-store",
             "content-security-policy": "sandbox",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "referrer-policy": "no-referrer",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
           });
           response.end(content);
         } catch (error) {
@@ -2617,12 +2640,7 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
           return;
         }
-        let content: Buffer;
-        try {
-          content = Buffer.from(input.contentBase64, "base64");
-        } catch {
-          throw new ApiError(400, "File content is not valid base64.");
-        }
+        const content = decodeBase64(input.contentBase64);
         let record: FileRecord;
         try {
           const expiresAt =
@@ -2856,6 +2874,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
             "content-length": content.byteLength,
             "cache-control": "private, no-store",
             "content-security-policy": "sandbox",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "referrer-policy": "no-referrer",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
             "content-disposition": isPreview
               ? "inline"
               : `attachment; filename="${record.safeName}"`,
@@ -2908,6 +2931,11 @@ export function createApiServer(options: ApiServerOptions = {}) {
             "content-length": content.byteLength,
             "cache-control": "private, no-store",
             "content-security-policy": "sandbox",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "referrer-policy": "no-referrer",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
             "content-disposition":
               parts[3] === "preview" ? "inline" : `attachment; filename="${record.safeName}"`,
           });

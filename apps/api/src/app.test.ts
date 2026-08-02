@@ -407,6 +407,8 @@ describe("API BFF", () => {
     expect(shell.status).toBe(200);
     expect(shell.headers.get("content-security-policy")).toContain("script-src 'self'");
     expect(shell.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(shell.headers.get("x-frame-options")).toBe("DENY");
+    expect(shell.headers.get("cross-origin-opener-policy")).toBe("same-origin");
     const shellText = await shell.text();
     expect(shellText).toContain('rel="manifest"');
     expect(shellText).toContain('href="/favicon.png"');
@@ -1888,6 +1890,8 @@ describe("API BFF", () => {
     const file = (await upload.json()) as { id: string };
     const preview = await fetch(`${base}/api/files/${file.id}/preview`);
     expect(preview.status).toBe(200);
+    expect(preview.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(preview.headers.get("content-security-policy")).toBe("sandbox");
     await expect(preview.text()).resolves.toBe("# hello");
     const artifact = await fetch(`${base}/api/artifacts`, {
       method: "POST",
@@ -1907,6 +1911,16 @@ describe("API BFF", () => {
       }),
     });
     expect(unsafe.status).toBe(415);
+    const malformed = await fetch(`${base}/api/files`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "malformed.md",
+        mimeType: "text/markdown",
+        contentBase64: "!!!!",
+      }),
+    });
+    expect(malformed.status).toBe(400);
   });
 
   it("imports Hermes artifacts only from declared project paths", async () => {
