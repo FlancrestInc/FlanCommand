@@ -3188,6 +3188,28 @@ export function createApiServer(options: ApiServerOptions = {}) {
           });
           return;
         }
+        const steerMatch = /^\/steer(?:\s+([\s\S]*))?$/u.exec(text);
+        if (steerMatch) {
+          const steerText = steerMatch[1]?.trim() ?? "";
+          if (!steerText) {
+            json(response, 400, {
+              error: { code: "EMPTY_STEER", message: "Add guidance after /steer." },
+            });
+            return;
+          }
+          await adapter.steer(sessionId, steerText);
+          const message = {
+            id: `message-user-${Date.now()}`,
+            role: "user" as const,
+            text,
+            at: new Date().toISOString(),
+            status: "complete" as const,
+          };
+          state.messages.push(message);
+          await persistMetadata();
+          json(response, 202, { message, steer: { status: "queued" } });
+          return;
+        }
         for (const fileId of fileIds) {
           const record = fileStore.get(fileId);
           if (!record) {

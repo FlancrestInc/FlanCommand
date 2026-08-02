@@ -189,6 +189,32 @@ describe("HermesAdapter", () => {
     ]);
   });
 
+  it("steers the active Hermes session without interrupting it", async () => {
+    const calls: Array<{ operation: string; input: unknown }> = [];
+    const adapter = new HermesAdapterImplementation(
+      {
+        connect: async () => undefined,
+        disconnect: async () => undefined,
+        call: async (operation, input) => {
+          calls.push({ operation, input });
+          return { status: "queued" };
+        },
+        stream: () => ({
+          async *[Symbol.asyncIterator]() {},
+        }),
+      },
+      createDefaultCapabilities(),
+    );
+    await adapter.connect();
+    await adapter.steer("session-1", "Check the auth log too.");
+    expect(calls).toEqual([
+      {
+        operation: "steer",
+        input: { sessionId: "session-1", text: "Check the auth log too." },
+      },
+    ]);
+  });
+
   it("uses Hermes session.undo for retry requests", async () => {
     const calls: Array<{ operation: string; input: unknown }> = [];
     const adapter = new HermesAdapterImplementation(
@@ -231,6 +257,7 @@ describe("HermesAdapter", () => {
       "retryTurn",
       "sendMessage",
       "setSessionModel",
+      "steer",
       "stopRun",
       "provideCredential",
       "attachFile",

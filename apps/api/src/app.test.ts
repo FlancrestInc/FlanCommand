@@ -31,6 +31,7 @@ function makeAdapter(
   connects: number;
   retried: string[];
   commands: string[];
+  steered: Array<{ sessionId: string; text: string }>;
   stopped: string[];
   sent: string[];
   provided: Array<{ sessionId: string; requestId: string; value: string }>;
@@ -41,6 +42,7 @@ function makeAdapter(
   let connects = 0;
   const retried: string[] = [];
   const commands: string[] = [];
+  const steered: Array<{ sessionId: string; text: string }> = [];
   const sent: string[] = [];
   const provided: Array<{ sessionId: string; requestId: string; value: string }> = [];
   const attached: Array<{ kind: string; sessionId: string; name: string; contentBase64: string }> =
@@ -54,6 +56,7 @@ function makeAdapter(
     },
     retried,
     commands,
+    steered,
     sent,
     provided,
     attached,
@@ -117,6 +120,9 @@ function makeAdapter(
         return;
       }
       for (const event of events) yield event;
+    },
+    steer: async (sessionId, text) => {
+      steered.push({ sessionId, text });
     },
     stopRun: async (runId) => {
       stopped.push(runId);
@@ -348,13 +354,12 @@ describe("API BFF", () => {
     });
     expect(steer.status).toBe(202);
     await steer.json();
-    for (
-      let attempt = 0;
-      attempt < 20 && !adapter.commands.includes("/steer focus on the failing test");
-      attempt += 1
-    )
+    for (let attempt = 0; attempt < 20 && !adapter.steered.length; attempt += 1)
       await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(adapter.commands).toContain("/steer focus on the failing test");
+    expect(adapter.steered).toEqual([
+      { sessionId: "session-1", text: "focus on the failing test" },
+    ]);
+    expect(adapter.commands).toEqual([]);
     release();
   });
 

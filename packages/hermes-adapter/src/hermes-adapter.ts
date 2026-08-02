@@ -267,6 +267,10 @@ export class HermesAdapterImplementation implements HermesAdapter {
     return this.delegateStream("sendMessage", { sessionId, input });
   }
 
+  async steer(sessionId: string, text: string): Promise<void> {
+    await this.call("steer", { sessionId, text });
+  }
+
   async stopRun(runId: string, sessionId?: string): Promise<void> {
     await this.call("stopRun", { runId, ...(sessionId ? { sessionId } : {}) });
   }

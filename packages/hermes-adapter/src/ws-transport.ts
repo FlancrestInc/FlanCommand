@@ -111,6 +111,7 @@ const wireMethods: Record<string, string> = {
   listModels: "model.options",
   setSessionModel: "config.set",
   sendMessage: "prompt.submit",
+  steer: "session.steer",
   dispatchCommand: "slash.exec",
   stopRun: "session.interrupt",
   retryTurn: "session.undo",
@@ -160,6 +161,9 @@ function wireParamsForOperation(operation: string, input: unknown): unknown {
       text: nested.text,
       ...(typeof nested.modelId === "string" ? { model: nested.modelId } : {}),
     };
+  }
+  if (operation === "steer") {
+    return { session_id: input.sessionId, text: input.text };
   }
   if (operation === "dispatchCommand") {
     return { session_id: input.sessionId, command: input.command };

@@ -43,6 +43,7 @@ export interface HermesAdapter {
   resumeSession(sessionId: string): Promise<HermesSession>;
   renameSession(sessionId: string, title: string): Promise<void>;
   sendMessage(sessionId: string, input: SendMessageInput): AsyncIterable<AgentEvent>;
+  steer(sessionId: string, text: string): Promise<void>;
   stopRun(runId: string, sessionId?: string): Promise<void>;
   retryTurn(sessionId: string, turnId: string): Promise<void>;
   dispatchCommand(sessionId: string, command: string): AsyncIterable<AgentEvent>;

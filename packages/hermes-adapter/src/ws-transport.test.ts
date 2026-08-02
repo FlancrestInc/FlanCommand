@@ -96,6 +96,33 @@ function openReady(socket: FakeSocket): void {
 }
 
 describe("WebSocket Hermes transport", () => {
+  it("maps steering requests to Hermes session.steer without interrupting the run", async () => {
+    FakeSocket.instances.length = 0;
+    const transport = new WebSocketHermesTransport({
+      endpoint: "ws://test",
+      origin: "http://localhost:5173",
+      socketFactory: factory,
+    });
+    const connected = transport.connect();
+    const socket = FakeSocket.instances[0]!;
+    openReady(socket);
+    await connected;
+
+    const response = transport.call("steer", {
+      sessionId: "session-1",
+      text: "Check the auth log too.",
+    });
+    const steerRequest = request(socket);
+    expect(steerRequest).toMatchObject({
+      method: "session.steer",
+      params: { session_id: "session-1", text: "Check the auth log too." },
+    });
+    socket.receive(
+      JSON.stringify({ jsonrpc: "2.0", id: steerRequest.id, result: { status: "queued" } }),
+    );
+    await expect(response).resolves.toEqual({ status: "queued" });
+  });
+
   it("logs in and uses a fresh Hermes dashboard ticket for each connection", async () => {
     FakeSocket.instances.length = 0;
     const requests: Array<{ url: string; init?: RequestInit }> = [];
